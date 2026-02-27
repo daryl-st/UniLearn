@@ -1,0 +1,43 @@
+# Node / PNPM
+node_modules/
+.pnpm-store/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (FastAPI)
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Vite
+.vite/
+
+# Prisma
+prisma/dev.db
+
+# Test outputs
+.nyc_output/
+
+# Editors
+.vscode/
+.idea/
+*.swp
