@@ -1,0 +1,54 @@
+# version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: uniLearn_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: unilearn
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: uniLearn_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - ai
+    ports:
+      - "4000:4000"
+
+  ai:
+    build:
+      context: .
+      dockerfile: apps/ai/Dockerfile
+    container_name: uniLearn_ai
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: uniLearn_web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:

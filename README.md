@@ -38,7 +38,7 @@ All client communication flows through the Node backend. The frontend never comm
 ## Monorepo Structure
 
 ```
-academic-platform/
+UniLearn/
 ├── apps/
 │   ├── frontend/
 │   ├── backend/
@@ -165,13 +165,13 @@ npx prisma generate
 From root:
 
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 Services:
 
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:4000
 - AI Service: internal container
 - PostgreSQL: internal container
 
