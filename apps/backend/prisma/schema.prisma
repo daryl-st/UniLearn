@@ -13,104 +13,199 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum FileType {
+  PDF
+  PPT
+  DOC
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  role         String   // 'client' | 'therapist' | 'admin'
-  firstName    String   @map("first_name")
-  lastName     String   @map("last_name")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                  String        @id @default(uuid())
+  username            String        @unique
+  email               String        @unique
+  passwordHash        String        @map("password_hash")
+  role                Role          // 'client' | 'therapist' | 'admin'
+  firstName           String        @map("first_name")
+  lastName            String        @map("last_name")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  // A user can be Studnet, Instructor, or Admin
+  studentProfile      StudentProfile?
+  instructorProfile   InstructorProfile?
+
+  quizzes             Quiz[]      @relation("Quiz")
+
+  @@index([email])
 }
 
 model StudentProfile {
-  id           String   @id @default(uuid())
-  studnetId    String   @unique
-  acadamicYear String   @map("acadamic_year")
+  id                  String        @id @default(uuid())
+  studnetId           String        @unique
+  acadamicYear        String        @map("acadamic_year")
+  departmentId        String
 
-  student       User          @relation(fields: [id], references: [id]) 
-  department    Department    @relation("Department")
+  student             User          @relation(fields: [id], references: [id], onDelete: Cascade)
+  department          Department    @relation(fields: [departmentId], references: [id])
 }
 
 model InstructorProfile {
-  id            String        @id @default(uuid())
-  instructorId  String        @unique
+  id                  String        @id @default(uuid())
+  instructorId        String        @unique
+  departmentId        String
 
-  instructor    User          @relation(fields: [id], references: [id])
-  department    Department    @relation("Department")
+  instructor          User          @relation(fields: [id], references: [id], onDelete: Cascade)
+  department          Department    @relation(fields: [departmentId], references: [id])
+
+  courses             Course[]
+  resources           Resource[]
 }
 
 model Department {
-  id           String   @id @default(uuid())
-  name         String
-  code         String   @unique
+  id                  String        @id @default(uuid())
+  name                String      
+  code                String        @unique
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  students            StudentProfile[]
+  instructor          InstructorProfile[]
+  courses             Course[]
 }
 
 model Course {
-  id           String   @id @default(uuid())
-  name         String   
-  code         String   @unique
-  acadamicYear String   @map("acadamic_year")
+  id                  String        @id @default(uuid())
+  name                String        
+  code                String        @unique
+  acadamicYear        String        @map("acadamic_year")
+  departmentId        String
+  instructorId        String
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  department          Department    @relation(fields: [departmentId], references: [id])
+  instructor          InstructorProfile   @relation(fields: [instructorId], references: [id])
+
+  resources           Resource[]
+  progress            Progress[]
+
+  @@index([instructorId])
 }
 
 model Resource {
-  id           String   @id @default(uuid())
-  title        String
-  type         String   // PDF, PPT, DOCX...
-  filePath     String   @map("file_path")
+  id                  String          @id @default(uuid())
+  title               String        
+  type                FileType        // PDF, PPT, DOCX...
+  fileUrl             String          @map("file_url")
+  courseId            String
+  instructorId        String
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+
+  instructor          User            @relation(fields: [instructorId], references: [id])
+  course              Course          @relation(fields: [courseId], references: [id])
+
+  summaries           Summary[]
+  quiz                Quiz[]
+
+  @@index([courseId])
+  @@index([instructorId])
 }
 
 model Summary {
-  id           String   @id @default(uuid())
-  content      String
+  id                  String            @id @default(uuid())
+  content             String    
+  resourceId          String    
+  studnetId           String    
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+        
+  resource            Resource          @relation(fields: [resourceId], references: [id])
+  student             User              @relation(fields: [studnetId], references: [id])
+
+  @@index([resourceId])
+  @@index([studnetId])
 }
 
 model Quiz {
-  id           String   @id @default(uuid())
-  difficulty   String   // EASY, MEDIUM, HARD
-  title        String
+  id                   String           @id @default(uuid())
+  difficulty           Difficulty   // EASY, MEDIUM, HARD
+  title                String
+  resourceId           String
+  studnetId            String
+  questions            Question[]
+  attempts             QuizAttempt[]
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  resource             Resource         @relation(fields: [resourceId], references: [id])
+  student              User             @relation(fields: [studnetId], references: [id])
+
+  @@index([resourceId])
 }
 
 model Question {
-  id           String   @id @default(uuid())
-  content      String
-  options      String
-  correctAns   String   @map("correct_answer")
+  id                   String       @id @default(uuid())
+  content              String       @db.Text
+  options              Json?
+  correctAns           String       @map("correct_answer")
+  quizId               String
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  quiz                 Quiz         @relation(fields: [quizId], references: [id])
+
+  @@index([quizId])
 }
 
 model QuizAttempt {
-  id           String   @id @default(uuid())
-  score        Number
+  id                   String       @id @default(uuid())
+  score                Number
+  quizId               String
+  studnetId            String
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  quiz                 Quiz         @relation(fields: [quizId], references: [id])
+  student              User         @relation(fields: [studnetId], references: [id])
+
+  @@index([quizId])
+  @@index([studnetId])
 }
 
 model Progress {
-  id              String   @id @default(uuid())
-  resourceViewed  Number
-  averageScore    Number
+  id                   String       @id @default(uuid())
+  resourceViewed       Int
+  averageScore         Float
+  studnetId            String
+  courseId             String
 
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  student              User         @relation(fields: [studnetId], references: [id])
+  course               Course       @relation(fields: [courseId], references: [id])
+
+  @@unique([studnetId, courseId])
+  @@index([studnetId])
+  @@index([courseId])
 }
