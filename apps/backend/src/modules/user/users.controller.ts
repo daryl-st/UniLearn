@@ -1,18 +1,20 @@
 import type { Request, Response } from "express";
-import { getAllUsers } from "../services/users.service.js";
+import { UserService } from "./users.service.js";
+import { UserRepository } from "./user.repository.js";
+import type { CreateUserInput } from "@unilearn/shared-types";
 
-export const getUsers = async (req: Request, res: Response) => {
-    try {
-        const userData = await getAllUsers();
+const userRepository = new UserRepository();
+const userService = new UserService(userRepository);
 
-        // if (userData.length == 0) throw new Error("No users found!");
+export class UserController {
+    async getUsers(req: Request, res: Response) {
+        const users = await userService.getUsers();
+        res.status(200).json(users);
+    };
 
-        return res.status(200).json({
-            success: true,
-            data: userData
-        })
-    } catch (err) {
-        console.log("Internal Server Error!")
-        console.error(err);
+    async createUser(req: Request, res: Response) {
+        const userData: CreateUserInput = req.body; // TODO: add validation logic
+        const user = await userService.createUser(userData); // the types from Shared-types has to match the entity
+        res.status(201).json(user);
     }
 }

@@ -14,7 +14,7 @@ export interface User {
 // Recieved from the frontend
 export interface CreateUserInput {
     email: string;
-    password: string;
+    passwordHash: string;
     username: string;
     firstName: string;
     lastName: string;

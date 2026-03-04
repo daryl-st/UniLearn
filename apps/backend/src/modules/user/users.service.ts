@@ -1,8 +1,24 @@
-import prisma from "../config/db.js";
-// import type { User } from "@unilearn/shared-types"; Import types as such
+import type { Role } from "@unilearn/shared-types";
+import { UserRepository } from "./user.repository.js"
 
-export const getAllUsers = async () => {
-    const users = prisma.user.findMany();
+export class UserService {
+    constructor(private userRepository: UserRepository) {}
 
-    return users;
+    async getUsers() {
+        return this.userRepository.findAll();
+    }
+
+    async createUser(data: {email: string, firstName: string, lastName: string, passwordHash: string, role: Role}) {
+        // check if user exists and other business logic
+        return this.userRepository.create(data);
+    }
 }
+
+// What is service’s role?
+// Service is where use cases live.
+
+// Like:
+// • registerUser
+// • enrollUserInCourse
+// • generateCertificate
+// • assignRoleToUser
