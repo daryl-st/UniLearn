@@ -50,6 +50,7 @@ async function main() {
         where: {id: student.id},
         update: {},
         create: {
+            id: student.id,
             studnetId: "UGR/1100/15",
             departmentId: department.id,
             acadamicYear: 2024,
@@ -60,6 +61,7 @@ async function main() {
         where: { id: Instructor.id },
         update: {},
         create: {
+            id: Instructor.id,
             instructorId: "INS/0001/15",
             departmentId: department.id,
         } 

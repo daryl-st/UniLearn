@@ -61,7 +61,7 @@ model StudentProfile {
 }
 
 model InstructorProfile {
-  id           String @id @default(uuid())
+  id           String @id
   instructorId String @unique
   departmentId String
 
