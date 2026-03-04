@@ -38,6 +38,10 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
+  "extends": "../../packages/tsconfig/base.json",
   "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+    "references": [
+      { "path": "../../packages/shared-types" }
+  ]
 }
