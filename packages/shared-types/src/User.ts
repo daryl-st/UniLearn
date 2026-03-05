@@ -22,6 +22,11 @@ export interface CreateUserInput {
     createdAt: Date;
 }
 
+export interface CreateUserInputLogin {
+    email: string;
+    passwordHash: string;
+}
+
 export interface UpdateUserInput {
     username?: string;
     firstName?: string;
