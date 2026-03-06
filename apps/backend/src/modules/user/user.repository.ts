@@ -14,6 +14,11 @@ export class UserRepository {
         return new User(user.id, user.email, user.passwordHash, user.firstName, user.lastName, user.role);
     }
 
+    // create refresh token 
+    async createRefreshToken(data: {tokenHash: string, userId: string, expiredAt: Date}) {
+        await prisma.refreshToken.create({ data });
+    }
+
     // Needs refactoring
     async createStudentProfile(data: {studentId: string, year: number}, id: string, departmentId: Department): Promise<StudentProfile> {
         const userProfile = await prisma.studentProfile.create({ 

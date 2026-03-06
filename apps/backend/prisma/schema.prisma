@@ -41,6 +41,7 @@ model User {
 
   quizes    Quiz[]
   resources Resource[]
+  refreshTokens RefreshToken[]
 
   @@index([email])
 }
@@ -211,4 +212,17 @@ model Progress {
   @@unique([studnetId, courseId])
   @@index([studnetId])
   @@index([courseId])
+}
+
+model RefreshToken {
+  id        String  @id @default(uuid())
+  tokenHash String  @unique
+  userId    String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiredAt DateTime
+  revoked   Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

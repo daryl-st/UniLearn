@@ -42,6 +42,44 @@ export class AuthController {
 
         // user type has to correct to be in sync with returned data
         const userData = (await authService.loginUser(user));
-        res.status(200).json(userData.existingUser);
+
+        res.cookie("refreshToken", userData.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict"
+        })
+
+        res.status(200).json({ user: userData.existingUser, accessToken: userData.accessToken });
+    };
+
+    async refresh(req: Request, res: Response) {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) return res.status(401).json({ message: "No refresh token!"});
+
+        try {
+            const refresh = await authService.refresh(refreshToken);
+
+            res.cookie("refreshToken", refresh.newRefreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+            })
+
+            return res.json({ accessToken: refresh.newAccessToken });
+        } catch (err) {
+            return res.status(403).json({ message: "Invalid refresh token "});
+        }
+    };
+
+    async logout(req: Request, res: Response) {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) res.sendStatus(204);
+
+        // revoked: true
+        authService.logout(refreshToken);
+
+        res.clearCookie("refreshToken");
+
+        res.sendStatus(204);
     }
 }
