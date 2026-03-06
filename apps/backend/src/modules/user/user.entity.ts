@@ -13,3 +13,20 @@ export class User {
 
     // updateName 
 }
+
+export class StudentProfile {
+    constructor(
+        public id: string,
+        public studentId: string,
+        public departmentId: string,
+        public acadamicYear: Number
+    ) {}
+}
+
+export class InstructorProfile {
+    constructor(
+        public id: string,
+        public instructorId: string,
+        public departmentId: string
+    ) {}
+}
