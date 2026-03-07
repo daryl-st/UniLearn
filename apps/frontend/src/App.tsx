@@ -5,8 +5,8 @@ import Register from "./pages/Register";
 const App = () => {
   return (
     <ThemeController>
-      {/* <LoginPage /> */}
-      <Register />
+      <LoginPage />
+      {/* <Register /> */}
     </ThemeController>
   );
 };

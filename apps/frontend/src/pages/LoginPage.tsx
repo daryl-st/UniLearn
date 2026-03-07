@@ -8,7 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
 
   return (
-    <div className="flex w-full min-h-screen bg-background text-foreground font-lexend">
+    <div className="flex w-full min-h-dvh lg:min-h-screen bg-background text-foreground font-lexend">
       {/* Left Side: Hero Image & Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
         <img
@@ -60,27 +60,27 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side: Login Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center bg-background px-6 py-12">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center bg-background px-5 py-5 sm:px-6 sm:py-6 lg:py-12">
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-full max-w-md"
+          className="w-full max-w-sm lg:max-w-md"
         >
           {/* Mobile Branding */}
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
+          <div className="lg:hidden flex items-center justify-left gap-3 mb-5">
             <div className="bg-black dark:bg-primary p-2 rounded-lg">
               <GraduationCap className="text-white w-6 h-6" />
             </div>
             <span className="text-2xl font-bold">UniLearn</span>
           </div>
 
-          <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-bold mb-2">Sign In</h2>
-            <p className="text-muted-foreground">Enter your university credentials to continue.</p>
+          <div className="mb-5 lg:text-left">
+            <h2 className="text-2xl lg:text-3xl font-bold mb-1.5 lg:mb-2">Sign In</h2>
+            <p className="text-sm lg:text-base text-muted-foreground">Enter your university credentials to continue.</p>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-4 lg:space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div>
               <label className="block text-sm font-medium text-foreground/90 mb-2" htmlFor="email">
                 University Email
@@ -88,7 +88,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <input
-                  className="w-full pl-11 pr-4 py-3 bg-card border border-input text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none placeholder:text-muted-foreground/70"
+                  className="w-full pl-11 pr-4 py-2.5 lg:py-3 bg-card border border-input text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none placeholder:text-muted-foreground/70"
                   id="email"
                   type="email"
                   placeholder="name@university.edu"
@@ -114,7 +114,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <input
-                  className="w-full pl-11 pr-4 py-3 bg-card border border-input text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none placeholder:text-muted-foreground/70"
+                  className="w-full pl-11 pr-4 py-2.5 lg:py-3 bg-card border border-input text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none placeholder:text-muted-foreground/70"
                   id="password"
                   type="password"
                   placeholder="••••••••"
@@ -137,7 +137,7 @@ export default function LoginPage() {
             </div>
 
             <button
-              className="w-full py-3 dark:bg-blue-600 bg-black hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 text-white font-semibold rounded-lg shadow-lg shadow-blue-900/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+              className="w-full py-2.5 lg:py-3 dark:bg-blue-600 bg-black hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 text-white font-semibold rounded-lg shadow-lg shadow-blue-900/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
               type="submit"
             >
               <span>Sign In</span>
@@ -145,27 +145,27 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-8">
-            <div className="relative flex items-center justify-center mb-8">
+          <div className="mt-5 lg:mt-8">
+            <div className="relative flex items-center justify-center mb-5 lg:mb-8">
               <div className="w-full h-px bg-border" />
               <span className="absolute px-4 bg-background text-xs font-medium text-muted-foreground uppercase tracking-widest">
                 Or continue with
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2 py-3 px-4 bg-card border border-input rounded-lg hover:bg-accent transition-colors">
+            <div className="grid grid-cols-2 gap-3 lg:gap-4">
+              <button className="flex items-center justify-center gap-2 py-2.5 lg:py-3 px-4 bg-card border border-input rounded-lg hover:bg-accent transition-colors">
                 <SiGooglechrome className="w-5 h-5 text-[#4285F4]" />
                 <span className="text-sm font-medium">Google</span>
               </button>
-              <button className="flex items-center justify-center gap-2 py-3 px-4 bg-card border border-input rounded-lg hover:bg-accent transition-colors">
+              <button className="flex items-center justify-center gap-2 py-2.5 lg:py-3 px-4 bg-card border border-input rounded-lg hover:bg-accent transition-colors">
                 <SiApple className="w-5 h-5" />
                 <span className="text-sm font-medium">Apple</span>
               </button>
             </div>
           </div>
 
-          <div className="mt-10 text-center">
+          <div className="mt-5 lg:mt-10 text-center">
             <p className="text-muted-foreground">
               Don't have an account?
               <a className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-semibold decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 rounded-sm" href="#">
@@ -174,7 +174,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-border flex justify-center gap-6 text-xs text-muted-foreground font-medium">
+          <div className="hidden sm:flex mt-6 lg:mt-12 pt-5 lg:pt-8 border-t border-border justify-center gap-6 text-xs text-muted-foreground font-medium">
             <a className="hover:text-primary transition-colors" href="#">Privacy Policy</a>
             <a className="hover:text-primary transition-colors" href="#">Terms of Service</a>
             <a className="hover:text-primary transition-colors" href="#">Help Center</a>

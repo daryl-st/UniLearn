@@ -7,25 +7,27 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="flex flex-col flex-1 justify-center items-center px-5 py-6 lg:px-10 lg:py-8 xl:px-16 xl:py-10 bg-background text-foreground">
+    <div className="flex flex-col flex-1 justify-center items-center px-5 py-4 sm:py-5 lg:px-10 lg:py-8 xl:px-16 xl:py-10 bg-background text-foreground">
       <motion.div 
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-        className="w-full max-w-[28rem]"
+        className="w-full max-w-[26rem] lg:max-w-[28rem]"
       >
         {/* Mobile Header */}
-        <div className="lg:hidden mb-7">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-black dark:bg-primary mb-6 shadow-lg shadow-primary/20">
-            <GraduationCap className="text-white w-6 h-6" />
+        <div className="lg:hidden mb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-black dark:bg-primary shadow-lg shadow-primary/20">
+              <GraduationCap className="text-white w-6 h-6" />
+            </div>
+            <h1 className="text-foreground text-2xl font-black tracking-tight">UniLearn</h1>
           </div>
-          <h1 className="text-foreground text-3xl font-black tracking-tight">UniLearn</h1>
-          <p className="text-muted-foreground mt-1.5 text-base">Join thousands of students today.</p>
+          <p className="text-muted-foreground text-sm">Join thousands of students today.</p>
         </div>
 
-        <div className="mb-6 lg:mb-7">
+        <div className="mb-4 lg:mb-7">
           <h2 className="text-foreground text-2xl lg:text-[1.65rem] font-extrabold tracking-tight">Create Account</h2>
-          <p className="text-muted-foreground mt-1.5 text-sm lg:text-base">Get started with your university credentials.</p>
+          <p className="text-muted-foreground mt-1 text-sm lg:text-base">Get started with your university credentials.</p>
         </div>
 
         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
@@ -75,21 +77,21 @@ export default function SignUp() {
             </div>
           </div>
 
-          <div className="pt-2">
-            <button className="w-full bg-black hover:bg-black/90 dark:bg-primary dark:hover:bg-primary/90 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-black/25 dark:shadow-primary/25 flex items-center justify-center gap-2 group">
+          <div className="pt-1.5">
+            <button className="w-full bg-black hover:bg-black/90 dark:bg-primary dark:hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-black/25 dark:shadow-primary/25 flex items-center justify-center gap-2 group">
               <span>Sign Up</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </form>
 
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-4 lg:mt-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-border"></div>
           <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">or continue with</span>
           <div className="h-px flex-1 bg-border"></div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
+        <div className="mt-4 lg:mt-5 grid grid-cols-2 gap-3">
           <button className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-input hover:bg-accent transition-all font-semibold text-foreground">
             <SiGooglechrome className="w-5 h-5 text-[#4285F4]" />
             <span>Google</span>
@@ -100,14 +102,14 @@ export default function SignUp() {
           </button>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-border text-center">
+        <div className="mt-4 lg:mt-6 pt-4 lg:pt-5 border-t border-border text-center">
           <p className="text-muted-foreground text-sm">
             Already have an account? 
             <a className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-bold hover:underline" href="#">Sign in</a>
           </p>
         </div>
 
-        <div className="mt-6 flex flex-wrap justify-center gap-6 text-[11px] text-muted-foreground uppercase tracking-widest font-bold">
+        <div className="hidden sm:flex mt-5 lg:mt-6 flex-wrap justify-center gap-6 text-[11px] text-muted-foreground uppercase tracking-widest font-bold">
           <a className="hover:text-primary transition-colors" href="#">Privacy Policy</a>
           <a className="hover:text-primary transition-colors" href="#">Terms of Service</a>
           <a className="hover:text-primary transition-colors" href="#">Help Center</a>
