@@ -2,9 +2,45 @@ import { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-react';
 import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/app/route-paths';
 
-export default function SignUp() {
+type SignUpFormInput = {
+  fullName: string;
+  email: string;
+  password: string;
+};
+
+type SignUpProps = {
+  onSubmit?: (input: SignUpFormInput) => Promise<void> | void;
+};
+
+export default function SignUp({ onSubmit }: SignUpProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!onSubmit) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await onSubmit({ fullName, email, password });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create account right now.';
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1 justify-center items-center px-5 py-4 sm:py-5 lg:px-10 lg:py-8 xl:px-16 xl:py-10 bg-background text-foreground">
@@ -30,7 +66,13 @@ export default function SignUp() {
           <p className="text-muted-foreground mt-1 text-sm lg:text-base">Get started with your university credentials.</p>
         </div>
 
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {errorMessage ? (
+            <p className="rounded-xl border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              {errorMessage}
+            </p>
+          ) : null}
+
           {/* Full Name */}
           <div className="flex flex-col gap-1.5">
             <label className="text-foreground/90 text-sm font-semibold ml-1">Full Name</label>
@@ -40,6 +82,9 @@ export default function SignUp() {
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
                 placeholder="John Doe" 
                 type="text" 
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
               />
             </div>
           </div>
@@ -53,6 +98,9 @@ export default function SignUp() {
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
                 placeholder="name@university.edu" 
                 type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
           </div>
@@ -66,6 +114,9 @@ export default function SignUp() {
                 className="w-full pl-12 pr-12 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
                 placeholder="••••••••" 
                 type={showPassword ? "text" : "password"} 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
               <button 
                 onClick={() => setShowPassword(!showPassword)}
@@ -78,8 +129,8 @@ export default function SignUp() {
           </div>
 
           <div className="pt-1.5">
-            <button className="w-full bg-black hover:bg-black/90 dark:bg-primary dark:hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-black/25 dark:shadow-primary/25 flex items-center justify-center gap-2 group">
-              <span>Sign Up</span>
+            <button className="w-full bg-black hover:bg-black/90 dark:bg-primary dark:hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-black/25 dark:shadow-primary/25 flex items-center justify-center gap-2 group disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting} type="submit">
+              <span>{isSubmitting ? 'Creating account...' : 'Sign Up'}</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -105,7 +156,7 @@ export default function SignUp() {
         <div className="mt-4 lg:mt-6 pt-4 lg:pt-5 border-t border-border text-center">
           <p className="text-muted-foreground text-sm">
             Already have an account? 
-            <a className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-bold hover:underline" href="#">Sign in</a>
+            <Link className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-bold hover:underline" to={ROUTES.LOGIN}>Sign in</Link>
           </p>
         </div>
 

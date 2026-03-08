@@ -2,10 +2,39 @@ import { useState } from 'react';
 import { GraduationCap, Mail, Lock, LogIn } from 'lucide-react';
 import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/app/route-paths';
+import { useAuth } from '@/auth/useAuth';
+import { roleHomePath } from '@/auth/utils';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
+
+  const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const user = await signIn({ email, password });
+      navigate(fromPath ?? roleHomePath(user.role), { replace: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to sign in right now.";
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex w-full min-h-dvh lg:min-h-screen bg-background text-foreground font-lexend">
@@ -80,7 +109,13 @@ export default function LoginPage() {
             <p className="text-sm lg:text-base text-muted-foreground">Enter your university credentials to continue.</p>
           </div>
 
-          <form className="space-y-4 lg:space-y-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-4 lg:space-y-6" onSubmit={handleSubmit}>
+            {errorMessage ? (
+              <p className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                {errorMessage}
+              </p>
+            ) : null}
+
             <div>
               <label className="block text-sm font-medium text-foreground/90 mb-2" htmlFor="email">
                 University Email
@@ -139,8 +174,9 @@ export default function LoginPage() {
             <button
               className="w-full py-2.5 lg:py-3 dark:bg-blue-600 bg-black hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 text-white font-semibold rounded-lg shadow-lg shadow-blue-900/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
               type="submit"
+              disabled={isSubmitting}
             >
-              <span>Sign In</span>
+              <span>{isSubmitting ? 'Signing In...' : 'Sign In'}</span>
               <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
@@ -168,9 +204,12 @@ export default function LoginPage() {
           <div className="mt-5 lg:mt-10 text-center">
             <p className="text-muted-foreground">
               Don't have an account?
-              <a className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-semibold decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 rounded-sm" href="#">
+              <Link
+                className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-semibold decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 rounded-sm"
+                to={ROUTES.REGISTER}
+              >
                 Sign up
-              </a>
+              </Link>
             </p>
           </div>
 
