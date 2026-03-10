@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { AuthService } from "./auth.service.js";
 import { UserRepository } from "../user/user.repository.js";
 import type { CreateUserInput, CreateUserInputLogin, User } from "@unilearn/shared-types";
+import type { LoginBody, RegisterBody } from "../../schemas/index.js";
 
 const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
@@ -20,14 +21,13 @@ let userProfile;
 
 export class AuthController {
     async registerUser(req: Request, res: Response) {
-        const userData: CreateUserInput = req.body;
-        // TODO: add validation logic before passing
+        const userData = req.body as RegisterBody;
         const { user, token } = await authService.registerUser(userData);
         
         // Need better implementation
         if (user.role == 'STUDENT') {
             userProfile = await authService.createStudentProfile(profileData, user.email);
-        } else if (user.role == 'INSTRUCTOR') {
+        } else if (user.role == 'INSTRUCTOR') { // we might not needs this coz only admins are allowed to create instructor acc
             userProfile = await authService.createInstructorProfile(instructorData, user.email);
         } else {
             throw new Error("Failed to create profile");
@@ -37,8 +37,7 @@ export class AuthController {
     };
 
     async loginUser(req: Request, res: Response) {
-        // use parse method to validated after initializing zod
-        const user: CreateUserInputLogin = req.body;
+        const user = req.body as LoginBody;
 
         // user type has to correct to be in sync with returned data
         const userData = (await authService.loginUser(user));

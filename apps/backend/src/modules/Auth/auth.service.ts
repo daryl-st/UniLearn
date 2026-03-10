@@ -11,17 +11,17 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN as string;
 export class AuthService {
     constructor(private userRepository: UserRepository) {}
 
-    async registerUser(data: {email: string, firstName: string, lastName: string, passwordHash: string, role: Role}) {
+    async registerUser(data: {email: string, firstName: string, lastName: string, password: string}) {
         const existingUser = await this.userRepository.findUserById(data.email);
         if (existingUser) throw new Error("Email already registered!");
 
-        const hashedPass = await bcrypt.hash(data.passwordHash, 10);
+        const hashedPass = await bcrypt.hash(data.password, 10);
 
         const user = await this.userRepository.create({
             email: data.email,
             firstName: data.firstName,
             lastName: data.lastName,
-            role: data.role,
+            role: "STUDENT", // needs to be changed
             passwordHash: hashedPass
         });
 
@@ -34,11 +34,11 @@ export class AuthService {
         return { user, token };
     };
 
-    async loginUser(data: { email: string, passwordHash: string }) {
+    async loginUser(data: { email: string, password: string }) {
         const existingUser = await this.userRepository.findUserById(data.email);
         if (!existingUser) throw new Error("User not found!");
 
-        const isPassValid = await bcrypt.compare(data.passwordHash, existingUser.password);
+        const isPassValid = await bcrypt.compare(data.password, existingUser.password);
         if (!isPassValid) throw new Error("Invalid email or password!");
 
         const accessToken = generateAccessToken(existingUser.id, existingUser.role);

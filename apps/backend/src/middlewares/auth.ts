@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction, RequestHandler } from "express";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const ACCESS_TTL = '15m';
@@ -19,10 +19,14 @@ export const auth = (req: AuthRequest, res: Response, next: NextFunction) => {
 
     if (!token) return res.status(401).json({ message: "Missing Authorization Header!"});
 
-    jwt.verify(token, JWT_SECRET, (err, user) => {
+    jwt.verify(token, JWT_SECRET, (err: any, user: any) => { // Needs fix
         if (err) return res.status(403).json({ message: "Invalid token." });
 
         req.user = user; // if succesful, attach it to the user
         next();
     })
 }
+
+// export const requireAuth: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+//     if (!req)
+// }

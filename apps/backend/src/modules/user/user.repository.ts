@@ -10,7 +10,7 @@ export class UserRepository {
     }
 
     async create(data: {email: string, firstName: string, lastName: string, passwordHash: string, role: Role}): Promise<User> {
-        const user = await prisma.user.create({ data }); // somehow we got the types check from shared-type
+        const user = await prisma.user.create({ data }); // we need to trim and toLowerCase when storing data
         return new User(user.id, user.email, user.passwordHash, user.firstName, user.lastName, user.role);
     }
 
