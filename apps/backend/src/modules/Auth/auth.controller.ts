@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { AuthService } from "./auth.service.js";
 import { UserRepository } from "../user/user.repository.js";
-import type { CreateUserInput, CreateUserInputLogin, User } from "@unilearn/shared-types";
 import type { LoginBody, RegisterBody } from "../../schemas/index.js";
 
 const userRepository = new UserRepository();
