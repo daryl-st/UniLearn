@@ -14,7 +14,7 @@ export class User {
     // updateName 
 }
 
-export class StudentProfile {
+export class StudentProfile { // this should extend User class ??
     constructor(
         public id: string,
         public studentId: string,
