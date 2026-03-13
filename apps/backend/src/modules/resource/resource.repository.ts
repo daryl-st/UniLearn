@@ -3,9 +3,11 @@ import prisma from "../../config/db.js";
 import { Course, Resource } from "./resource.entity.js";
 
 export class ResourceRepository {
-    async findAll(): Promise<Resource[]> {
-        const resources = await prisma.resource.findMany();
-        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl));
+    async findAll(courseId: string): Promise<Resource[]> {
+        const resources = await prisma.resource.findMany({
+            where: { courseId: courseId }
+        });
+        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl, u.instructorId));
     }
 
     async findOne(data: {id: string}): Promise<Resource | null> {
@@ -13,19 +15,34 @@ export class ResourceRepository {
             where: { id: data.id}
         });
         if (!resource) return null; // Not found
-        return new Resource(resource?.id, resource?.title, resource?.type, resource?.fileUrl);
+        return new Resource(resource?.id, resource?.title, resource?.type, resource?.fileUrl, resource?.instructorId);
     }
 
-    async create(data: {title: string, type: FileType, fileUrl: string}) : Promise<Resource> {
-        const resource = await prisma.resource.create({ data }); // i might need summaries and quizzes here ??
+    async findByCourseId(data: {id: string}): Promise<Resource[] | null> {
+        const resources = await prisma.resource.findMany({
+            where: { courseId: data.id }
+        });
+        if (!resources) return null; // no resources found
+        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl));
+    }
+
+    async create(data: {title: string, type: FileType, fileUrl: string, instructorId: string, courseId: string}) : Promise<Resource> {
+        // versioning and duplication should be handled
+        const resource = await prisma.resource.create({ data });
         return new Resource(resource.id, resource.title, resource.type, resource.fileUrl);
-    } 
+    }
+
+    async delete(data: { id: string }): Promise<Resource | null > { // soft delete will be implemented
+        const resource = await prisma.resource.delete({ where: {id: data.id}});
+        if (!resource) return null;
+        return resource;
+    }
 }
 
 export class CourseRepository {
     async findAll(): Promise<Course[]> {
-        const courses = await prisma.course.findMany();
-        return courses.map(u => new Course(u.id, u.name, u.code, u.acadamicYear)); // we need to have serious descussion about resources
+        const courses = await prisma.course.findMany(); // we might not need to fetch id for this request
+        return courses.map(u => new Course(u.id, u.name, u.code, u.acadamicYear )); 
     };
 
     async findOne(data: {id: string}): Promise<Course | null> {
@@ -34,8 +51,20 @@ export class CourseRepository {
         return new Course(course.id, course.name, course.code, course.acadamicYear);
     }
 
-    async create(data: {name: string, code: string, acadamicYear: Number}): Promise<Course> {
+    async findOneByCode(code: string): Promise<Course | null> { // we can just make this boolean if the use-case allows it
+        const course = await prisma.course.findUnique({ where: {code: code }});
+        if (!course) return null;
+        return new Course(course.id, course.name, course.code, course.acadamicYear);
+    }
+
+    async create(data: {name: string, code: string, acadamicYear: number, instructorId: string, departmentId: string}): Promise<Course> {
         const course = await prisma.course.create({ data });
         return new Course(course.id, course.name, course.code, course.acadamicYear);
+    }
+
+    async delete(data: {id: string}): Promise<Course | null> {
+        const course = await prisma.course.delete({ where: {id: data.id }});
+        if (!course) return null;
+        return course;
     }
 }

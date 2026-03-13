@@ -7,6 +7,7 @@ export class Resource {
         public title: string,
         public type: FileType,
         public fileUrl: String,
+        public instructorId?: string
         // summaries, quizzes and other things will be included 
     ) {}
 }
@@ -16,8 +17,8 @@ export class Course {
         public id: string,
         public name: string,
         public code: string,
-        public acadamicYear: Number,
-        public resources?: Resource[], // might need to make it private
+        public acadamicYear: Number, 
+        public resources?: Resource[], // doesn't neccessarily need to have one always.
     ) {}
 }
 

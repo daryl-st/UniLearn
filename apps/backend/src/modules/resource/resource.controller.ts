@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { CourseService, ResourceService } from "./resource.service.js";
+import type { createCourseBody, deleteResourceBody, uploadResourceBody } from "../../schemas/index.js";
 
 const resourceRepo = new ResourceRepository();
 const resourceService = new ResourceService(resourceRepo);
@@ -9,11 +10,15 @@ const courseService = new CourseService(courseRepo);
 
 export class ResourceController {
     async getResources(req: Request, res: Response) {
-        const resources = await resourceService.getResources();
+        // the basic idea is this func will return all resources specific to a course
+        const resources = await resourceService.getResources("ca010cdb-9a41-4512-8300-bb5f60fc25c0"); 
         res.status(200).json(resources);
     };
 
     async getCourses(req: Request, res: Response) {
+        // returns all courses name, code, all other important needs
+        // course resorces should not be returned at this request and a course might have 0 resources
+        // this will be requested when the user is presented with a list of courses.
         const courses = await courseService.getCourses();
         res.status(200).json(courses);
     }
@@ -31,14 +36,39 @@ export class ResourceController {
     }
 
     async uploadResource(req: Request, res: Response) {
-        const resourceData = req.body;
+        // will be prompted to available courses it teaches to upload onto them only
+        const resourceDetails = req.body as uploadResourceBody;
+
+        // instructor id and course id should come from req.body but for now let's hardcode it
+        const resourceData = {
+            ...resourceDetails,
+            instructorId: "cc33d76b-9344-48ee-8954-ece7114a6f32",
+            courseId: "ca010cdb-9a41-4512-8300-bb5f60fc25c0",
+        }
         const resource = await resourceService.uploadResource(resourceData);
         res.status(201).json(resource);
     }
 
     async createCourse(req: Request, res: Response) {
-        const courseData = req.body;
+        // we need to assign the instructor to course and department (fixed for now - CS) 
+        const courseDetails = req.body as createCourseBody;
+
+        // we might create a selection thing to select and assign the instructor and also the department
+        // then will be included in the req.body
+        const courseData = {
+            ...courseDetails,
+            instructorId: "cc33d76b-9344-48ee-8954-ece7114a6f32", // id for instructor
+            departmentId: "ff4d9866-61fa-48a1-bdbf-1883eda940f3", // id for CS, remove this later
+        }
         const course = await courseService.createCourse(courseData);
         res.status(201).json(course);
+    }
+
+    async deleteResource(req: Request, res: Response) {
+        // const { resourceId, instructorId } = req.body; // this should be the correct implementation, but using params
+        const resourceData = req.body as deleteResourceBody;
+        const instructorId = "cc33d76b-9344-48ee-8954-ece7114a6f32";
+        const resource = await resourceService.deleteResource(resourceData, instructorId);
+        res.status(200).json(resource);
     }
 }

@@ -3,10 +3,11 @@ export type FileType = "PDF" | "PPT" | "DOC"
 // for now this can be used to send data to the frontend and as response
 export interface Course {
     id: string;
-    Name: string;
-    Code: string;
+    name: string;
+    code: string;
     instructorId: string;
-    acadamicYear: Number;
+    acadamicYear: number;
+    departmentId: string;
 };
 
 export interface UpdateCourseInput {
