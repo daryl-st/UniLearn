@@ -1,20 +1,20 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { ROUTES } from "@/app/route-paths";
-import { PublicOnly } from "@/auth/guards/PublicOnly";
-import { RequireAuth } from "@/auth/guards/RequireAuth";
-import { RequireRole } from "@/auth/guards/RequireRole";
-import LoginPage from "@/auth/pages/LoginPage";
-import RegisterPage from "@/auth/pages/RegisterPage";
-import AdminDashboardPage from "@/dashboards/admin/AdminDashboardPage";
-import AdminLayout from "@/dashboards/admin/AdminLayout";
-import CreateTeacherPage from "@/dashboards/admin/CreateTeacherPage";
-import StudentDashboardPage from "@/dashboards/student/StudentDashboardPage";
-import StudentLayout from "@/dashboards/student/StudentLayout";
-import TeacherDashboardPage from "@/dashboards/teacher/TeacherDashboardPage";
-import TeacherLayout from "@/dashboards/teacher/TeacherLayout";
-import HeroPage from "@/marketing/pages/HeroPage";
-import NotFoundPage from "@/shared/pages/NotFoundPage";
-import UnauthorizedPage from "@/shared/pages/UnauthorizedPage";
+import { ROUTES } from "@/lib/route-paths";
+import { PublicOnly } from "@/components/guards/PublicOnly";
+import { RequireAuth } from "@/components/guards/RequireAuth";
+import { RequireRole } from "@/components/guards/RequireRole";
+import LoginPage from "@/pages/auth/LoginPage";
+import RegisterPage from "@/pages/auth/RegisterPage";
+import AdminDashboardPage from "@/pages/dashboards/admin/AdminDashboardPage";
+import AdminLayout from "@/pages/dashboards/admin/AdminLayout";
+import CreateTeacherPage from "@/pages/dashboards/admin/CreateTeacherPage";
+import StudentDashboardPage from "@/pages/dashboards/student/StudentDashboardPage";
+import StudentLayout from "@/pages/dashboards/student/StudentLayout";
+import TeacherDashboardPage from "@/pages/dashboards/teacher/TeacherDashboardPage";
+import TeacherLayout from "@/pages/dashboards/teacher/TeacherLayout";
+import HeroPage from "@/pages/marketing/HeroPage";
+import NotFoundPage from "@/pages/shared/NotFoundPage";
+import UnauthorizedPage from "@/pages/shared/UnauthorizedPage";
 
 export default function AppRouter() {
   return (

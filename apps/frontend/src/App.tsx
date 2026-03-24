@@ -1,6 +1,6 @@
 import { BrowserRouter } from "react-router-dom";
-import AppRouter from "@/app/router";
-import { AuthProvider } from "@/auth/AuthProvider";
+import AppRouter from "@/lib/router";
+import { AuthProvider } from "@/contextes/auth";
 import ThemeController from "@/components/ThemeController";
 
 const App = () => {

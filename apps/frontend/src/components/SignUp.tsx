@@ -3,7 +3,7 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-
 import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ROUTES } from '@/app/route-paths';
+import { ROUTES } from '@/lib/route-paths';
 
 type SignUpFormInput = {
   fullName: string;
@@ -53,8 +53,8 @@ export default function SignUp({ onSubmit }: SignUpProps) {
         {/* Mobile Header */}
         <div className="lg:hidden mb-4">
           <div className="flex items-center gap-3 mb-2">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-black dark:bg-primary shadow-lg shadow-primary/20">
-              <GraduationCap className="text-white w-6 h-6" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary shadow-lg shadow-primary/20">
+              <GraduationCap className="text-primary-foreground w-6 h-6" />
             </div>
             <h1 className="text-foreground text-2xl font-black tracking-tight">UniLearn</h1>
           </div>
@@ -129,7 +129,7 @@ export default function SignUp({ onSubmit }: SignUpProps) {
           </div>
 
           <div className="pt-1.5">
-            <button className="w-full bg-black hover:bg-black/90 dark:bg-primary dark:hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-black/25 dark:shadow-primary/25 flex items-center justify-center gap-2 group disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting} type="submit">
+            <button className="w-full bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 rounded-xl transition-all shadow-lg shadow-black/15 flex items-center justify-center gap-2 group disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting} type="submit">
               <span>{isSubmitting ? 'Creating account...' : 'Sign Up'}</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>

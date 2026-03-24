@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "@/auth/useAuth";
-import { roleHomePath } from "@/auth/utils";
+import { useAuth } from "@/contextes/useAuth";
+import { roleHomePath } from "@/utils/auth";
 
 export function PublicOnly() {
   const { user } = useAuth();
