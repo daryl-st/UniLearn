@@ -1,5 +1,5 @@
-import { ROUTES } from "@/app/route-paths";
-import type { Role } from "@/auth/types";
+import { ROUTES } from "@/lib/route-paths";
+import type { Role } from "@/types/auth";
 
 export const roleHomePath = (role: Role): string => {
   switch (role) {

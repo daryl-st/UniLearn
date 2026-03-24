@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { ROUTES } from "@/app/route-paths";
-import { useAuth } from "@/auth/useAuth";
+import { ROUTES } from "@/lib/route-paths";
+import { useAuth } from "@/contextes/useAuth";
 
 type DashboardShellProps = {
   title: string;

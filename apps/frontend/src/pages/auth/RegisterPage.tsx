@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import RegisterHero from "@/components/RegisterHero";
 import SignUp from "@/components/SignUp";
-import { roleHomePath } from "@/auth/utils";
-import { useAuth } from "@/auth/useAuth";
+import { roleHomePath } from "@/utils/auth";
+import { useAuth } from "@/contextes/useAuth";
 
 export default function RegisterPage() {
   const navigate = useNavigate();

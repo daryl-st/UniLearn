@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ROUTES } from "@/app/route-paths";
+import { ROUTES } from "@/lib/route-paths";
 
 export default function NotFoundPage() {
   return (

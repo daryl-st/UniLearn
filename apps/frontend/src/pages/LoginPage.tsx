@@ -3,9 +3,9 @@ import { GraduationCap, Mail, Lock, LogIn } from 'lucide-react';
 import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/app/route-paths';
-import { useAuth } from '@/auth/useAuth';
-import { roleHomePath } from '@/auth/utils';
+import { ROUTES } from '@/lib/route-paths';
+import { useAuth } from '@/contextes/useAuth';
+import { roleHomePath } from '@/utils/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -39,24 +39,24 @@ export default function LoginPage() {
   return (
     <div className="flex w-full min-h-dvh lg:min-h-screen bg-background text-foreground font-lexend">
       {/* Left Side: Hero Image & Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
-        <img
-          className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJTAWgxrrY_-p8LNIR2kP8fJg9EvVub81_qt8SphweHG16i3K_rUTe5wQ3FirPpP7sPj6NRL2m7x6OMVHfCJevH3TMS86QltDtwIicE13JTmffcH0jVSvK7tlQTuVTBwV7Hp0jTckWxMdAKhdy6Q03vh4naU_IhfRGhR4p_T1msbRBf9oOHfPNGfmK3zo_3cvNLBVo_Dc1XwgXgk4N5aBAzuI_u9qFquQa9qowQHTyrEGr9HofJNH4JgV57TYixtAP_MdfDs9Tu2P5"
-          alt="Modern university library"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-background/95 via-background/80 to-transparent dark:from-black/90 dark:via-black/70" />
+      <div
+        className="relative hidden overflow-hidden bg-background bg-cover bg-center lg:flex lg:w-1/2 items-center justify-center"
+        style={{
+          backgroundImage:
+            "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBJTAWgxrrY_-p8LNIR2kP8fJg9EvVub81_qt8SphweHG16i3K_rUTe5wQ3FirPpP7sPj6NRL2m7x6OMVHfCJevH3TMS86QltDtwIicE13JTmffcH0jVSvK7tlQTuVTBwV7Hp0jTckWxMdAKhdy6Q03vh4naU_IhfRGhR4p_T1msbRBf9oOHfPNGfmK3zo_3cvNLBVo_Dc1XwgXgk4N5aBAzuI_u9qFquQa9qowQHTyrEGr9HofJNH4JgV57TYixtAP_MdfDs9Tu2P5')",
+        }}
+      >
+        <div className="absolute inset-0 bg-linear-to-t from-background/95 via-background/80 to-transparent backdrop-blur-sm" />
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="relative z-10 px-12 xl:px-24 dark:text-white"
+          className="relative z-10 px-12 xl:px-24"
         >
           <div className="flex items-center gap-3 mb-8">
-            <div className="bg-black dark:bg-primary p-2 rounded-lg">
-              <GraduationCap className="text-white w-6 h-6" />
+            <div className="bg-primary p-2 rounded-lg">
+              <GraduationCap className="text-primary-foreground w-6 h-6" />
             </div>
             <span className="text-2xl font-bold tracking-tight">UniLearn</span>
           </div>
@@ -65,7 +65,7 @@ export default function LoginPage() {
             Welcome back to <br /> UniLearn
           </h1>
           
-          <p className="text-xl text-foreground/90 dark:text-white/90 max-w-md font-light leading-relaxed">
+          <p className="text-xl text-foreground/90 max-w-md font-light leading-relaxed">
             Your AI-powered study companion. Access course materials, generate smart summaries, and track your performance in one place.
           </p>
           
@@ -81,7 +81,7 @@ export default function LoginPage() {
                 />
               ))}
             </div>
-            <span className="text-sm font-medium text-muted-foreground dark:text-white/80">
+            <span className="text-sm font-medium text-muted-foreground">
               Joined by 5,000+ students this semester
             </span>
           </div>
@@ -98,8 +98,8 @@ export default function LoginPage() {
         >
           {/* Mobile Branding */}
           <div className="lg:hidden flex items-center justify-left gap-3 mb-5">
-            <div className="bg-black dark:bg-primary p-2 rounded-lg">
-              <GraduationCap className="text-white w-6 h-6" />
+            <div className="bg-primary p-2 rounded-lg">
+              <GraduationCap className="text-primary-foreground w-6 h-6" />
             </div>
             <span className="text-2xl font-bold">UniLearn</span>
           </div>
@@ -172,7 +172,7 @@ export default function LoginPage() {
             </div>
 
             <button
-              className="w-full py-2.5 lg:py-3 dark:bg-blue-600 bg-black hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 text-white font-semibold rounded-lg shadow-lg shadow-blue-900/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+              className="w-full py-2.5 lg:py-3 bg-primary hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-primary-foreground font-semibold rounded-lg shadow-lg shadow-black/15 transition-all flex items-center justify-center gap-2 group cursor-pointer"
               type="submit"
               disabled={isSubmitting}
             >

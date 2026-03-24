@@ -10,29 +10,29 @@ export default function RegisterHero() {
 
   return (
     <div 
-      className="relative hidden lg:flex lg:w-1/2 flex-col justify-center px-12 xl:px-24 bg-cover bg-center bg-white dark:bg-black"
+      className="relative hidden lg:flex lg:w-1/2 flex-col justify-center px-12 xl:px-24 bg-cover bg-center bg-background"
       style={{ 
         backgroundImage: "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1920&auto=format&fit=crop')" 
       }}
     >
-      <div className="absolute inset-0 bg-white/78 dark:bg-black/93 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-linear-to-t from-background/95 via-background/80 to-transparent backdrop-blur-sm"></div>
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="relative z-10 dark:text-white"
+        className="relative z-10"
       >
-        <div className="mb-8 inline-flex items-center justify-center w-14 h-14 rounded-xl bg-black dark:bg-primary shadow-lg shadow-primary/30">
-          <GraduationCap className="text-white w-8 h-8" />
+        <div className="mb-8 inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary shadow-lg shadow-primary/30">
+          <GraduationCap className="text-primary-foreground w-8 h-8" />
         </div>
         
-        <h1 className="text-foreground dark:text-white text-4xl xl:text-6xl font-black leading-tight tracking-tight mb-6">
+        <h1 className="text-foreground text-2xl xl:text-5xl font-black leading-tight tracking-tight mb-6">
           Welcome to <br />
           <span className="text-primary">UniLearn</span>
         </h1>
         
-        <p className="text-muted-foreground dark:text-slate-200 text-lg xl:text-xl font-light max-w-lg leading-relaxed opacity-90">
+        <p className="text-muted-foreground text-lg xl:text-xl font-light max-w-lg leading-relaxed opacity-90">
           Join thousands of students across the globe. Access exclusive resources, 
           collaborate on projects, and accelerate your academic journey.
         </p>
@@ -44,15 +44,15 @@ export default function RegisterHero() {
                 key={i}
                 src={src} 
                 alt="Student avatar" 
-                className="w-12 h-12 rounded-full border-2 border-black/30 dark:border-background-dark object-cover"
+                className="w-10 h-10 rounded-full border-2 border-border object-cover"
                 referrerPolicy="no-referrer"
               />
             ))}
-            <div className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-black/30 dark:border-background-dark bg-primary text-[10px] font-bold text-white uppercase tracking-tighter">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-border bg-primary text-[10px] font-bold text-primary-foreground uppercase tracking-tighter">
               +2k
             </div>
           </div>
-          <span className="text-muted-foreground dark:text-slate-300 text-sm font-medium tracking-wide">
+          <span className="text-muted-foreground text-sm font-medium tracking-wide">
             Trusted by students worldwide
           </span>
         </div>
