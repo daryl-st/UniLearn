@@ -1,5 +1,5 @@
 import { BrowserRouter } from "react-router-dom";
-import AppRouter from "@/lib/router";
+import { AppRouter } from "@/lib/router";
 // import { AuthProvider } from "@/contextes/auth"; // migrate to zustand
 import { useAuthStore } from "@/stores/authStore";
 import ThemeController from "@/components/ThemeController";

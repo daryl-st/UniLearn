@@ -1,55 +1,139 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { ROUTES } from "@/lib/route-paths";
-import { PublicOnly } from "@/components/guards/PublicOnly";
-import { RequireAuth } from "@/components/guards/RequireAuth";
-import { RequireRole } from "@/components/guards/RequireRole";
-import LoginPage from "@/pages/auth/LoginPage";
-import RegisterPage from "@/pages/auth/RegisterPage";
-import AdminDashboardPage from "@/pages/dashboards/admin/AdminDashboardPage";
-import AdminLayout from "@/pages/dashboards/admin/AdminLayout";
-import CreateTeacherPage from "@/pages/dashboards/admin/CreateTeacherPage";
-import StudentDashboardPage from "@/pages/dashboards/student/StudentDashboardPage";
-import StudentLayout from "@/pages/dashboards/student/StudentLayout";
-import TeacherDashboardPage from "@/pages/dashboards/teacher/TeacherDashboardPage";
-import TeacherLayout from "@/pages/dashboards/teacher/TeacherLayout";
-import HeroPage from "@/pages/marketing/HeroPage";
-import NotFoundPage from "@/pages/shared/NotFoundPage";
-import UnauthorizedPage from "@/pages/shared/UnauthorizedPage";
+import { Navigate, Route } from "react-router-dom";
+// import { ROUTES } from "@/lib/route-paths";
+// import { PublicOnly } from "@/components/guards/PublicOnly";
+// import { RequireAuth } from "@/components/guards/RequireAuth";
+// import { RequireRole } from "@/components/guards/RequireRole";
+// import LoginPage from "@/pages/auth/LoginPage";
+// import RegisterPage from "@/pages/auth/RegisterPage";
+// import AdminDashboardPage from "@/pages/dashboards/admin/AdminDashboardPage";
+// import AdminLayout from "@/pages/dashboards/admin/AdminLayout";
+// import CreateTeacherPage from "@/pages/dashboards/admin/CreateTeacherPage";
+// import StudentDashboardPage from "@/pages/dashboards/student/StudentDashboardPage";
+// import StudentLayout from "@/pages/dashboards/student/StudentLayout";
+// import TeacherDashboardPage from "@/pages/dashboards/teacher/TeacherDashboardPage";
+// import TeacherLayout from "@/pages/dashboards/teacher/TeacherLayout";
+// import HeroPage from "@/pages/marketing/HeroPage";
+// import NotFoundPage from "@/pages/shared/NotFoundPage";
+// import UnauthorizedPage from "@/pages/shared/UnauthorizedPage";
 
-export default function AppRouter() {
-  return (
-    <Routes>
-      <Route path={ROUTES.HOME} element={<HeroPage />} />
+import { lazy, Suspense } from "react";
+import { useAuthStore } from "@/stores/authStore";
 
-      <Route element={<PublicOnly />}>
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-      </Route>
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/Register'));
+const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
+const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/teacher/TeacherDashboardPage'));
+const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDashboardPage'));
 
-      <Route element={<RequireAuth />}>
-        <Route element={<RequireRole allowed={["STUDENT"]} />}>
-          <Route path={ROUTES.STUDENT_DASHBOARD} element={<StudentLayout />}>
-            <Route index element={<StudentDashboardPage />} />
-          </Route>
-        </Route>
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
 
-        <Route element={<RequireRole allowed={["TEACHER"]} />}>
-          <Route path={ROUTES.TEACHER_DASHBOARD} element={<TeacherLayout />}>
-            <Route index element={<TeacherDashboardPage />} />
-          </Route>
-        </Route>
+  // TODO: refactor
+  if (isLoading) {
+    return <div>Loading...</div> // loading component
+  }
 
-        <Route element={<RequireRole allowed={["ADMIN"]} />}>
-          <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminLayout />}>
-            <Route index element={<AdminDashboardPage />} />
-            <Route path="teachers/new" element={<CreateTeacherPage />} />
-          </Route>
-        </Route>
-      </Route>
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
 
-      <Route path={ROUTES.UNAUTHORIZED} element={<UnauthorizedPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-      <Route path="/dashboard" element={<Navigate replace to={ROUTES.HOME} />} />
-    </Routes>
-  );
+  return children;
 }
+
+// Public Route Components
+// redirect to dashboard of already logged in
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (user) return <Navigate to="/dashboard" replace />;
+
+  return children;
+}
+
+export function AppRouter() {
+  // TODO: needs refactoring
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Route>
+        {/* Public Routes */}
+        <Route path="/login" element={
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        } />
+        <Route path="/register" element={
+          <PublicRoute>
+            <RegisterPage />
+          </PublicRoute>
+        } />
+
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <StudnetDashboardPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <InstructorDashboardPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        } />
+
+        {/* Redirect root to dashboard or login  */}
+        <Route path="/" element={
+          <Navigate to="/dashboard" replace />
+        } />
+
+        {/* 404 - Not Found  */}
+        <Route path="*" element={<div>404 - Page Not Found</div>} />
+      </Route>
+    </Suspense>
+  )
+}
+
+// export default function AppRouter() {
+//   return (
+//     <Routes>
+//       <Route path={ROUTES.HOME} element={<HeroPage />} />
+
+//       <Route element={<PublicOnly />}>
+//         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+//         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+//       </Route>
+
+//       <Route element={<RequireAuth />}>
+//         <Route element={<RequireRole allowed={["STUDENT"]} />}>
+//           <Route path={ROUTES.STUDENT_DASHBOARD} element={<StudentLayout />}>
+//             <Route index element={<StudentDashboardPage />} />
+//           </Route>
+//         </Route>
+
+//         <Route element={<RequireRole allowed={["TEACHER"]} />}>
+//           <Route path={ROUTES.TEACHER_DASHBOARD} element={<TeacherLayout />}>
+//             <Route index element={<TeacherDashboardPage />} />
+//           </Route>
+//         </Route>
+
+//         <Route element={<RequireRole allowed={["ADMIN"]} />}>
+//           <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminLayout />}>
+//             <Route index element={<AdminDashboardPage />} />
+//             <Route path="teachers/new" element={<CreateTeacherPage />} />
+//           </Route>
+//         </Route>
+//       </Route>
+
+//       <Route path={ROUTES.UNAUTHORIZED} element={<UnauthorizedPage />} />
+//       <Route path="*" element={<NotFoundPage />} />
+//       <Route path="/dashboard" element={<Navigate replace to={ROUTES.HOME} />} />
+//     </Routes>
+//   );
+// }

@@ -1,19 +1,22 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/route-paths";
-import { useAuth } from "@/contextes/useAuth";
+// import { useAuth } from "@/contextes/useAuth";
+import { useAuthStore } from "@/stores/authStore";
 
 type DashboardShellProps = {
   title: string;
 };
 
 export default function DashboardShell({ title }: DashboardShellProps) {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
 
-  const handleLogout = () => {
-    signOut();
-    navigate(ROUTES.LOGIN);
-  };
+  // const { user, signOut } = useAuth();
+  // const navigate = useNavigate();
+
+  // const handleLogout = () => {
+  //   signOut();
+  //   navigate(ROUTES.LOGIN);
+  // };
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -24,13 +27,13 @@ export default function DashboardShell({ title }: DashboardShellProps) {
             <h1 className="text-xl font-bold">{title}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:inline">{user?.email}</span>
+            <span className="hidden text-sm text-muted-foreground sm:inline">Welcome, {user?.name}</span>
             <Link className="rounded-md border border-border px-3 py-1.5 text-sm" to={ROUTES.HOME}>
               Home
             </Link>
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={logout}
               className="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground"
             >
               Logout
