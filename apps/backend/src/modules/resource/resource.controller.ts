@@ -47,6 +47,11 @@ export class ResourceController {
         }
         const resource = await resourceService.uploadResource(resourceData);
         res.status(201).json(resource);
+
+        // should update resource be separate function or should this function handle this ??
+        // because updating is essentially same resource with same meta-data, but with only version change.
+        // so i should integrate version number in the db so that when updating we only change version number and the url
+        // if this is the case how do find the older version, so we should add version but also implement new function 
     }
 
     async createCourse(req: Request, res: Response) {

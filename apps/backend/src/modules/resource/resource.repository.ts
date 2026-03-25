@@ -28,6 +28,7 @@ export class ResourceRepository {
 
     async create(data: {title: string, type: FileType, fileUrl: string, instructorId: string, courseId: string}) : Promise<Resource> {
         // versioning and duplication should be handled
+        // maybe the fileUrl should also be unique, so that it would be easier to locate and prevent duplicates.
         const resource = await prisma.resource.create({ data });
         return new Resource(resource.id, resource.title, resource.type, resource.fileUrl);
     }
@@ -62,6 +63,7 @@ export class CourseRepository {
         return new Course(course.id, course.name, course.code, course.acadamicYear);
     }
 
+    // can we delete a course without deleting it's resources? if so, is that valid?
     async delete(data: {id: string}): Promise<Course | null> {
         const course = await prisma.course.delete({ where: {id: data.id }});
         if (!course) return null;
