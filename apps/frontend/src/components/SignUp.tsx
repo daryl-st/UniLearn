@@ -1,46 +1,93 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-react';
 import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/lib/route-paths';
+import { useAuthStore } from '@/stores/authStore';
 
-type SignUpFormInput = {
-  fullName: string;
-  email: string;
-  password: string;
-};
+// type SignUpFormInput = {
+//   fullName: string;
+//   email: string;
+//   password: string;
+// };
 
-type SignUpProps = {
-  onSubmit?: (input: SignUpFormInput) => Promise<void> | void;
-};
+// type SignUpProps = {
+//   onSubmit?: (input: SignUpFormInput) => Promise<void> | void;
+// };
 
-export default function SignUp({ onSubmit }: SignUpProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+export default function SignUp() {
+  const navigate = useNavigate();
+  const { register, isLoading, error, clearError } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Local form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  }); // we might not need confirm password
+
+  const [validationError, setValidationError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // clear error when user starts typing
+    if (error) clearError();
+    if (validationError) setValidationError('');
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!onSubmit) {
+    // validation
+    if (formData.password !== formData.confirmPassword) {
+      setValidationError('Password do not match!');
       return;
     }
 
-    setIsSubmitting(true);
-    setErrorMessage(null);
+    if (formData.password.length < 4) { // TODO: edit later
+      setValidationError('Password must be at least 6 characters');
+      return;
+    } 
+
     try {
-      await onSubmit({ fullName, email, password });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to create account right now.';
-      setErrorMessage(message);
-    } finally {
-      setIsSubmitting(false);
+      const { confirmPassword, ...userData } = formData;
+      await register(userData);
+      navigate('/dashboard'); // role based
+    } catch (err) {
+      // Error already in store, no need to handle here
+      console.log('Registration failed');
     }
-  };
+  }
+
+
+  const [showPassword, setShowPassword] = useState(false);
+  // const [fullName, setFullName] = useState('');
+  // const [email, setEmail] = useState('');
+  // const [password, setPassword] = useState('');
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+
+  //   if (!onSubmit) {
+  //     return;
+  //   }
+
+  //   setIsSubmitting(true);
+  //   setErrorMessage(null);
+  //   try {
+  //     await onSubmit({ fullName, email, password });
+  //   } catch (error) {
+  //     const message = error instanceof Error ? error.message : 'Unable to create account right now.';
+  //     setErrorMessage(message);
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   return (
     <div className="flex flex-col flex-1 justify-center items-center px-5 py-4 sm:py-5 lg:px-10 lg:py-8 xl:px-16 xl:py-10 bg-background text-foreground">
@@ -66,10 +113,16 @@ export default function SignUp({ onSubmit }: SignUpProps) {
           <p className="text-muted-foreground mt-1 text-sm lg:text-base">Get started with your university credentials.</p>
         </div>
 
+        {(error || validationError) && (
+          <div className='bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded'>
+            {error || validationError}
+          </div>
+        )}
+
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {errorMessage ? (
+          {error ? (
             <p className="rounded-xl border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-              {errorMessage}
+              {error}
             </p>
           ) : null}
 
@@ -82,8 +135,8 @@ export default function SignUp({ onSubmit }: SignUpProps) {
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
                 placeholder="John Doe" 
                 type="text" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={formData.name}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -98,8 +151,8 @@ export default function SignUp({ onSubmit }: SignUpProps) {
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
                 placeholder="name@university.edu" 
                 type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -114,8 +167,8 @@ export default function SignUp({ onSubmit }: SignUpProps) {
                 className="w-full pl-12 pr-12 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
                 placeholder="••••••••" 
                 type={showPassword ? "text" : "password"} 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
                 required
               />
               <button 
@@ -129,8 +182,8 @@ export default function SignUp({ onSubmit }: SignUpProps) {
           </div>
 
           <div className="pt-1.5">
-            <button className="w-full bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 rounded-xl transition-all shadow-lg shadow-black/15 flex items-center justify-center gap-2 group disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting} type="submit">
-              <span>{isSubmitting ? 'Creating account...' : 'Sign Up'}</span>
+            <button className="w-full bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 rounded-xl transition-all shadow-lg shadow-black/15 flex items-center justify-center gap-2 group disabled:cursor-not-allowed disabled:opacity-60" disabled={isLoading} type="submit">
+              <span>{isLoading ? 'Creating account...' : 'Sign Up'}</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

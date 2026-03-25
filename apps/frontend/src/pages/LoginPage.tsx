@@ -1,40 +1,73 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { GraduationCap, Mail, Lock, LogIn } from 'lucide-react';
-import {SiGooglechrome, SiApple} from 'react-icons/si';
+import { SiGooglechrome, SiApple } from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/lib/route-paths';
 import { useAuth } from '@/contextes/useAuth';
 import { roleHomePath } from '@/utils/auth';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn } = useAuth();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
-  const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+  // Local form state
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // clear error when user starts typing
+    if (error) clearError();
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    setIsSubmitting(true);
-    setErrorMessage(null);
+    if (!formData.email || !formData.password) {
+      return; // add validation
+    }
 
     try {
-      const user = await signIn({ email, password });
-      navigate(fromPath ?? roleHomePath(user.role), { replace: true });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to sign in right now.";
-      setErrorMessage(message);
-    } finally {
-      setIsSubmitting(false);
+      await login(formData.email, formData.password);
+      navigate('/dashboard'); // role based
+    } catch (err) {
+      // Error already in store, no need to handle here
+      console.log('Login failed');
     }
-  };
+  }
+
+  // const [email, setEmail] = useState('');
+  // const [password, setPassword] = useState('');
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // // const navigate = useNavigate();
+  // const location = useLocation();
+  // const { signIn } = useAuth();
+
+  // const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+
+  //   setIsSubmitting(true);
+  //   setErrorMessage(null);
+
+  //   try {
+  //     const user = await signIn({ email, password });
+  //     navigate(fromPath ?? roleHomePath(user.role), { replace: true });
+  //   } catch (error) {
+  //     const message = error instanceof Error ? error.message : "Unable to sign in right now.";
+  //     setErrorMessage(message);
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   return (
     <div className="flex w-full min-h-dvh lg:min-h-screen bg-background text-foreground font-lexend">
@@ -110,9 +143,9 @@ export default function LoginPage() {
           </div>
 
           <form className="space-y-4 lg:space-y-6" onSubmit={handleSubmit}>
-            {errorMessage ? (
+            {error ? ( // not sure what error has exactly
               <p className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-                {errorMessage}
+                {error}
               </p>
             ) : null}
 
@@ -127,8 +160,8 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   placeholder="name@university.edu"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={handleChange}
                   required
                 />
               </div>
@@ -153,8 +186,8 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handleChange}
                   required
                 />
               </div>
@@ -174,9 +207,9 @@ export default function LoginPage() {
             <button
               className="w-full py-2.5 lg:py-3 bg-primary hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-primary-foreground font-semibold rounded-lg shadow-lg shadow-black/15 transition-all flex items-center justify-center gap-2 group cursor-pointer"
               type="submit"
-              disabled={isSubmitting}
+              disabled={isLoading}
             >
-              <span>{isSubmitting ? 'Signing In...' : 'Sign In'}</span>
+              <span>{isLoading ? 'Signing In...' : 'Sign In'}</span>
               <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
