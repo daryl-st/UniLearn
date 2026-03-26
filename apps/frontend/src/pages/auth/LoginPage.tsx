@@ -3,9 +3,8 @@ import { GraduationCap, Mail, Lock, LogIn } from 'lucide-react';
 import { SiGooglechrome, SiApple } from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/lib/route-paths';
 // import { useAuth } from '@/contextes/useAuth'; // we are using zustand
-import { roleHomePath } from '@/utils/auth';
+// import { roleHomePath } from '@/utils/auth';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginPage() {
@@ -37,7 +36,7 @@ export default function LoginPage() {
       navigate('/dashboard'); // role based
     } catch (err) {
       // Error already in store, no need to handle here
-      console.log('Login failed');
+      console.log('Login failed', err); // for debuggin purpose only
     }
   }
 
@@ -241,7 +240,7 @@ export default function LoginPage() {
               Don't have an account?
               <Link
                 className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-semibold decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 rounded-sm"
-                to={ROUTES.REGISTER}
+                to='/register'
               >
                 Sign up
               </Link>

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authAPI } from "@/api/auth";
-import { api, ApiError } from "@/api/client";
+import { api } from "@/api/client";
 
 interface User {
     id: string;
@@ -28,6 +28,8 @@ export const useAuthStore = create<AuthState>() (
             isLoading: true,
             error: null,
 
+            // TODO: proper error handling
+
             login: async (email: string, password: string) => {
                 set({ isLoading: true, error: null });
                 try {
@@ -49,7 +51,7 @@ export const useAuthStore = create<AuthState>() (
                     set({ user: response.user, isLoading: false });
                 } catch (err: any) {
                     set({
-                        error: err.message || 'Login Failed!',
+                        error: err.message || 'Registration Failed!',
                         isLoading: false,
                     });
                     throw err;

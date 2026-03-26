@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+// const API_BASE = '/api';
 
 export class ApiError extends Error {
     constructor(
@@ -7,7 +7,7 @@ export class ApiError extends Error {
         public data?: any,
     ) {
         super(message);
-        this.name = 'APIError'
+        this.name = 'APIError';
     }
 }
 
@@ -20,7 +20,7 @@ class APIClient {
     private baseUrl: string;
     private defaultHeaders: HeadersInit;
 
-    constructor(baseUrl: string = 'http://localhost:3000/api') {
+    constructor(baseUrl: string = 'http://localhost:4000/') { // TODO: make a constant
         this.baseUrl = baseUrl;
         this.defaultHeaders = {
             'Content-Type': 'application/json',

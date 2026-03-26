@@ -1,4 +1,4 @@
-import type { AuthSession, AuthUser, BackendRole, Role } from "@/types/auth";
+// import type { AuthSession, AuthUser, BackendRole, Role } from "@/types/auth";
 import { ApiError, api } from "./client";
 
 // TODO: needs to be imported from shared types
@@ -19,7 +19,7 @@ interface AuthResponse {
 export const authAPI = {
   login: async (credentials: LoginCredentails) => {
     try {
-      const response = await api.post<AuthResponse>('/auth/login', credentials);
+      const response = await api.post<AuthResponse>('auth/login', credentials); // make it auth/login and polish everyroute to have similar structure
 
       // Store token and set it in the API client
       if (response.token) {
@@ -40,7 +40,7 @@ export const authAPI = {
 
   register: async (userData: any) => {
     try {
-      const response = await api.post<AuthResponse>('/auth/register', userData);
+      const response = await api.post<AuthResponse>('auth/register', userData);
 
       if (response.token) {
         api.setAuthToken(response.token);

@@ -7,7 +7,7 @@ const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
 
 const profileData = {
-    studentId: "UGR/0905/15",
+    studentId: "UGR/0906/15",
     year: 2024,
 }
 

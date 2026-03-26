@@ -3,7 +3,6 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-
 import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/lib/route-paths';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function RegisterPage() {
@@ -44,11 +43,18 @@ export default function RegisterPage() {
 
     try {
       // const { confirmPassword, ...userData } = formData; // no confirm password
-      await register(formData);
+      const userData = {
+        role: "STUDENT",
+        firstName: "John",
+        lastName: "D",
+        password: formData.password,
+        email: formData.email,
+      }
+      await register(userData);
       navigate('/dashboard'); // role based
     } catch (err) {
       // Error already in store, no need to handle here
-      console.log('Registration failed');
+      console.log('Registration failed', err);
     }
   }
 
@@ -227,7 +233,7 @@ export default function RegisterPage() {
         <div className="mt-4 lg:mt-6 pt-4 lg:pt-5 border-t border-border text-center">
           <p className="text-muted-foreground text-sm">
             Already have an account? 
-            <Link className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-bold hover:underline" to={ROUTES.LOGIN}>Sign in</Link>
+            <Link className="ml-1 text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 font-bold hover:underline" to="/login">Sign in</Link>
           </p>
         </div>
 
