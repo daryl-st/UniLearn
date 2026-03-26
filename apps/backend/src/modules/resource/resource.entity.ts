@@ -7,6 +7,7 @@ export class Resource {
         public title: string,
         public type: FileType,
         public fileUrl: String,
+        public version: number, // might need to change this to float
         public instructorId?: string
         // summaries, quizzes and other things will be included 
     ) {}

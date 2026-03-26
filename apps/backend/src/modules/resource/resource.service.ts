@@ -13,9 +13,11 @@ export class ResourceService {
         return resource;
     };
 
-    async uploadResource(data: { title: string, type: FileType, fileUrl: string, instructorId: string, courseId: string }) {
-        // other business logic here...
-        return this.resourceRepositor.create(data);
+    async uploadResource(data: { title: string, type: FileType, fileUrl: string, version: number, instructorId: string, courseId: string }) {
+        const resource = await this.resourceRepositor.create(data);
+        if (!resource) return "Resource already exists";
+
+        return resource;
     }
 
     async getResourceByCourseId(data: { id: string}) {

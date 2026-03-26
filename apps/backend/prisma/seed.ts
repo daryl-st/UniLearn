@@ -88,6 +88,7 @@ async function main() {
             fileUrl: "cloudinary_url",
             courseId: course.id,
             instructorId: instructorProfile.id,
+            version: 1.0,
         }
     });
 

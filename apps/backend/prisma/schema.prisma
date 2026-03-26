@@ -110,9 +110,11 @@ model Resource {
   id           String   @id @default(uuid())
   title        String
   type         FileType
-  fileUrl      String
+  fileUrl      String   @unique
   courseId     String
   instructorId String
+  version      Float
+  isDeleted    Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

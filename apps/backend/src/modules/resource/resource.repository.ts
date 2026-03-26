@@ -7,7 +7,7 @@ export class ResourceRepository {
         const resources = await prisma.resource.findMany({
             where: { courseId: courseId }
         });
-        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl, u.instructorId));
+        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl, u.version, u.instructorId));
     }
 
     async findOne(data: {id: string}): Promise<Resource | null> {
@@ -15,7 +15,7 @@ export class ResourceRepository {
             where: { id: data.id}
         });
         if (!resource) return null; // Not found
-        return new Resource(resource?.id, resource?.title, resource?.type, resource?.fileUrl, resource?.instructorId);
+        return new Resource(resource?.id, resource?.title, resource?.type, resource?.fileUrl, resource?.version, resource?.instructorId);
     }
 
     async findByCourseId(data: {id: string}): Promise<Resource[] | null> {
@@ -23,17 +23,21 @@ export class ResourceRepository {
             where: { courseId: data.id }
         });
         if (!resources) return null; // no resources found
-        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl));
+        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl, u.version));
     }
 
-    async create(data: {title: string, type: FileType, fileUrl: string, instructorId: string, courseId: string}) : Promise<Resource> {
-        // versioning and duplication should be handled
-        // maybe the fileUrl should also be unique, so that it would be easier to locate and prevent duplicates.
+    async create(data: {title: string, type: FileType, fileUrl: string, version: number, instructorId: string, courseId: string}) : Promise<Resource | null> {
+        // fileUrl is unique to prevent duplicate file uploads
+        const existingResource = await prisma.resource.findUnique({ where: {fileUrl: data.fileUrl }});
+        if (existingResource) return null;
+
         const resource = await prisma.resource.create({ data });
-        return new Resource(resource.id, resource.title, resource.type, resource.fileUrl);
+        return new Resource(resource.id, resource.title, resource.type, resource.fileUrl, resource.version);
     }
 
-    async delete(data: { id: string }): Promise<Resource | null > { // soft delete will be implemented
+    async delete(data: { id: string }): Promise<Resource | null > { 
+        // soft delete 
+        // const resource = await prisma.resource.update({ where: {id: data.id}, data: {isDeleted: true} });
         const resource = await prisma.resource.delete({ where: {id: data.id}});
         if (!resource) return null;
         return resource;
