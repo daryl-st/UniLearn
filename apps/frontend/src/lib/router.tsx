@@ -1,4 +1,4 @@
-import { Navigate, Route } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 // import { ROUTES } from "@/lib/route-paths";
 // import { PublicOnly } from "@/components/guards/PublicOnly";
 // import { RequireAuth } from "@/components/guards/RequireAuth";
@@ -19,11 +19,13 @@ import { Navigate, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useAuthStore } from "@/stores/authStore";
 
-const LoginPage = lazy(() => import('@/pages/LoginPage'));
-const RegisterPage = lazy(() => import('@/pages/Register'));
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
 const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/teacher/TeacherDashboardPage'));
 const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDashboardPage'));
+const NotFoundPage = lazy(() => import('@/pages/shared/NotFoundPage'));
+// const UnauthorizedPage = lazy(() => import('@/pages/shared/UnauthorizedPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -58,7 +60,7 @@ export function AppRouter() {
   // TODO: needs refactoring
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Route>
+      <Routes>
         {/* Public Routes */}
         <Route path="/login" element={
           <PublicRoute>
@@ -94,8 +96,12 @@ export function AppRouter() {
         } />
 
         {/* 404 - Not Found  */}
-        <Route path="*" element={<div>404 - Page Not Found</div>} />
-      </Route>
+        <Route path="*" element={
+          <PublicRoute>
+            <NotFoundPage />
+          </PublicRoute>
+        } />
+      </Routes>
     </Suspense>
   )
 }
