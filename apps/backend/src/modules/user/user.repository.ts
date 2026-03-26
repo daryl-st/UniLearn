@@ -46,9 +46,19 @@ export class UserRepository {
         return new InstructorProfile(userProfile.id, userProfile.instructorId, userProfile.departmentId);
     }
 
-    async findUserById(email: string): Promise<User | null> {
+    async findUserByEmail(email: string): Promise<User | null> {
         const existingUser = await prisma.user.findUnique({
             where: { email: email }
+        });
+
+        if (!existingUser) return null;
+
+        return new User(existingUser.id, existingUser?.email, existingUser.passwordHash, existingUser?.firstName, existingUser?.lastName, existingUser.role); // return null if not found
+    }
+
+    async findUserById(id: string): Promise<User | null> {
+        const existingUser = await prisma.user.findUnique({
+            where: { id: id }
         });
 
         if (!existingUser) return null;

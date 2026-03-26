@@ -12,7 +12,7 @@ export class AuthService {
     constructor(private userRepository: UserRepository) {}
 
     async registerUser(data: {email: string, firstName: string, lastName: string, password: string}) {
-        const existingUser = await this.userRepository.findUserById(data.email);
+        const existingUser = await this.userRepository.findUserByEmail(data.email);
         if (existingUser) throw new Error("Email already registered!");
 
         const hashedPass = await bcrypt.hash(data.password, 10);
@@ -35,8 +35,9 @@ export class AuthService {
     };
 
     async loginUser(data: { email: string, password: string }) {
-        const existingUser = await this.userRepository.findUserById(data.email);
-        if (!existingUser) throw new Error("User not found!");
+        // centralize error handling using separate AppError class 
+        const existingUser = await this.userRepository.findUserByEmail(data.email);
+        if (!existingUser) throw new Error("User not found!"); // return 500 that don't say much
 
         const isPassValid = await bcrypt.compare(data.password, existingUser.password);
         if (!isPassValid) throw new Error("Invalid email or password!");
@@ -115,7 +116,7 @@ export class AuthService {
 
     // Needs refactoring
     async createStudentProfile(data: { studentId: string, year: number}, email: string) {
-        const existing = await this.userRepository.findUserById(email);
+        const existing = await this.userRepository.findUserByEmail(email);
         if (!existing) throw new Error("Internal Error!");
 
         // temporary
@@ -128,7 +129,7 @@ export class AuthService {
     }
 
     async createInstructorProfile(data: { instructorId: string }, email: string) {
-        const existing = await this.userRepository.findUserById(email);
+        const existing = await this.userRepository.findUserByEmail(email);
         if (!existing) throw new Error("Internal Error!");
 
         // temporary

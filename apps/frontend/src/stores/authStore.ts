@@ -28,8 +28,7 @@ export const useAuthStore = create<AuthState>() (
             isLoading: true,
             error: null,
 
-            // TODO: proper error handling
-
+            // TODO: proper error handling -- partially done
             login: async (email: string, password: string) => {
                 set({ isLoading: true, error: null });
                 try {
@@ -44,6 +43,7 @@ export const useAuthStore = create<AuthState>() (
                 }
             },
 
+            // TODO: proper error handling -- partially done
             register: async (userData: any) => {
                 set({ isLoading: true, error: null });
                 try {

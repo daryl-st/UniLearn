@@ -17,18 +17,22 @@ export default function LoginPage() {
     password: "",
   });
 
+  const [validationError, setValidationError] = useState('');
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // clear error when user starts typing
     if (error) clearError();
+    if (validationError) setValidationError('');
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      return; // add validation
+      setValidationError('email or password required');
+      return;
     }
 
     try {
@@ -36,7 +40,7 @@ export default function LoginPage() {
       navigate('/dashboard'); // role based
     } catch (err) {
       // Error already in store, no need to handle here
-      console.log('Login failed', err); // for debuggin purpose only
+      console.log('Login failed');
     }
   }
 
@@ -142,9 +146,9 @@ export default function LoginPage() {
           </div>
 
           <form className="space-y-4 lg:space-y-6" onSubmit={handleSubmit}>
-            {error ? ( // not sure what error has exactly
+            {error || validationError ? ( // not sure what error has exactly
               <p className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-                {error}
+                {error || validationError}
               </p>
             ) : null}
 

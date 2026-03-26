@@ -1,5 +1,3 @@
-// const API_BASE = '/api';
-
 export class ApiError extends Error {
     constructor(
         public status: number,
@@ -18,7 +16,10 @@ interface RequestConfig extends RequestInit {
 
 class APIClient {
     private baseUrl: string;
-    private defaultHeaders: HeadersInit;
+    // private defaultHeaders: HeadersInit;
+    defaultHeaders: Record<string, string> = {
+        "Content-Type": "application/json"
+    };
 
     constructor(baseUrl: string = 'http://localhost:4000/') { // TODO: make a constant
         this.baseUrl = baseUrl;
@@ -68,7 +69,7 @@ class APIClient {
             if (!response.ok) {
                 throw new ApiError(
                     response.status,
-                    data?.message || data || response.statusText,
+                    response.statusText,
                     data
                 );
             }
@@ -94,10 +95,10 @@ class APIClient {
                 ...this.defaultHeaders,
                 'Authorization': `Bearer ${token}`,
             };
-        } // else {
-        //     const { Authorization, ...rest} = this.defaultHeaders;
-        //     this.defaultHeaders = rest;
-        // }
+        } else {
+            const { Authorization, ...rest} = this.defaultHeaders;
+            this.defaultHeaders = rest;
+        }
     }
 
     // Generic HTTP methods

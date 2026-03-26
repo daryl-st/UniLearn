@@ -14,7 +14,7 @@ export default function RegisterPage() {
     name: "",
     email: "",
     password: "",
-  }); // we might not need confirm password
+  }); 
 
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -30,23 +30,18 @@ export default function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // validation
-    // if (formData.password !== formData.confirmPassword) {
-    //   setValidationError('Password do not match!');
-    //   return;
-    // }
-
     if (formData.password.length < 4) { // TODO: edit later
       setValidationError('Password must be at least 6 characters');
       return;
     } 
 
     try {
-      // const { confirmPassword, ...userData } = formData; // no confirm password
+      // restructure the data for the backend
+      const name = formData.name.split(' ');
       const userData = {
         role: "STUDENT",
-        firstName: "John",
-        lastName: "D",
+        firstName: name[0],
+        lastName: name[1],
         password: formData.password,
         email: formData.email,
       }

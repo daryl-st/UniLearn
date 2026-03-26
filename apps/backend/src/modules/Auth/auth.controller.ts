@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { AuthService } from "./auth.service.js";
 import { UserRepository } from "../user/user.repository.js";
 import type { LoginBody, RegisterBody } from "../../schemas/index.js";
+import type { AuthRequest } from "../../middlewares/auth.js";
 
 const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
@@ -79,5 +80,24 @@ export class AuthController {
         res.clearCookie("refreshToken");
 
         res.sendStatus(204);
-    }
+    };
+
+    // refactor
+    async me(req: AuthRequest, res: Response) {
+        const userId = req.user.id;
+        console.log(req.user);
+        // refactor
+        const user = await userRepository.findUserById(userId);
+        console.log(user);
+        if (!user) throw new Error("User not found!");
+
+        res.json({
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.firstName,
+                role: user.role
+            }
+        });
+    };
 }

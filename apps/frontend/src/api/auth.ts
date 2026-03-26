@@ -8,7 +8,7 @@ interface LoginCredentails {
 }
 
 interface AuthResponse {
-  token: string,
+  accessToken: string,
   user: {
     id: string,
     email: string,
@@ -19,18 +19,19 @@ interface AuthResponse {
 export const authAPI = {
   login: async (credentials: LoginCredentails) => {
     try {
-      const response = await api.post<AuthResponse>('auth/login', credentials); // make it auth/login and polish everyroute to have similar structure
+      const response = await api.post<AuthResponse>('auth/login', credentials);
 
       // Store token and set it in the API client
-      if (response.token) {
-        api.setAuthToken(response.token);
+      if (response.accessToken) {
+        api.setAuthToken(response.accessToken);
         // for now let's store in local storage
-        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('auth-token', response.accessToken);
       }
 
       return response;
     } catch (err) {
       if (err instanceof ApiError) {
+        // centralize and sync error with backend
         if (err.status == 401) throw new Error('Invalid email or password');
         throw err;
       }
@@ -42,10 +43,10 @@ export const authAPI = {
     try {
       const response = await api.post<AuthResponse>('auth/register', userData);
 
-      if (response.token) {
-        api.setAuthToken(response.token);
+      if (response.accessToken) {
+        api.setAuthToken(response.accessToken);
         // let's store in local storage
-        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('auth-token', response.accessToken);
       }
 
       return response
@@ -60,7 +61,8 @@ export const authAPI = {
   },
 
   getCurrentUser: async () => {
-    return api.get<{ user: any }>('/auth/me');
+    // got not found error - probably because of auth/me non existant
+    return api.get<{ user: any }>('auth/me');
   }
 }
 

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { ROUTES } from "@/lib/route-paths";
 
+// refactor route paths
 export default function HeroPage() {
   return (
     <main className="relative min-h-dvh overflow-hidden bg-background text-foreground">
@@ -15,13 +15,13 @@ export default function HeroPage() {
         </p>
         <div className="flex flex-wrap gap-4">
           <Link
-            to={ROUTES.REGISTER}
+            to="/register"
             className="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
             Register as Student
           </Link>
           <Link
-            to={ROUTES.LOGIN}
+            to="/login"
             className="rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
           >
             Login

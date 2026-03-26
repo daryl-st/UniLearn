@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ROUTES } from "@/lib/route-paths";
 
 export default function UnauthorizedPage() {
   return (
@@ -8,7 +7,7 @@ export default function UnauthorizedPage() {
         <h1 className="text-3xl font-bold">Unauthorized</h1>
         <p className="mt-3 text-muted-foreground">You are signed in, but your role cannot access this page.</p>
         <Link
-          to={ROUTES.HOME}
+          to="/"
           className="mt-6 inline-flex rounded-lg border border-border bg-accent px-4 py-2 text-sm font-semibold"
         >
           Back to Home

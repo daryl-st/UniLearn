@@ -22,10 +22,11 @@ import { useAuthStore } from "@/stores/authStore";
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
-const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/teacher/TeacherDashboardPage'));
+const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
 const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDashboardPage'));
 const NotFoundPage = lazy(() => import('@/pages/shared/NotFoundPage'));
 // const UnauthorizedPage = lazy(() => import('@/pages/shared/UnauthorizedPage'));
+const HomePage = lazy(() => import('@/pages/marketing/HeroPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -61,6 +62,8 @@ export function AppRouter() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
+        <Route path="/" element={<HomePage />}/>
+
         {/* Public Routes */}
         <Route path="/login" element={
           <PublicRoute>
@@ -72,14 +75,15 @@ export function AppRouter() {
             <RegisterPage />
           </PublicRoute>
         } />
+        {/* For debugging purpose */}
+        <Route path="/dashboard" element={
+          <PublicRoute>
+            <StudnetDashboardPage />
+          </PublicRoute>
+        } />
 
         {/* Protected Routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <StudnetDashboardPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
+        {/* <Route path="/dashboard" element={
           <ProtectedRoute>
             <InstructorDashboardPage />
           </ProtectedRoute>
@@ -88,11 +92,11 @@ export function AppRouter() {
           <ProtectedRoute>
             <AdminDashboardPage />
           </ProtectedRoute>
-        } />
+        } /> */}
 
-        {/* Redirect root to dashboard or login  */}
+        {/* TODO: Redirect root to dashboard or login  */}
         <Route path="/" element={
-          <Navigate to="/dashboard" replace />
+          <Navigate to="/" replace />
         } />
 
         {/* 404 - Not Found  */}
