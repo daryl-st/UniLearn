@@ -28,6 +28,8 @@ const NotFoundPage = lazy(() => import('@/pages/shared/NotFoundPage'));
 // const UnauthorizedPage = lazy(() => import('@/pages/shared/UnauthorizedPage'));
 const HomePage = lazy(() => import('@/pages/marketing/HeroPage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
+const AboutPage = lazy(() => import('@/pages/AboutPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -62,52 +64,56 @@ export function AppRouter() {
   // TODO: needs refactoring
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Routes>
-        <Route path="/" element={<HomePage />}/>
-        <Route path="/home" element={<LandingPage />}/>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<HomePage />}/>
+          <Route path="/home" element={<LandingPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          
 
-        {/* Public Routes */}
-        <Route path="/login" element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        } />
-        <Route path="/register" element={
-          <PublicRoute>
-            <RegisterPage />
-          </PublicRoute>
-        } />
-        {/* For debugging purpose */}
-        <Route path="/dashboard" element={
-          <PublicRoute>
-            <StudnetDashboardPage />
-          </PublicRoute>
-        } />
+          {/* Public Routes */}
+          <Route path="/login" element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          } />
+          <Route path="/register" element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          } />
+          {/* For debugging purpose */}
+          <Route path="/dashboard" element={
+            <PublicRoute>
+              <StudnetDashboardPage />
+            </PublicRoute>
+          } />
 
-        {/* Protected Routes */}
-        {/* <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <InstructorDashboardPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <AdminDashboardPage />
-          </ProtectedRoute>
-        } /> */}
+          {/* Protected Routes */}
+          {/* <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <InstructorDashboardPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          } /> */}
 
-        {/* TODO: Redirect root to dashboard or login  */}
-        <Route path="/" element={
-          <Navigate to="/" replace />
-        } />
+          {/* TODO: Redirect root to dashboard or login  */}
+          <Route path="/" element={
+            <Navigate to="/" replace />
+          } />
 
-        {/* 404 - Not Found  */}
-        <Route path="*" element={
-          <PublicRoute>
-            <NotFoundPage />
-          </PublicRoute>
-        } />
-      </Routes>
+          {/* 404 - Not Found  */}
+          <Route path="*" element={
+            <PublicRoute>
+              <NotFoundPage />
+            </PublicRoute>
+          } />
+        </Routes>
+      </AppLayout>
     </Suspense>
   )
 }

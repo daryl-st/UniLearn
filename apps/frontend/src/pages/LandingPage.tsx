@@ -1,34 +1,15 @@
-import React from "react"
 import { Button } from "../components/ui/Button"
 import { Badge } from "../components/ui/Badge"
 import { Surface } from "../components/ui/Surface"
 import { Globe, Cpu, Navigation, Box, Zap } from "lucide-react"
 
+// Needs refactoring
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-surface text-on-surface-variant font-sans antialiased selection:bg-brand/30 selection:text-on-surface">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#49454f]/15 bg-surface/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-8">
-            <span className="font-display text-xl font-bold text-on-surface">UniLearn</span>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <a href="#" className="text-on-surface transition-colors">About</a>
-              <a href="#" className="hover:text-on-surface transition-colors">Courses</a>
-              <a href="#" className="hover:text-on-surface transition-colors">Pricing</a>
-              <a href="#" className="hover:text-on-surface transition-colors">Contact</a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="tertiary">Login</Button>
-            <Button variant="primary">Sign Up</Button>
-          </div>
-        </div>
-      </header>
-
       <main>
         {/* Hero Section */}
-        <section className="relative pt-32 pb-24 overflow-hidden">
+        <section className="relative pt-32 pb-42 overflow-hidden">
           {/* Subtle background glow mimicking the monolithic/ethereal vibe */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-brand/5 blur-[120px] rounded-full pointer-events-none" />
           
@@ -118,7 +99,7 @@ export default function LandingPage() {
               <h2 className="font-display text-3xl font-bold text-on-surface mb-2">Active Registries</h2>
               <p>Select a protocol to begin your integration into the enterprise intelligence network.</p>
             </div>
-            <Button variant="tertiary" className="font-mono text-xs uppercase tracking-wider shrink-0">
+            <Button variant="tertiary" className="font-mono text-xs text-brand uppercase tracking-wider shrink-0">
               View All Protocols
             </Button>
           </div>
@@ -139,7 +120,7 @@ export default function LandingPage() {
                     className="object-cover w-full h-full opacity-60 grayscale group-hover:grayscale-0 transition-all duration-500 scale-100 group-hover:scale-105"
                   />
                   <div className="absolute top-4 right-4 z-20">
-                    <Badge variant="status">Live</Badge>
+                    <Badge variant="status">L-01</Badge>
                   </div>
                 </Surface>
                 <h3 className="font-display text-xl font-bold text-on-surface mb-2 group-hover:text-brand transition-colors">{item.title}</h3>
@@ -170,22 +151,6 @@ export default function LandingPage() {
           </Surface>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-[#49454f]/15 bg-surface py-8">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-             <span className="font-display font-bold text-on-surface">UniLearn</span>
-             <span className="text-xs text-on-surface-variant/70">© 2026 UniLearn Protocol. All rights reserved.</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm">
-            <a href="#" className="hover:text-on-surface transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-on-surface transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-on-surface transition-colors">Cookie Settings</a>
-            <a href="#" className="hover:text-on-surface transition-colors">Security</a>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
