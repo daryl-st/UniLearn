@@ -1,6 +1,6 @@
-import { Button } from "../components/ui/Button"
-import { Badge } from "../components/ui/Badge"
-import { Surface } from "../components/ui/Surface"
+import { Button } from "../../components/ui/Button"
+import { Badge } from "../../components/ui/Badge"
+import { Surface } from "../../components/ui/Surface"
 import { Globe, Cpu, Navigation, Box, Zap } from "lucide-react"
 
 // Needs refactoring

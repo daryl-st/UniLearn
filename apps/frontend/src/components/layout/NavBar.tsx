@@ -1,5 +1,9 @@
 import { Button } from "../ui/Button";
 
+// TODO: Conditional Rendering
+// TODO: Mark Active Pages using active color and underline
+// TODO: Edit the Typography
+
 export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur-md">
@@ -15,7 +19,7 @@ export function Navbar() {
           {["About", "Courses", "Pricing", "Contact"].map((item) => (
             <a 
               key={item} 
-              href={`#${item.toLowerCase()}`} 
+              href={`${item.toLowerCase()}`} 
               className="text-on-surface-variant hover:text-brand transition-colors duration-150"
             >
               {item}

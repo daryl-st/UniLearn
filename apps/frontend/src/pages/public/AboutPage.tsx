@@ -13,7 +13,7 @@ export default function AboutPage() {
     <div className="container mx-auto px-6">
       {/* Hero Header for About - Protocol headline-lg (2rem) */}
       <section className="pt-24 pb-16 border-b border-border/10">
-        <span className="font-mono text-xs text-brand uppercase tracking-[0.2em] mb-4 block">
+        <span className="font-mono text-xs text-accent uppercase tracking-[0.2em] mb-4 block">
           System Version 4.2.1 // Documentation
         </span>
         <h1 className="font-display text-5xl md:text-6xl font-bold text-on-surface leading-tight">

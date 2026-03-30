@@ -27,9 +27,13 @@ const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDash
 const NotFoundPage = lazy(() => import('@/pages/shared/NotFoundPage'));
 // const UnauthorizedPage = lazy(() => import('@/pages/shared/UnauthorizedPage'));
 const HomePage = lazy(() => import('@/pages/marketing/HeroPage'));
-const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const LandingPage = lazy(() => import('@/pages/public/LandingPage'));
 const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
-const AboutPage = lazy(() => import('@/pages/AboutPage'));
+const AboutPage = lazy(() => import('@/pages/public/AboutPage'));
+const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
+const CoursesPage = lazy(() => import('@/pages/public/CoursePage'));
+const LoginPageNew = lazy(() => import('@/pages/public/LoginPage'));
+const RegisterPageNew = lazy(() => import('@/pages/public/RegitsterPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -69,6 +73,10 @@ export function AppRouter() {
           <Route path="/" element={<HomePage />}/>
           <Route path="/home" element={<LandingPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/log" element={<LoginPageNew />} />
+          <Route path="/reg" element={<RegisterPageNew />} />
           
 
           {/* Public Routes */}
