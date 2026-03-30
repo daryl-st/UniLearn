@@ -27,6 +27,7 @@ const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDash
 const NotFoundPage = lazy(() => import('@/pages/shared/NotFoundPage'));
 // const UnauthorizedPage = lazy(() => import('@/pages/shared/UnauthorizedPage'));
 const HomePage = lazy(() => import('@/pages/marketing/HeroPage'));
+const LandingPage = lazy(() => import('@/pages/LandingPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -63,6 +64,7 @@ export function AppRouter() {
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
         <Route path="/" element={<HomePage />}/>
+        <Route path="/home" element={<LandingPage />}/>
 
         {/* Public Routes */}
         <Route path="/login" element={

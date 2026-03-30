@@ -12,6 +12,28 @@
   --font-lexend: "Lexend", ui-sans-serif, system-ui, sans-serif;
   --color-primary: #136dec;
   --color-background-dark: #131313;
+  --color-border: var(--border);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ring: var(--ring);
+  
+  /* Monolithic Design System Tokens */
+  --color-surface: #131315;
+  --color-surface-low: #1B1B1D;
+  --color-surface-high: #2A2A2C;
+  --color-brand: #D0BCFF;
+  --color-accent: #4EDEA3;
+  --color-on-surface: #FFFFFF;
+  --color-on-surface-variant: #cac4d0;
+  
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --shadow-ambient: 0 20px 40px rgba(0, 0, 0, 0.65);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
 }
 
 :root {
@@ -33,20 +55,21 @@
   --border: rgb(122 153 208 / 22%);
   --input: rgb(122 153 208 / 28%);
   --ring: #74a9ff;
-    --chart-1: oklch(0.809 0.105 251.813);
-    --chart-2: oklch(0.623 0.214 259.815);
-    --chart-3: oklch(0.546 0.245 262.881);
-    --chart-4: oklch(0.488 0.243 264.376);
-    --chart-5: oklch(0.424 0.199 265.638);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgb(122 153 208 / 22%);
 }
 
   .theme-light {
@@ -98,6 +121,7 @@
     --border: color-mix(in srgb, #777674 55%, transparent);
     --input: color-mix(in srgb, #777674 70%, transparent);
     --ring: #EFD395;
+    --border: color-mix(in srgb, #777674 55%, transparent);
 }
 
 @theme inline {
@@ -140,6 +164,33 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+
+    /* --- INJECT MONOLITHIC DESIGN SYSTEM TOKENS --- */
+    /* Colors */
+    --color-surface: #131315;
+    --color-surface-low: #1B1B1D;
+    --color-surface-high: #2A2A2C;
+    --color-surface-highest: #3A3A3C;
+    
+    --color-brand: #D0BCFF;
+    --color-accent: #4EDEA3;
+    
+    --color-on-surface: #FFFFFF;
+    --color-on-surface-variant: #cac4d0;
+    --color-on-primary: #131315;
+
+    /* Typography */
+    --font-display: "Space Grotesk", sans-serif;
+    --font-sans-ui: "Inter", sans-serif; 
+    --font-mono-ui: "JetBrains Mono", monospace;
+
+    /* Depth / Shadows */
+    --shadow-ambient: 0 20px 40px rgba(0, 0, 0, 0.65);
+
+    /* Enforce strict protocol radiuses */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
 }
 
 @layer base {
@@ -150,6 +201,6 @@
     @apply font-sans;
     }
   body {
-    @apply min-h-screen font-lexend antialiased bg-background text-foreground;
+    @apply min-h-screen antialiased bg-surface text-on-surface-variant font-sans;
   }
 }
