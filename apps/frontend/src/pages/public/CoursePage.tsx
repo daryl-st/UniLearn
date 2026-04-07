@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { AlertCircle, Loader, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseStore } from "@/stores/courseStrore";
+// skeleton needs ajustment to match the course card design
+// import { CourseSkeleton, CourseSkeletonGrid } from "@/components/features/public_pages/CourseSkeleton";
 
 // Placeholder data - representative of technical protocols
 const disciplines = ["All Disciplines", "Quantum Logic", "Neural Architecture", "Bio-Engineering", "Deep Space Ethics"];
@@ -42,6 +44,7 @@ export default function CoursesPage() {
       <div className="flex justify-center items-center min-h-screen">
         <Loader className="w-8 h-8 animate-spin text-blue-500" />
         <span className="ml-2">Loading courses...</span>
+        {/* <CourseSkeletonGrid count={6} /> */}
       </div>
     );
   }

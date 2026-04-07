@@ -1,12 +1,14 @@
 // src/components/features/courses/CourseCard.tsx
 import { Surface } from "@/components/ui/Surface";
 import { Badge } from "@/components/ui/Badge";
+import { motion } from "motion/react";
 
 interface CourseCardProps {
     id: string,
     name: string,
     code: string,
     acadamicYear: number,
+    image?: string,
 }
 
 // interface CourseCardProps {
@@ -19,14 +21,19 @@ interface CourseCardProps {
 // }
 
 // export function CourseCard({ id, discipline, title, description, instructor, image }: CourseCardProps) {
-export function CourseCard({ id, name, code, acadamicYear }: CourseCardProps) {
+export function CourseCard({ id, name, code, acadamicYear, image }: CourseCardProps) {
   return (
+    // let's wrap it with motion.div for hover effects
+    <motion.div 
+      whileHover={{ y: -10 }} 
+      className="group cursor-pointer"
+    >
     <Surface level={1} className="overflow-hidden group flex flex-col h-full border border-border/10">
       {/* Visual Input - Asymmetric aspect ratio */}
       <div className="aspect-[16/10] overflow-hidden relative">
         <img 
-          src={name}
-          // src={image} 
+          // src={name}
+          src={image} 
           alt={name} 
           className="object-cover w-full h-full grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" 
         />
@@ -71,5 +78,33 @@ export function CourseCard({ id, name, code, acadamicYear }: CourseCardProps) {
         </div>
       </div>
     </Surface>
+    </motion.div>
   );
 }
+
+// const CourseCard = ({ id, title, description, modules, level, image }: any) => (
+//   <motion.div 
+//     whileHover={{ y: -10 }}
+//     className="group cursor-pointer"
+//   >
+//     <div className="relative overflow-hidden mb-6 aspect-[4/3] border border-outline-variant">
+//       <img 
+//         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100" 
+//         src={image} 
+//         alt={title}
+//         referrerPolicy="no-referrer"
+//       />
+//       <div className="absolute top-4 right-4 px-2 py-1 bg-surface-highest text-secondary font-mono text-[10px] tracking-widest rounded-sm border border-outline-variant">
+//         {id}
+//       </div>
+//     </div>
+//     <div className="space-y-3">
+//       <h4 className="text-xl font-headline font-bold text-white group-hover:text-primary transition-colors">{title}</h4>
+//       <p className="text-sm text-on-surface-variant leading-relaxed">{description}</p>
+//       <div className="flex items-center gap-4 pt-2">
+//         <span className="text-[10px] font-mono text-on-surface-variant uppercase">{modules} Modules</span>
+//         <span className="text-[10px] font-mono text-on-surface-variant uppercase">{level}</span>
+//       </div>
+//     </div>
+//   </motion.div>
+// );

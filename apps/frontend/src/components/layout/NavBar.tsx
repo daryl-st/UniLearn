@@ -1,42 +1,32 @@
-import { Button } from "../ui/Button";
-
 // TODO: Conditional Rendering
 // TODO: Mark Active Pages using active color and underline
 // TODO: Edit the Typography
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur-md">
-      <div className="container relative mx-auto flex h-16 items-center justify-between px-6">
-        
-        <div className="flex items-center">
-          <span className="font-display text-xl font-bold text-brand">
-            UniLearn
-          </span>
-        </div>
-
-        <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-8 text-sm font-medium tracking-tight">
+    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div className="flex justify-between items-center h-16 px-8 w-full max-w-7xl mx-auto">
+        <div className="text-2xl font-bold text-primary tracking-tighter font-headline">UniLearn</div>
+        <div className="hidden md:flex items-center gap-8">
           {["About", "Courses", "Pricing", "Contact"].map((item) => (
             <a 
-              key={item} 
+              key={item}
               href={`${item.toLowerCase()}`} 
-              className="text-on-surface-variant hover:text-brand transition-colors duration-150"
+              className="font-headline font-bold tracking-tight text-on-surface-variant hover:text-white transition-colors text-sm"
             >
               {item}
             </a>
           ))}
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" className="text-xs font-mono uppercase tracking-widest">
-            Login
-          </Button>
-          <Button variant="primary" className="px-5">
-            Initialize
-          </Button>
         </div>
-
+        <div className="flex items-center gap-4">
+          <button className="px-4 py-2 rounded text-on-surface-variant hover:bg-surface-high transition-all duration-150 text-sm font-medium">
+            Login
+          </button>
+          <button className="px-5 py-2 rounded-sm bg-primary text-on-primary font-bold text-sm hover:opacity-90 transition-opacity">
+            Sign Up
+          </button>
+        </div>
       </div>
-    </header>
+    </nav>
   );
 }
