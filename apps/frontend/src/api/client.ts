@@ -130,7 +130,7 @@ class APIClient {
         });
     }
 
-    delte<T>(endpoint: string, config?: RequestConfig): Promise<T> {
+    delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
         return this.request<T>(endpoint, { ...config, method: 'DELETE'});
     }
 }
