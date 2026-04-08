@@ -1,6 +1,6 @@
 import { Box, ArrowUpRight, Layers, Activity, Brain } from "lucide-react"
 import { motion } from "motion/react"
-import { CourseCard } from "@/components/features/public_pages/CourseCard"
+import { CourseCard } from "@/components/features/public/CourseCard"
 
 // Needs refactoring
 export default function LandingPage() {

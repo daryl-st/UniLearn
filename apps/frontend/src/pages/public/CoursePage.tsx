@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CourseCard } from "@/components/features/public_pages/CourseCard";
+import { CourseCard } from "@/components/features/public/CourseCard";
 import { Button } from "@/components/ui/Button";
 import { AlertCircle, Loader, Search } from "lucide-react";
 import { cn } from "@/lib/utils";

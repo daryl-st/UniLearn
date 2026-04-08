@@ -1,4 +1,4 @@
-import { AuthInput } from "@/components/features/public_pages/AuthInput";
+import { AuthInput } from "@/components/features/public/AuthInput";
 import { Button } from "@/components/ui/Button";
 import { AtSign, LockKeyhole, ArrowRight, Terminal } from "lucide-react";
 

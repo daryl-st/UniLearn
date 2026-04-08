@@ -1,4 +1,4 @@
-import { ContactForm } from "@/components/features/public_pages/ContactForm"; 
+import { ContactForm } from "@/components/features/public/ContactForm"; 
 import { AtSign, Share2, Globe } from "lucide-react";
 
 export default function ContactPage() {
