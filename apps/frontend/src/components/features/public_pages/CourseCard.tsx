@@ -7,7 +7,9 @@ interface CourseCardProps {
     id: string,
     name: string,
     code: string,
-    acadamicYear: number,
+    // acadamicYear: number,
+    instructor: string,
+    discipline: string,
     image?: string,
 }
 
@@ -21,7 +23,7 @@ interface CourseCardProps {
 // }
 
 // export function CourseCard({ id, discipline, title, description, instructor, image }: CourseCardProps) {
-export function CourseCard({ id, name, code, acadamicYear, image }: CourseCardProps) {
+export function CourseCard({ name, code, discipline, instructor, image }: CourseCardProps) {
   return (
     // let's wrap it with motion.div for hover effects
     <motion.div 
@@ -39,7 +41,7 @@ export function CourseCard({ id, name, code, acadamicYear, image }: CourseCardPr
         />
         {/* Absolute Protocol ID - Section 5 Metadata Rule */}
         <Badge className="absolute top-3 right-3 font-mono text-[9px] bg-surface-high/70 backdrop-blur-sm border border-border/10">
-          ID: {id}
+          ID: {code}
         </Badge>
       </div>
 
@@ -47,31 +49,31 @@ export function CourseCard({ id, name, code, acadamicYear, image }: CourseCardPr
       <div className="p-6 flex-1 flex flex-col justify-between">
         <div className="space-y-3 mb-6">
           <Badge variant="status" className="font-mono text-[10px] uppercase tracking-widest text-accent">
-            {code}
-            {/* {discipline} */}
+            {/* {code} */}
+            {discipline}
           </Badge>
           <h3 className="font-display text-xl font-bold text-on-surface leading-snug group-hover:text-brand transition-colors">
             {name}
             {/* {title} */}
           </h3>
           <p className="text-sm text-on-surface-variant leading-relaxed line-clamp-2">
-            {acadamicYear}
+            {discipline}
             {/* {description} */}
           </p>
         </div>
 
         {/* Action/Instructor Node */}
         <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/10 mt-auto">
-          {/* <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5">
             <img 
-              src={instructor.avatar} 
-              alt={instructor.name} 
+              src={instructor} 
+              alt={instructor} 
               className="w-7 h-7 rounded-full object-cover grayscale" 
             />
             <span className="font-sans text-xs text-on-surface-variant/80">
-              {instructor.name}
+              {instructor}
             </span>
-          </div> */}
+          </div>
           <span className="font-mono text-[9px] uppercase tracking-widest text-on-surface-variant/50">
             Enrollment Required
           </span>

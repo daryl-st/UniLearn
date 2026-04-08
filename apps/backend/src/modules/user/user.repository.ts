@@ -65,4 +65,14 @@ export class UserRepository {
 
         return new User(existingUser.id, existingUser?.email, existingUser.passwordHash, existingUser?.firstName, existingUser?.lastName, existingUser.role); // return null if not found
     }
+
+    async getUserNameById(id: string): Promise<string> {
+        const existingUser = await prisma.user.findUnique({
+            where: { id: id }
+        });
+
+        if (!existingUser) return 'Not Found!';
+
+        return existingUser.firstName + " " + existingUser.lastName; // return null if not found
+    }
 }

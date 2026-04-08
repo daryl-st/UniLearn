@@ -19,7 +19,20 @@ export class Course {
         public name: string,
         public code: string,
         public acadamicYear: Number, 
+        public instructorId: string,
+        public departmentId: string,
         public resources?: Resource[], // doesn't neccessarily need to have one always.
+    ) {}
+}
+
+export class CourseResponse {
+    constructor(
+        public id: string,
+        public name: string,
+        public code: string,
+        public acadamicYear: Number,
+        public instructorName?: string,
+        public departmentName?: string,
     ) {}
 }
 

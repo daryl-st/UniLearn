@@ -2,11 +2,13 @@ import type { Request, Response } from "express";
 import { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { CourseService, ResourceService } from "./resource.service.js";
 import type { createCourseBody, deleteResourceBody, uploadResourceBody } from "../../schemas/index.js";
+import { UserRepository } from "../user/user.repository.js";
 
 const resourceRepo = new ResourceRepository();
 const resourceService = new ResourceService(resourceRepo);
 const courseRepo = new CourseRepository();
-const courseService = new CourseService(courseRepo);
+const userRepository = new UserRepository();
+const courseService = new CourseService(courseRepo, userRepository);
 
 export class ResourceController {
     async getResources(req: Request, res: Response) {
@@ -20,6 +22,7 @@ export class ResourceController {
         // course resorces should not be returned at this request and a course might have 0 resources
         // this will be requested when the user is presented with a list of courses.
         const courses = await courseService.getCourses();
+        console.log(courses);
         res.status(200).json(courses);
     }
 
@@ -44,6 +47,7 @@ export class ResourceController {
             ...resourceDetails,
             instructorId: "cc33d76b-9344-48ee-8954-ece7114a6f32",
             courseId: "ca010cdb-9a41-4512-8300-bb5f60fc25c0",
+            version: 1, // we will update this when we implement update resource, for now it is fixed to 1
         }
         const resource = await resourceService.uploadResource(resourceData);
         res.status(201).json(resource);

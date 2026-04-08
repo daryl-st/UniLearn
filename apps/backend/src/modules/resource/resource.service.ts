@@ -1,6 +1,7 @@
 import type { FileType } from "@unilearn/shared-types";
 import type { CourseRepository, ResourceRepository } from "./resource.repository.js";
-import { Resource, type Course } from "./resource.entity.js";
+import { CourseResponse, Resource, type Course } from "./resource.entity.js";
+import type { UserRepository } from "../user/user.repository.js";
 
 export class ResourceService {
     constructor(private resourceRepositor: ResourceRepository) {}
@@ -38,10 +39,17 @@ export class ResourceService {
 }
 
 export class CourseService {
-    constructor(private courseRepositor: CourseRepository) {}
+    constructor(private courseRepositor: CourseRepository, private userRepository: UserRepository) {}
 
-    async getCourses(): Promise<Course[]> {
-        return this.courseRepositor.findAll();
+    async getCourses(): Promise<CourseResponse[]> {
+        // before returning the courses i need to get the instructor name and department name and attach it in the course object.
+        const response = await this.courseRepositor.findAll();
+        const instructorIds = response.map(course => course.instructorId);
+        // const departmentIds = response.map(course => course.departmentId);
+
+        const instructorNames = await Promise.all(instructorIds.map(id => this.userRepository.getUserNameById(id)));
+        // const departmentNames = await Promise.all(departmentIds.map(id => this.userRepository.getDepartmentName(id)));
+        return response.map(course => new CourseResponse(course.id ,course.name, course.code, course.acadamicYear, instructorNames[instructorIds.indexOf(course.instructorId)], 'CS')); // department name is hardcoded for now
     }
 
     async getCourseById(data: { id: string }) {

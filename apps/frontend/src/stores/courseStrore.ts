@@ -3,16 +3,38 @@ import { persist } from 'zustand/middleware';
 import { CourseAPI } from '@/api/course';
 
 interface Course {
-    id: string;
+    id: string; // i believe we don't need this for now.
     name: string;
     code: string;
+    instructor: string;
+    discipline: string;
+    image?: string;
     acadamicYear: number;
     // description: string;
     // instructor: {
     //     name: string;
     //     avatar: string;
     // };
-    // image: string;
+}
+
+// interface CourseResponse {
+//     id: string;
+//     name: string;
+//     code: string;
+//     instructorName: string;
+//     departmentName: string;
+//     image?: string;
+//     acadamicYear: number;
+// }   
+
+interface CourseUploadData {
+    name: string;
+    code: string;
+    instructor: string;
+    discipline: string;
+    image?: string; // course image
+    acadamicYear: number;
+    // description: string;
 }
 
 interface CourseState {
@@ -22,7 +44,7 @@ interface CourseState {
 
     fetchCourses: () => Promise<void>;
     getCourseById: (courseId: string) => Course | undefined;
-    uploadCourse: (courseData: any) => Promise<void>;
+    uploadCourse: (courseData: CourseUploadData) => Promise<void>;
     deleteCourse: (courseId: string) => Promise<void>;
 }
 
@@ -37,10 +59,20 @@ export const useCourseStore = create<CourseState>() (
                 set({ isLoading: true, error: null });
                 try {
                     const response = await CourseAPI.getAllCourses();
-                    set({ courses: response, isLoading: false });
-                } catch (err: any) {
+                    // Map CourseResponse to Course
+                    const courses: Course[] = response.map((course: any) => ({ // will be edited later to course response
+                        id: course.id,
+                        name: course.name,
+                        code: course.code,
+                        acadamicYear: course.acadamicYear,
+                        instructor: course.instructorName ?? '',
+                        discipline: course.departmentName ?? '',
+                        image: course.image,
+                    }));
+                    set({ courses, isLoading: false });
+                } catch (err: unknown) {
                     set({
-                        error: err.message || 'Failed to fetch courses!',
+                        error: err instanceof Error ? err.message : 'Failed to fetch courses!',
                         isLoading: false,
                     });
                     throw err;
@@ -53,14 +85,14 @@ export const useCourseStore = create<CourseState>() (
                 return courses.find(course => course.id === courseId);
             },
 
-            uploadCourse: async (courseData: any) => {
+            uploadCourse: async (courseData: CourseUploadData) => {
                 set({ isLoading: true, error: null });
                 try {
                     const response = await CourseAPI.createCourse(courseData);
-                    set((state) => ({ courses: [...state.courses, response], isLoading: false }));
-                } catch (err: any) {
+                    set((state: { courses: any; }) => ({ courses: [...state.courses, response], isLoading: false }));
+                } catch (err: unknown) {
                     set({
-                        error: err.message || 'Failed to upload course!',
+                        error: err instanceof Error ? err.message : 'Failed to upload course!',
                         isLoading: false,
                     });
                     throw err;
@@ -72,9 +104,9 @@ export const useCourseStore = create<CourseState>() (
                 try {
                     await CourseAPI.deleteCourse(courseId);
                     set((state) => ({ courses: state.courses.filter(course => course.id !== courseId), isLoading: false }));
-                } catch (err: any) {
+                } catch (err: unknown) {
                     set({
-                        error: err.message || 'Failed to delete course!',
+                        error: err instanceof Error ? err.message : 'Failed to delete course!',
                         isLoading: false,
                     });
                     throw err;

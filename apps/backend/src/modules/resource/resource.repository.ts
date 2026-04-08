@@ -47,24 +47,24 @@ export class ResourceRepository {
 export class CourseRepository {
     async findAll(): Promise<Course[]> {
         const courses = await prisma.course.findMany(); // we might not need to fetch id for this request
-        return courses.map(u => new Course(u.id, u.name, u.code, u.acadamicYear )); 
+        return courses.map(u => new Course(u.id, u.name, u.code, u.acadamicYear, u.instructorId, u.departmentId)); 
     };
 
     async findOne(data: {id: string}): Promise<Course | null> {
         const course = await prisma.course.findUnique({ where: {id: data.id} });
         if (!course) return null;
-        return new Course(course.id, course.name, course.code, course.acadamicYear);
+        return new Course(course.id, course.name, course.code, course.acadamicYear, course.instructorId, course.departmentId);
     }
 
     async findOneByCode(code: string): Promise<Course | null> { // we can just make this boolean if the use-case allows it
         const course = await prisma.course.findUnique({ where: {code: code }});
         if (!course) return null;
-        return new Course(course.id, course.name, course.code, course.acadamicYear);
+        return new Course(course.id, course.name, course.code, course.acadamicYear, course.instructorId, course.departmentId);
     }
 
     async create(data: {name: string, code: string, acadamicYear: number, instructorId: string, departmentId: string}): Promise<Course> {
         const course = await prisma.course.create({ data });
-        return new Course(course.id, course.name, course.code, course.acadamicYear);
+        return new Course(course.id, course.name, course.code, course.acadamicYear, course.instructorId, course.departmentId);
     }
 
     // can we delete a course without deleting it's resources? if so, is that valid?
