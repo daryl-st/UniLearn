@@ -1,13 +1,18 @@
 import { motion } from 'motion/react';
-import { Search, Filter, ChevronDown, Play, Clock, BarChart, Bookmark, Terminal, BookOpen, Plus, Box } from 'lucide-react';
-import { COURSES } from '../constants';
+import { ChevronDown, Play, Clock, BarChart, Terminal, BookOpen, Plus, Box } from 'lucide-react';
+import { COURSES } from '@/utils/constants';
 
 interface CoursesProps {
   onCourseSelect: (id: string) => void;
 }
 
 // Needs refactroring - too much hardcoded data and UI logic in one component, but good enough for MVP phase.
-export default function Courses({ onCourseSelect }: CoursesProps) {
+// export default function Courses({ onCourseSelect }: CoursesProps) {
+export default function Courses() {
+  const { onCourseSelect }: CoursesProps = {
+    onCourseSelect: (id: string) => alert(`Selected course ID: ${id} (this will navigate to the course detail page in future iterations)`)
+  };
+
   const categories = ['All Courses', 'Neural Networks', 'Prompt Engineering', 'Data Privacy', 'LLM Architecture'];
 
   return (

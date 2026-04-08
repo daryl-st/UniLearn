@@ -19,21 +19,58 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useAuthStore } from "@/stores/authStore";
 
+// Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
-const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
-const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
-const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDashboardPage'));
+const LoginPageNew = lazy(() => import('@/pages/public/LoginPage'));
+const RegisterPageNew = lazy(() => import('@/pages/public/RegitsterPage'));
+
+// shared page
+const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
 const NotFoundPage = lazy(() => import('@/pages/shared/NotFoundPage'));
 // const UnauthorizedPage = lazy(() => import('@/pages/shared/UnauthorizedPage'));
+
+// public pages
 const HomePage = lazy(() => import('@/pages/marketing/HeroPage'));
 const LandingPage = lazy(() => import('@/pages/public/LandingPage'));
-const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
 const AboutPage = lazy(() => import('@/pages/public/AboutPage'));
 const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
 const CoursesPage = lazy(() => import('@/pages/public/CoursePage'));
-const LoginPageNew = lazy(() => import('@/pages/public/LoginPage'));
-const RegisterPageNew = lazy(() => import('@/pages/public/RegitsterPage'));
+
+// let's have the private pages here
+const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
+const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
+const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
+const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
+
+// const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
+// const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
+// const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDashboardPage'));
+
+function DashboardDemoPage({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="p-8 md:p-10">
+      <section className="rounded-sm border border-outline-variant/10 bg-surface-low p-8 shadow-[0_20px_40px_rgba(0,0,0,0.18)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-on-surface-variant">
+          Demo route
+        </p>
+        <h1 className="mt-3 font-headline text-3xl font-bold text-white">{title}</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
+          {description}
+        </p>
+        <div className="mt-8 inline-flex items-center rounded-sm border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
+          This section is a placeholder for the next iteration.
+        </div>
+      </section>
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -90,29 +127,64 @@ export function AppRouter() {
               <RegisterPage />
             </PublicRoute>
           } />
+
           {/* For debugging purpose */}
           <Route path="/dashboard" element={
             <PublicRoute>
               <StudnetDashboardPage />
             </PublicRoute>
           } />
+          <Route path="/dashboard/courses/:courseId" element={
+            <PublicRoute>
+              <CourseDetail />
+            </PublicRoute>
+          } />
+          <Route path="/dashboard/courses" element={
+            <PublicRoute>
+              <CourseExplorer />
+            </PublicRoute>
+          } />
+          <Route path="/dashboard/learning" element={
+            <PublicRoute>
+              <LearningWorkspace />
+            </PublicRoute>
+          } />
+          <Route path="/dashboard/analytics" element={
+            <PublicRoute>
+              <DashboardDemoPage
+                title="Analytics"
+                description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
+              />
+            </PublicRoute>
+          } />
+          <Route path="/dashboard/ai-tools" element={
+            <PublicRoute>
+              <DashboardDemoPage
+                title="AI Tools"
+                description="This demo route will host assistants, prompt labs, and course generation tools."
+              />
+            </PublicRoute>
+          } />
+          <Route path="/dashboard/settings" element={
+            <PublicRoute>
+              <DashboardDemoPage
+                title="Settings"
+                description="This demo route will contain profile preferences, workspace options, and notification controls."
+              />
+            </PublicRoute>
+          } />
 
           {/* Protected Routes */}
           {/* <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <PublicRoute>
               <InstructorDashboardPage />
-            </ProtectedRoute>
+            </PublicRoute>
           } />
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <PublicRoute>
               <AdminDashboardPage />
-            </ProtectedRoute>
+            </PublicRoute>
           } /> */}
-
-          {/* TODO: Redirect root to dashboard or login  */}
-          <Route path="/" element={
-            <Navigate to="/" replace />
-          } />
 
           {/* 404 - Not Found  */}
           <Route path="*" element={

@@ -56,7 +56,9 @@ export default function Dashboard() {
           <button className="text-primary text-[11px] font-mono uppercase tracking-widest hover:underline">View All History</button>
         </div>
         
-        <div className="glass-ai rounded-sm p-8 flex flex-col md:flex-row gap-8 items-center border border-primary/10 cursor-pointer" onClick={() => onCourseSelect(COURSES[0].id)}>
+        <div className="glass-ai rounded-sm p-8 flex flex-col md:flex-row gap-8 items-center border border-primary/10 cursor-pointer"
+        //  onClick={() => onCourseSelect(COURSES[0].id)}
+         >
           <div className="w-full md:w-1/3 aspect-video rounded-sm overflow-hidden relative shadow-2xl group cursor-pointer">
             <img 
               src={COURSES[0].thumbnail} 

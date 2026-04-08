@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { useLocation } from "react-router-dom"
 import { Menu } from "lucide-react"
 import { Navbar } from "./NavBar"
@@ -19,7 +19,12 @@ function isPublicShell(pathname: string) {
 }
 
 function getActiveTabFromPath(pathname: string) {
-  if (pathname.startsWith("/dashboard")) return "dashboard"
+  if (pathname === "/dashboard") return "dashboard"
+  if (pathname.startsWith("/dashboard/courses")) return "courses"
+  if (pathname.startsWith("/dashboard/learning")) return "learning"
+  if (pathname.startsWith("/dashboard/analytics")) return "analytics"
+  if (pathname.startsWith("/dashboard/ai-tools")) return "ai-tools"
+  if (pathname.startsWith("/dashboard/settings")) return "settings"
   return "dashboard"
 }
 
@@ -35,15 +40,11 @@ function getDashboardTitle(pathname: string) {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const { pathname } = useLocation()
-  const [activeTab, setActiveTab] = useState(() => getActiveTabFromPath(pathname))
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const activeTab = getActiveTabFromPath(pathname)
   const showSidebarLayout = isDashboardShell(pathname)
   const showPublicLayout = isPublicShell(pathname)
-
-  useEffect(() => {
-    setActiveTab(getActiveTabFromPath(pathname))
-  }, [pathname])
 
   // render navbar and footer only on public pages, and sidebar layout on dashboard pages.
   if (!showSidebarLayout) {
@@ -76,10 +77,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       >
         <Sidebar
           activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setActiveTab(tab)
-            setIsMobileMenuOpen(false)
-          }}
+          onNavigate={() => setIsMobileMenuOpen(false)}
         />
       </div>
         

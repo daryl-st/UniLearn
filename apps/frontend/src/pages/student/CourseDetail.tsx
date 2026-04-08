@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+// import { motion } from 'motion/react';
 import { 
   ChevronLeft, 
   Clock, 
@@ -9,7 +9,7 @@ import {
   CheckCircle2, 
   Share2, 
   Bookmark,
-  MoreHorizontal,
+//   MoreHorizontal,
   ArrowRight,
   Info
 } from 'lucide-react';
@@ -23,7 +23,15 @@ interface CourseDetailProps {
 
 // Needs refactrowing - too much hardcoded data and UI logic in one component, but good enough for MVP phase. 
 // Will break down into smaller components in future iterations.
-export default function CourseDetail({ courseId, onBack, onStart }: CourseDetailProps) {
+// export default function CourseDetail({ courseId, onBack, onStart }: CourseDetailProps) {
+export default function CourseDetail() {
+    // courseId has to passed from the dashboard page when user clicks on a course card, but for now we will hardcode it for development purpose.
+    const { courseId, onBack, onStart }: CourseDetailProps = {
+        courseId: "course-001",
+        onBack: () => window.history.back(),
+        onStart: () => alert("Starting course... (this will navigate to the learning workspace in future iterations)")
+    };
+    
   const course = COURSES.find(c => c.id === courseId) || COURSES[0];
 
   return (
@@ -100,7 +108,7 @@ export default function CourseDetail({ courseId, onBack, onStart }: CourseDetail
                 </div>
                 
                 <div className="divide-y divide-outline-variant/5">
-                  {module.lessons.map((lesson, lIdx) => (
+                  {module.lessons.map((lesson) => ( // lIdx - lesson index for potential future use
                     <div key={lesson.id} className="p-4 flex items-center justify-between group hover:bg-surface-high/50 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className={`w-8 h-8 rounded-sm flex items-center justify-center ${lesson.isCompleted ? 'bg-secondary/10 text-secondary' : 'bg-surface-high text-on-surface-variant'}`}>
