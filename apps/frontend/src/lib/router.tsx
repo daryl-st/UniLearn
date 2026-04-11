@@ -42,6 +42,11 @@ const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
+const InstructorDashboardPage = lazy(() => import('@/pages/instructor/Dashboard').then((module) => ({ default: module.Dashboard })));
+const InstructorCourseManagementPage = lazy(() => import('@/pages/instructor/CourseManagement').then((module) => ({ default: module.CourseManagement })));
+const InstructorAnalyticsPage = lazy(() => import('@/pages/instructor/Analytics').then((module) => ({ default: module.Analytics })));
+const InstructorContentLibraryPage = lazy(() => import('@/pages/instructor/ContentLibrary').then((module) => ({ default: module.ContentLibrary })));
+const InstructorSettingsPage = lazy(() => import('@/pages/instructor/Setting').then((module) => ({ default: module.Settings })));
 
 // const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
 // const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
@@ -72,21 +77,21 @@ function DashboardDemoPage({
   );
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const isLoading = useAuthStore((state) => state.isLoading);
+// function ProtectedRoute({ children }: { children: React.ReactNode }) {
+//   const user = useAuthStore((state) => state.user);
+//   const isLoading = useAuthStore((state) => state.isLoading);
 
-  // TODO: refactor
-  if (isLoading) {
-    return <div>Loading...</div> // loading component
-  }
+//   // TODO: refactor
+//   if (isLoading) {
+//     return <div>Loading...</div> // loading component
+//   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
+//   if (!user) {
+//     return <Navigate to="/login" replace />
+//   }
 
-  return children;
-}
+//   return children;
+// }
 
 // Public Route Components
 // redirect to dashboard of already logged in
@@ -101,20 +106,104 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+type RouteEntry = {
+  path: string;
+  element: React.ReactNode;
+};
+
+const publicRoutes: RouteEntry[] = [
+  { path: '/', element: <HomePage /> },
+  { path: '/home', element: <LandingPage /> },
+  { path: '/about', element: <AboutPage /> },
+  { path: '/contact', element: <ContactPage /> },
+  { path: '/courses', element: <CoursesPage /> },
+  { path: '/log', element: <LoginPageNew /> },
+  { path: '/reg', element: <RegisterPageNew /> },
+];
+
+const protectedRoutes: RouteEntry[] = [
+  {
+    path: '/dashboard',
+    element: (
+      <PublicRoute>
+        <StudnetDashboardPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/courses/:courseId',
+    element: (
+      <PublicRoute>
+        <CourseDetail />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/courses',
+    element: (
+      <PublicRoute>
+        <CourseExplorer />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/learning',
+    element: (
+      <PublicRoute>
+        <LearningWorkspace />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/analytics',
+    element: (
+      <PublicRoute>
+        <DashboardDemoPage
+          title="Analytics"
+          description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
+        />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/ai-tools',
+    element: (
+      <PublicRoute>
+        <DashboardDemoPage
+          title="AI Tools"
+          description="This demo route will host assistants, prompt labs, and course generation tools."
+        />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/settings',
+    element: (
+      <PublicRoute>
+        <DashboardDemoPage
+          title="Settings"
+          description="This demo route will contain profile preferences, workspace options, and notification controls."
+        />
+      </PublicRoute>
+    ),
+  },
+  { path: '/instructor', element: <Navigate to="/instructor/dashboard" replace /> },
+  { path: '/instructor/dashboard', element: <InstructorDashboardPage /> },
+  { path: '/instructor/courses', element: <InstructorCourseManagementPage /> },
+  { path: '/instructor/content', element: <InstructorContentLibraryPage /> },
+  { path: '/instructor/analytics', element: <InstructorAnalyticsPage /> },
+  { path: '/instructor/settings', element: <InstructorSettingsPage /> },
+];
+
 export function AppRouter() {
   // TODO: needs refactoring
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <AppLayout>
         <Routes>
-          <Route path="/" element={<HomePage />}/>
-          <Route path="/home" element={<LandingPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/courses" element={<CoursesPage />} />
-          <Route path="/log" element={<LoginPageNew />} />
-          <Route path="/reg" element={<RegisterPageNew />} />
-          
+          {publicRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
+          ))}
 
           {/* Public Routes */}
           <Route path="/login" element={
@@ -129,50 +218,9 @@ export function AppRouter() {
           } />
 
           {/* For debugging purpose */}
-          <Route path="/dashboard" element={
-            <PublicRoute>
-              <StudnetDashboardPage />
-            </PublicRoute>
-          } />
-          <Route path="/dashboard/courses/:courseId" element={
-            <PublicRoute>
-              <CourseDetail />
-            </PublicRoute>
-          } />
-          <Route path="/dashboard/courses" element={
-            <PublicRoute>
-              <CourseExplorer />
-            </PublicRoute>
-          } />
-          <Route path="/dashboard/learning" element={
-            <PublicRoute>
-              <LearningWorkspace />
-            </PublicRoute>
-          } />
-          <Route path="/dashboard/analytics" element={
-            <PublicRoute>
-              <DashboardDemoPage
-                title="Analytics"
-                description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
-              />
-            </PublicRoute>
-          } />
-          <Route path="/dashboard/ai-tools" element={
-            <PublicRoute>
-              <DashboardDemoPage
-                title="AI Tools"
-                description="This demo route will host assistants, prompt labs, and course generation tools."
-              />
-            </PublicRoute>
-          } />
-          <Route path="/dashboard/settings" element={
-            <PublicRoute>
-              <DashboardDemoPage
-                title="Settings"
-                description="This demo route will contain profile preferences, workspace options, and notification controls."
-              />
-            </PublicRoute>
-          } />
+          {protectedRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
+          ))}
 
           {/* Protected Routes */}
           {/* <Route path="/dashboard" element={

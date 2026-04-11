@@ -1,8 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 import { AppRouter } from "@/lib/router";
-// import { AuthProvider } from "@/contextes/auth"; // migrate to zustand
+// import { AuthProvider } from "@/contextes/auth"; // migrated to zustand
 import { useAuthStore } from "@/stores/authStore";
-import ThemeController from "@/components/ThemeController";
 import { useEffect } from "react";
 
 const App = () => {
@@ -12,11 +11,9 @@ const App = () => {
   }, []);
 
   return (
-    <ThemeController>
-        <BrowserRouter>
-          <AppRouter />
-        </BrowserRouter>
-    </ThemeController>
+    <BrowserRouter>
+      <AppRouter />
+    </BrowserRouter>
   );
 };
 
