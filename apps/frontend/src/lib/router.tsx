@@ -42,6 +42,7 @@ const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
+const AnalyticsPage = lazy(() => import('@/pages/student/Analytics'));
 
 // const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
 // const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
@@ -130,48 +131,45 @@ export function AppRouter() {
 
           {/* For debugging purpose */}
           <Route path="/dashboard" element={
-            <PublicRoute>
+            <ProtectedRoute>
               <StudnetDashboardPage />
-            </PublicRoute>
+            </ProtectedRoute>
           } />
           <Route path="/dashboard/courses/:courseId" element={
-            <PublicRoute>
+            <ProtectedRoute>
               <CourseDetail />
-            </PublicRoute>
+            </ProtectedRoute>
           } />
           <Route path="/dashboard/courses" element={
-            <PublicRoute>
+            <ProtectedRoute>
               <CourseExplorer />
-            </PublicRoute>
+            </ProtectedRoute>
           } />
           <Route path="/dashboard/learning" element={
-            <PublicRoute>
+            <ProtectedRoute>
               <LearningWorkspace />
-            </PublicRoute>
+            </ProtectedRoute>
           } />
           <Route path="/dashboard/analytics" element={
-            <PublicRoute>
-              <DashboardDemoPage
-                title="Analytics"
-                description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
-              />
-            </PublicRoute>
+            <ProtectedRoute>
+              <AnalyticsPage />
+            </ProtectedRoute>
           } />
           <Route path="/dashboard/ai-tools" element={
-            <PublicRoute>
+            <ProtectedRoute>
               <DashboardDemoPage
                 title="AI Tools"
                 description="This demo route will host assistants, prompt labs, and course generation tools."
               />
-            </PublicRoute>
+            </ProtectedRoute>
           } />
           <Route path="/dashboard/settings" element={
-            <PublicRoute>
+            <ProtectedRoute>
               <DashboardDemoPage
                 title="Settings"
                 description="This demo route will contain profile preferences, workspace options, and notification controls."
               />
-            </PublicRoute>
+            </ProtectedRoute>
           } />
 
           {/* Protected Routes */}
@@ -187,11 +185,7 @@ export function AppRouter() {
           } /> */}
 
           {/* 404 - Not Found  */}
-          <Route path="*" element={
-            <PublicRoute>
-              <NotFoundPage />
-            </PublicRoute>
-          } />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AppLayout>
     </Suspense>
