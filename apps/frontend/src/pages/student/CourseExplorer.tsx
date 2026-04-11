@@ -6,6 +6,9 @@ interface CoursesProps {
   onCourseSelect: (id: string) => void;
 }
 
+// TODO: Refactor this component into smaller components like course card and catalog grid.
+// TODO: Implement the onCourseSelect callback and pass it to the course cards.
+
 // Needs refactroring - too much hardcoded data and UI logic in one component, but good enough for MVP phase.
 // export default function Courses({ onCourseSelect }: CoursesProps) {
 export default function Courses() {
