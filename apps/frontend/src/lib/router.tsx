@@ -43,6 +43,8 @@ const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
 const AnalyticsPage = lazy(() => import('@/pages/student/Analytics'));
+const SettingsPage = lazy(() => import('@/pages/student/Setting'));
+const AIToolPage = lazy(() => import('@/pages/student/AITool'));
 
 // const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
 // const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
@@ -157,18 +159,12 @@ export function AppRouter() {
           } />
           <Route path="/dashboard/ai-tools" element={
             <ProtectedRoute>
-              <DashboardDemoPage
-                title="AI Tools"
-                description="This demo route will host assistants, prompt labs, and course generation tools."
-              />
+              <AIToolPage />
             </ProtectedRoute>
           } />
           <Route path="/dashboard/settings" element={
             <ProtectedRoute>
-              <DashboardDemoPage
-                title="Settings"
-                description="This demo route will contain profile preferences, workspace options, and notification controls."
-              />
+              <SettingsPage />
             </ProtectedRoute>
           } />
 
