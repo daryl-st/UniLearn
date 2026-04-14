@@ -16,7 +16,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
-type SidebarVariant = 'dashboard' | 'instructor';
+type SidebarVariant = 'dashboard' | 'instructor' | 'admin';
 
 function getSidebarVariant(pathname: string): SidebarVariant | null {
   if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
@@ -25,6 +25,10 @@ function getSidebarVariant(pathname: string): SidebarVariant | null {
 
   if (pathname === '/instructor' || pathname.startsWith('/instructor/')) {
     return 'instructor';
+  }
+
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return 'admin';
   }
 
   return null;
@@ -40,6 +44,7 @@ export default function Sidebar() {
   }
 
   const isDashboard = variant === 'dashboard';
+  const isAdmin = variant === 'admin';
 
   const dashboardItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -58,7 +63,15 @@ export default function Sidebar() {
     { id: 'settings', label: 'Settings', icon: Settings, path: '/instructor/settings' },
   ];
 
-  const menuItems = isDashboard ? dashboardItems : instructorItems;
+  const adminItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
+    { id: 'users', label: 'User Management', icon: ShieldCheck, path: '/admin/users' },
+    { id: 'courses', label: 'Course Management', icon: Layers, path: '/admin/courses' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },
+  ];
+
+  const menuItems = isDashboard ? dashboardItems : isAdmin ? adminItems : instructorItems;
 
   const activeTab = (() => {
     if (isDashboard) {
@@ -76,6 +89,11 @@ export default function Sidebar() {
     if (pathname.startsWith('/instructor/content')) return 'content';
     if (pathname.startsWith('/instructor/analytics')) return 'analytics';
     if (pathname.startsWith('/instructor/settings')) return 'settings';
+    if (pathname.startsWith('/admin/dashboard')) return 'dashboard';
+    if (pathname.startsWith('/admin/users')) return 'users';
+    if (pathname.startsWith('/admin/courses')) return 'courses';
+    if (pathname.startsWith('/admin/analytics')) return 'analytics';
+    if (pathname.startsWith('/admin/settings')) return 'settings';
     return 'dashboard';
   })();
 
@@ -100,10 +118,10 @@ export default function Sidebar() {
         </div>
         <div>
           <h1 className="font-headline text-xl font-bold tracking-tight text-white">
-            {isDashboard ? 'UniLearn' : 'Instructor Hub'}
+            {isDashboard ? 'UniLearn' : isAdmin ? 'Admin Hub' : 'Instructor Hub'}
           </h1>
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-on-surface-variant opacity-60">
-            {isDashboard ? 'Enterprise AI' : 'Teaching Console'}
+            {isDashboard ? 'Enterprise AI' : isAdmin ? 'Ops Console' : 'Teaching Console'}
           </p>
         </div>
       </div>
@@ -145,6 +163,14 @@ export default function Sidebar() {
           >
             <Plus className="h-4 w-4" />
             <span>New Inquiry</span>
+          </button>
+        ) : isAdmin ? (
+          <button
+            className="mb-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-2.5 font-headline text-sm font-bold text-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
+            onClick={() => handleNavigate('/admin/users')}
+          >
+            <Plus className="h-4 w-4" />
+            <span>New User</span>
           </button>
         ) : (
           <button

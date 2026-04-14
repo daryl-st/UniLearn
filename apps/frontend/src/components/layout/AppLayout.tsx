@@ -14,7 +14,9 @@ function isDashboardShell(pathname: string) {
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
     pathname === "/instructor" ||
-    pathname.startsWith("/instructor/")
+    pathname.startsWith("/instructor/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/")
   )
 }
 
@@ -34,6 +36,11 @@ function getDashboardTitle(pathname: string) {
   if (pathname.startsWith("/instructor/content")) return "Content Library"
   if (pathname.startsWith("/instructor/analytics")) return "Analytics"
   if (pathname.startsWith("/instructor/settings")) return "Settings"
+  if (pathname === "/admin/dashboard") return "Admin Dashboard"
+  if (pathname.startsWith("/admin/users")) return "User Management"
+  if (pathname.startsWith("/admin/courses")) return "Course Management"
+  if (pathname.startsWith("/admin/analytics")) return "Analytics"
+  if (pathname.startsWith("/admin/settings")) return "Settings"
   return "Dashboard"
 }
 

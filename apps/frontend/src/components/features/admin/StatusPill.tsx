@@ -16,15 +16,15 @@ export const StatusPill: React.FC<StatusPillProps> = ({ status }) => {
         <div className="flex items-center gap-2">
         <span className={cn(
             "w-2 h-2 rounded-full",
-            isSynchronized && "bg-secondary-accent",
-            isSuspended && "bg-error",
-            isDraft && "bg-primary-brand"
+            isSynchronized && "bg-secondary",
+            isSuspended && "bg-destructive",
+            isDraft && "bg-primary"
         )}></span>
         <span className={cn(
             "text-xs font-bold",
             isSynchronized && "text-on-surface",
-            isSuspended && "text-error",
-            isDraft && "text-primary-brand"
+            isSuspended && "text-destructive",
+            isDraft && "text-primary"
         )}>
             {status}
         </span>

@@ -10,7 +10,7 @@ type DataTableProps = {
 
 export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
     return (
-        <div className="bg-surface-low rounded-2xl overflow-hidden border border-border shadow-sleek">
+        <div className="bg-surface-low rounded-2xl overflow-hidden border border-border shadow-sm">
         <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
             <thead>
@@ -24,7 +24,7 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
             </thead>
             <tbody className="divide-y divide-border">
                 {data.map((item) => (
-                <tr key={item.id} className="h-16 hover:bg-primary-surface/30 transition-colors group">
+                <tr key={item.id} className="h-16 hover:bg-primary/10 transition-colors group">
                     <td className="px-6">
                     <div className="flex items-center gap-3">
                         {type === 'users' ? (
@@ -32,7 +32,7 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
                             <img 
                             className="w-9 h-9 rounded-full object-cover border border-border" 
                             src={(item as User).avatar || `https://picsum.photos/seed/${item.id}/100/100`} 
-                            alt={item.name}
+                            alt={(item as User).name}
                             referrerPolicy="no-referrer"
                             />
                             <div className="flex flex-col">
@@ -46,7 +46,7 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
                             <img 
                                 className="w-full h-full object-cover" 
                                 src={(item as Course).image} 
-                                alt={item.title}
+                                alt={(item as Course).title}
                                 referrerPolicy="no-referrer"
                             />
                             </div>
@@ -60,7 +60,7 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
                     </td>
                     <td className="px-4">
                     {type === 'users' ? (
-                        <span className="text-[10px] font-bold bg-primary-surface text-primary-brand px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span className="text-[10px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full uppercase tracking-wider">
                         {(item as User).role}
                         </span>
                     ) : (
@@ -91,17 +91,17 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
                         {type === 'users' ? (
                         <>
                             {(item as User).status === 'Suspended' ? (
-                            <button className="p-1.5 text-on-surface-variant hover:text-secondary-accent transition-colors" title="Reactivate"><RefreshCw className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-secondary transition-colors" title="Reactivate"><RefreshCw className="w-4 h-4" /></button>
                             ) : (
-                            <button className="p-1.5 text-on-surface-variant hover:text-error transition-colors" title="Suspend"><Ban className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-destructive transition-colors" title="Suspend"><Ban className="w-4 h-4" /></button>
                             )}
-                            <button className="p-1.5 text-on-surface-variant hover:text-primary-brand transition-colors" title="Edit"><Edit2 className="w-4 h-4" /></button>
-                            <button className="p-1.5 text-on-surface-variant hover:text-error transition-colors" title="Remove"><Trash2 className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Edit"><Edit2 className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-destructive transition-colors" title="Remove"><Trash2 className="w-4 h-4" /></button>
                         </>
                         ) : (
                         <>
-                            <button className="p-1.5 text-on-surface-variant hover:text-primary-brand transition-colors"><Edit2 className="w-4 h-4" /></button>
-                            <button className="p-1.5 text-on-surface-variant hover:text-primary-brand transition-colors"><MoreVertical className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors"><Edit2 className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors"><MoreVertical className="w-4 h-4" /></button>
                         </>
                         )}
                     </div>

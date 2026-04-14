@@ -37,16 +37,23 @@ const AboutPage = lazy(() => import('@/pages/public/AboutPage'));
 const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
 const CoursesPage = lazy(() => import('@/pages/public/CoursePage'));
 
-// let's have the private pages here
+// let's have the private pages here - Student pages first
 const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
+// Instructor Pages
 const InstructorDashboardPage = lazy(() => import('@/pages/instructor/Dashboard').then((module) => ({ default: module.Dashboard })));
 const InstructorCourseManagementPage = lazy(() => import('@/pages/instructor/CourseManagement').then((module) => ({ default: module.CourseManagement })));
 const InstructorAnalyticsPage = lazy(() => import('@/pages/instructor/Analytics').then((module) => ({ default: module.Analytics })));
 const InstructorContentLibraryPage = lazy(() => import('@/pages/instructor/ContentLibrary').then((module) => ({ default: module.ContentLibrary })));
 const InstructorSettingsPage = lazy(() => import('@/pages/instructor/Setting').then((module) => ({ default: module.Settings })));
+// Admin Pages
+const AdminDashboardPage = lazy(() => import('@/pages/admin/Dashboard').then((module) => ({ default: module.Dashboard })));
+const AdminCourseManagementPage = lazy(() => import('@/pages/admin/CourseMangement').then((module) => ({ default: module.CourseManagement })));
+const AdminAnalyticsPage = lazy(() => import('@/pages/admin/Analytics').then((module) => ({ default: module.Analytics })));
+const AdminSettingsPage = lazy(() => import('@/pages/admin/Settings').then((module) => ({ default: module.Settings })));
+const AdminUserManagementPage = lazy(() => import('@/pages/admin/UserManagement').then((module) => ({ default: module.UserManagement })));
 
 // const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
 // const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
@@ -187,12 +194,20 @@ const protectedRoutes: RouteEntry[] = [
       </PublicRoute>
     ),
   },
+  // instructor pages here
   { path: '/instructor', element: <Navigate to="/instructor/dashboard" replace /> },
   { path: '/instructor/dashboard', element: <InstructorDashboardPage /> },
   { path: '/instructor/courses', element: <InstructorCourseManagementPage /> },
   { path: '/instructor/content', element: <InstructorContentLibraryPage /> },
   { path: '/instructor/analytics', element: <InstructorAnalyticsPage /> },
   { path: '/instructor/settings', element: <InstructorSettingsPage /> },
+  // admin pages here (same style grouping as instructor routes)
+  { path: '/admin', element: <Navigate to="/admin/dashboard" replace /> },
+  { path: '/admin/dashboard', element: <AdminDashboardPage /> },
+  { path: '/admin/users', element: <AdminUserManagementPage /> },
+  { path: '/admin/courses', element: <AdminCourseManagementPage /> },
+  { path: '/admin/analytics', element: <AdminAnalyticsPage /> },
+  { path: '/admin/settings', element: <AdminSettingsPage /> },
 ];
 
 export function AppRouter() {
