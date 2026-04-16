@@ -42,6 +42,9 @@ const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
+const AnalyticsPage = lazy(() => import('@/pages/student/Analytics'));
+const AIToolPage = lazy(() => import('@/pages/student/AITool'));
+const SettingsPage = lazy(() => import('@/pages/student/Setting'));
 // Instructor Pages
 const InstructorDashboardPage = lazy(() => import('@/pages/instructor/Dashboard').then((module) => ({ default: module.Dashboard })));
 const InstructorCourseManagementPage = lazy(() => import('@/pages/instructor/CourseManagement').then((module) => ({ default: module.CourseManagement })));
@@ -59,31 +62,6 @@ const AdminUserManagementPage = lazy(() => import('@/pages/admin/UserManagement'
 // const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
 // const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDashboardPage'));
 
-function DashboardDemoPage({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="p-8 md:p-10">
-      <section className="rounded-sm border border-outline-variant/10 bg-surface-low p-8 shadow-[0_20px_40px_rgba(0,0,0,0.18)]">
-        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-on-surface-variant">
-          Demo route
-        </p>
-        <h1 className="mt-3 font-headline text-3xl font-bold text-white">{title}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
-          {description}
-        </p>
-        <div className="mt-8 inline-flex items-center rounded-sm border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
-          This section is a placeholder for the next iteration.
-        </div>
-      </section>
-    </div>
-  );
-}
-
 // function ProtectedRoute({ children }: { children: React.ReactNode }) {
 //   const user = useAuthStore((state) => state.user);
 //   const isLoading = useAuthStore((state) => state.isLoading);
@@ -99,7 +77,6 @@ function DashboardDemoPage({
 
 //   return children;
 // }
-
 // Public Route Components
 // redirect to dashboard of already logged in
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -131,68 +108,31 @@ const publicRoutes: RouteEntry[] = [
 const protectedRoutes: RouteEntry[] = [
   {
     path: '/dashboard',
-    element: (
-      <PublicRoute>
-        <StudnetDashboardPage />
-      </PublicRoute>
-    ),
+    element: <StudnetDashboardPage />,
   },
   {
     path: '/dashboard/courses/:courseId',
-    element: (
-      <PublicRoute>
-        <CourseDetail />
-      </PublicRoute>
-    ),
+    element: <CourseDetail />,
   },
   {
     path: '/dashboard/courses',
-    element: (
-      <PublicRoute>
-        <CourseExplorer />
-      </PublicRoute>
-    ),
+    element: <CourseExplorer />,
   },
   {
     path: '/dashboard/learning',
-    element: (
-      <PublicRoute>
-        <LearningWorkspace />
-      </PublicRoute>
-    ),
+    element: <LearningWorkspace />,
   },
   {
     path: '/dashboard/analytics',
-    element: (
-      <PublicRoute>
-        <DashboardDemoPage
-          title="Analytics"
-          description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
-        />
-      </PublicRoute>
-    ),
+    element: <AnalyticsPage />,
   },
   {
     path: '/dashboard/ai-tools',
-    element: (
-      <PublicRoute>
-        <DashboardDemoPage
-          title="AI Tools"
-          description="This demo route will host assistants, prompt labs, and course generation tools."
-        />
-      </PublicRoute>
-    ),
+    element: <AIToolPage />,
   },
   {
     path: '/dashboard/settings',
-    element: (
-      <PublicRoute>
-        <DashboardDemoPage
-          title="Settings"
-          description="This demo route will contain profile preferences, workspace options, and notification controls."
-        />
-      </PublicRoute>
-    ),
+    element: <SettingsPage />,
   },
   // instructor pages here
   { path: '/instructor', element: <Navigate to="/instructor/dashboard" replace /> },
