@@ -1,26 +1,52 @@
-import { 
-  LayoutDashboard, 
-  GraduationCap, 
-  BookOpen, 
-  BarChart3, 
-  Bot, 
-  Settings, 
-  Plus, 
-  HelpCircle, 
-  UserCircle 
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import {
+  LayoutDashboard,
+  GraduationCap,
+  BookOpen,
+  BarChart3,
+  Bot,
+  Settings,
+  Plus,
+  HelpCircle,
+  UserCircle,
+  Layers,
+  Library,
+  ShieldCheck,
+} from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
-interface SidebarProps {
-  activeTab: string;
-  onNavigate?: () => void;
+type SidebarVariant = 'dashboard' | 'instructor' | 'admin';
+
+function getSidebarVariant(pathname: string): SidebarVariant | null {
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    return 'dashboard';
+  }
+
+  if (pathname === '/instructor' || pathname.startsWith('/instructor/')) {
+    return 'instructor';
+  }
+
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return 'admin';
+  }
+
+  return null;
 }
 
-export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
+export default function Sidebar() {
+  const { pathname } = useLocation();
   const navigate = useNavigate();
+  const variant = getSidebarVariant(pathname);
 
-  const menuItems = [
+  if (!variant) {
+    return null;
+  }
+
+  const isDashboard = variant === 'dashboard';
+  const isAdmin = variant === 'admin';
+
+  const dashboardItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'courses', label: 'Courses', icon: GraduationCap, path: '/dashboard/courses' },
     { id: 'learning', label: 'Learning', icon: BookOpen, path: '/dashboard/learning' },
@@ -29,62 +55,140 @@ export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
     { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
+  const instructorItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/instructor/dashboard' },
+    { id: 'courses', label: 'Course Management', icon: Layers, path: '/instructor/courses' },
+    { id: 'content', label: 'Content Library', icon: Library, path: '/instructor/content' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/instructor/analytics' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/instructor/settings' },
+  ];
+
+  const adminItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
+    { id: 'users', label: 'User Management', icon: ShieldCheck, path: '/admin/users' },
+    { id: 'courses', label: 'Course Management', icon: Layers, path: '/admin/courses' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },
+  ];
+
+  const menuItems = isDashboard ? dashboardItems : isAdmin ? adminItems : instructorItems;
+
+  const activeTab = (() => {
+    if (isDashboard) {
+      if (pathname === '/dashboard') return 'dashboard';
+      if (pathname.startsWith('/dashboard/courses')) return 'courses';
+      if (pathname.startsWith('/dashboard/learning')) return 'learning';
+      if (pathname.startsWith('/dashboard/analytics')) return 'analytics';
+      if (pathname.startsWith('/dashboard/ai-tools')) return 'ai-tools';
+      if (pathname.startsWith('/dashboard/settings')) return 'settings';
+      return 'dashboard';
+    }
+
+    if (pathname === '/instructor/dashboard') return 'dashboard';
+    if (pathname.startsWith('/instructor/courses')) return 'courses';
+    if (pathname.startsWith('/instructor/content')) return 'content';
+    if (pathname.startsWith('/instructor/analytics')) return 'analytics';
+    if (pathname.startsWith('/instructor/settings')) return 'settings';
+    if (pathname.startsWith('/admin/dashboard')) return 'dashboard';
+    if (pathname.startsWith('/admin/users')) return 'users';
+    if (pathname.startsWith('/admin/courses')) return 'courses';
+    if (pathname.startsWith('/admin/analytics')) return 'analytics';
+    if (pathname.startsWith('/admin/settings')) return 'settings';
+    return 'dashboard';
+  })();
+
   const handleNavigate = (path: string) => {
     navigate(path);
-    onNavigate?.();
   };
 
   return (
-    <aside className="flex h-full w-full flex-col overflow-hidden border-r border-outline-variant/10 bg-surface-low py-6">
+    <aside className="fixed left-0 top-0 bottom-0 z-40 hidden w-64 flex-col overflow-hidden border-r border-outline-variant/10 bg-surface-low py-6 lg:flex">
       <div className="px-6 mb-10 flex items-center gap-3">
-        <div className="w-10 h-10 rounded bg-primary flex items-center justify-center">
-          <GraduationCap className="text-on-primary w-6 h-6" />
+        <div
+          className={cn(
+            'flex h-10 w-10 items-center justify-center rounded',
+            isDashboard ? 'bg-primary' : 'bg-primary/20 text-primary'
+          )}
+        >
+          {isDashboard ? (
+            <GraduationCap className="h-6 w-6 text-on-primary" />
+          ) : (
+            <ShieldCheck className="h-5 w-5" />
+          )}
         </div>
         <div>
-          <h1 className="font-headline text-xl font-bold text-white tracking-tight">UniLearn</h1>
-          <p className="text-[10px] text-on-surface-variant tracking-[0.2em] uppercase font-mono opacity-60">Enterprise AI</p>
+          <h1 className="font-headline text-xl font-bold tracking-tight text-white">
+            {isDashboard ? 'UniLearn' : isAdmin ? 'Admin Hub' : 'Instructor Hub'}
+          </h1>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-on-surface-variant opacity-60">
+            {isDashboard ? 'Enterprise AI' : isAdmin ? 'Ops Console' : 'Teaching Console'}
+          </p>
         </div>
       </div>
 
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 space-y-1 px-3">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleNavigate(item.path)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm transition-all duration-200 group relative ${
-              activeTab === item.id 
-                ? 'text-primary bg-surface-high border-l-2 border-primary' 
-                : 'text-on-surface-variant hover:text-white hover:bg-surface-high/50'
-            }`}
+            className={cn(
+              'group relative flex w-full items-center gap-3 rounded-sm px-4 py-3 text-left transition-all duration-200',
+              activeTab === item.id
+                ? 'border-l-2 border-primary bg-surface-high text-primary'
+                : 'text-on-surface-variant hover:bg-surface-high/50 hover:text-white'
+            )}
           >
-            <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-primary' : 'text-on-surface-variant group-hover:text-white'}`} />
+            <item.icon
+              className={cn(
+                'h-5 w-5 transition-colors',
+                activeTab === item.id ? 'text-primary' : 'text-on-surface-variant group-hover:text-white'
+              )}
+            />
             <span className="font-medium text-[13px]">{item.label}</span>
             {activeTab === item.id && (
-              <motion.div 
-                layoutId="active-pill"
-                className="absolute inset-0 bg-primary/5 -z-10"
+              <motion.div
+                layoutId={`active-pill-${variant}`}
+                className="absolute inset-0 -z-10 bg-primary/5"
               />
             )}
           </button>
         ))}
       </nav>
 
-      <div className="px-4 mt-auto">
-        <button
-          className="w-full flex items-center justify-center gap-2 py-2.5 mb-6 rounded-sm bg-primary text-on-primary font-headline font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/10"
-          onClick={() => handleNavigate('/dashboard/learning')}
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Inquiry</span>
-        </button>
-        
-        <div className="space-y-1">
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-white transition-all text-[13px]">
-            <HelpCircle className="w-4 h-4" />
+      <div className="mt-auto px-4">
+        {isDashboard ? (
+          <button
+            className="mb-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-2.5 font-headline text-sm font-bold text-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
+            onClick={() => handleNavigate('/dashboard/learning')}
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Inquiry</span>
+          </button>
+        ) : isAdmin ? (
+          <button
+            className="mb-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-2.5 font-headline text-sm font-bold text-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
+            onClick={() => handleNavigate('/admin/users')}
+          >
+            <Plus className="h-4 w-4" />
+            <span>New User</span>
+          </button>
+        ) : (
+          <button
+            className="mb-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-2.5 font-headline text-sm font-bold text-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
+            onClick={() => handleNavigate('/instructor/courses')}
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Course</span>
+          </button>
+        )}
+
+        <div className="space-y-1 border-t border-outline-variant/10 pt-4">
+          <button className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-white">
+            <HelpCircle className="h-4 w-4" />
             <span>Support</span>
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-white transition-all text-[13px]">
-            <UserCircle className="w-4 h-4" />
+          <button className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-white">
+            <UserCircle className="h-4 w-4" />
             <span>Account</span>
           </button>
         </div>

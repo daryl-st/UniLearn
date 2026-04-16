@@ -37,14 +37,23 @@ const AboutPage = lazy(() => import('@/pages/public/AboutPage'));
 const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
 const CoursesPage = lazy(() => import('@/pages/public/CoursePage'));
 
-// let's have the private pages here
+// let's have the private pages here - Student pages first
 const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
-const AnalyticsPage = lazy(() => import('@/pages/student/Analytics'));
-const SettingsPage = lazy(() => import('@/pages/student/Setting'));
-const AIToolPage = lazy(() => import('@/pages/student/AITool'));
+// Instructor Pages
+const InstructorDashboardPage = lazy(() => import('@/pages/instructor/Dashboard').then((module) => ({ default: module.Dashboard })));
+const InstructorCourseManagementPage = lazy(() => import('@/pages/instructor/CourseManagement').then((module) => ({ default: module.CourseManagement })));
+const InstructorAnalyticsPage = lazy(() => import('@/pages/instructor/Analytics').then((module) => ({ default: module.Analytics })));
+const InstructorContentLibraryPage = lazy(() => import('@/pages/instructor/ContentLibrary').then((module) => ({ default: module.ContentLibrary })));
+const InstructorSettingsPage = lazy(() => import('@/pages/instructor/Setting').then((module) => ({ default: module.Settings })));
+// Admin Pages
+const AdminDashboardPage = lazy(() => import('@/pages/admin/Dashboard').then((module) => ({ default: module.Dashboard })));
+const AdminCourseManagementPage = lazy(() => import('@/pages/admin/CourseMangement').then((module) => ({ default: module.CourseManagement })));
+const AdminAnalyticsPage = lazy(() => import('@/pages/admin/Analytics').then((module) => ({ default: module.Analytics })));
+const AdminSettingsPage = lazy(() => import('@/pages/admin/Settings').then((module) => ({ default: module.Settings })));
+const AdminUserManagementPage = lazy(() => import('@/pages/admin/UserManagement').then((module) => ({ default: module.UserManagement })));
 
 // const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
 // const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
@@ -75,21 +84,21 @@ function DashboardDemoPage({
   );
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const isLoading = useAuthStore((state) => state.isLoading);
+// function ProtectedRoute({ children }: { children: React.ReactNode }) {
+//   const user = useAuthStore((state) => state.user);
+//   const isLoading = useAuthStore((state) => state.isLoading);
 
-  // TODO: refactor
-  if (isLoading) {
-    return <div>Loading...</div> // loading component
-  }
+//   // TODO: refactor
+//   if (isLoading) {
+//     return <div>Loading...</div> // loading component
+//   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
+//   if (!user) {
+//     return <Navigate to="/login" replace />
+//   }
 
-  return children;
-}
+//   return children;
+// }
 
 // Public Route Components
 // redirect to dashboard of already logged in
@@ -104,20 +113,112 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+type RouteEntry = {
+  path: string;
+  element: React.ReactNode;
+};
+
+const publicRoutes: RouteEntry[] = [
+  { path: '/', element: <HomePage /> },
+  { path: '/home', element: <LandingPage /> },
+  { path: '/about', element: <AboutPage /> },
+  { path: '/contact', element: <ContactPage /> },
+  { path: '/courses', element: <CoursesPage /> },
+  { path: '/log', element: <LoginPageNew /> },
+  { path: '/reg', element: <RegisterPageNew /> },
+];
+
+const protectedRoutes: RouteEntry[] = [
+  {
+    path: '/dashboard',
+    element: (
+      <PublicRoute>
+        <StudnetDashboardPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/courses/:courseId',
+    element: (
+      <PublicRoute>
+        <CourseDetail />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/courses',
+    element: (
+      <PublicRoute>
+        <CourseExplorer />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/learning',
+    element: (
+      <PublicRoute>
+        <LearningWorkspace />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/analytics',
+    element: (
+      <PublicRoute>
+        <DashboardDemoPage
+          title="Analytics"
+          description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
+        />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/ai-tools',
+    element: (
+      <PublicRoute>
+        <DashboardDemoPage
+          title="AI Tools"
+          description="This demo route will host assistants, prompt labs, and course generation tools."
+        />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/dashboard/settings',
+    element: (
+      <PublicRoute>
+        <DashboardDemoPage
+          title="Settings"
+          description="This demo route will contain profile preferences, workspace options, and notification controls."
+        />
+      </PublicRoute>
+    ),
+  },
+  // instructor pages here
+  { path: '/instructor', element: <Navigate to="/instructor/dashboard" replace /> },
+  { path: '/instructor/dashboard', element: <InstructorDashboardPage /> },
+  { path: '/instructor/courses', element: <InstructorCourseManagementPage /> },
+  { path: '/instructor/content', element: <InstructorContentLibraryPage /> },
+  { path: '/instructor/analytics', element: <InstructorAnalyticsPage /> },
+  { path: '/instructor/settings', element: <InstructorSettingsPage /> },
+  // admin pages here (same style grouping as instructor routes)
+  { path: '/admin', element: <Navigate to="/admin/dashboard" replace /> },
+  { path: '/admin/dashboard', element: <AdminDashboardPage /> },
+  { path: '/admin/users', element: <AdminUserManagementPage /> },
+  { path: '/admin/courses', element: <AdminCourseManagementPage /> },
+  { path: '/admin/analytics', element: <AdminAnalyticsPage /> },
+  { path: '/admin/settings', element: <AdminSettingsPage /> },
+];
+
 export function AppRouter() {
   // TODO: needs refactoring
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <AppLayout>
         <Routes>
-          <Route path="/" element={<HomePage />}/>
-          <Route path="/home" element={<LandingPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/courses" element={<CoursesPage />} />
-          <Route path="/log" element={<LoginPageNew />} />
-          <Route path="/reg" element={<RegisterPageNew />} />
-          
+          {publicRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
+          ))}
 
           {/* Public Routes */}
           <Route path="/login" element={
@@ -132,41 +233,9 @@ export function AppRouter() {
           } />
 
           {/* For debugging purpose */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <StudnetDashboardPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/courses/:courseId" element={
-            <ProtectedRoute>
-              <CourseDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/courses" element={
-            <ProtectedRoute>
-              <CourseExplorer />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/learning" element={
-            <ProtectedRoute>
-              <LearningWorkspace />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/analytics" element={
-            <ProtectedRoute>
-              <AnalyticsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/ai-tools" element={
-            <ProtectedRoute>
-              <AIToolPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/settings" element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          } />
+          {protectedRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
+          ))}
 
           {/* Protected Routes */}
           {/* <Route path="/dashboard" element={
@@ -181,7 +250,11 @@ export function AppRouter() {
           } /> */}
 
           {/* 404 - Not Found  */}
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="*" element={
+            <PublicRoute>
+              <NotFoundPage />
+            </PublicRoute>
+          } />
         </Routes>
       </AppLayout>
     </Suspense>

@@ -2,10 +2,18 @@ import { motion } from 'motion/react';
 import { Verified, Clock, Rocket, PlayCircle, Share2, ChevronLeft, ChevronRight, CheckCircle2, MessageSquare, Sparkles } from 'lucide-react';
 import { COURSES, NOTIFICATIONS } from '@/utils/constants';
 
-// i need to understand the need for this
+// this call back is here mainly to handle navigation to course details page when user clicks on a course card.
+// through props and letting the parent component hanlde the routing logic.
+// when a course is selected either from resume course or additional course section, it will call the onCourseSelect callback 
+// with the course id, and parent component can then navigate to the course details page using that id. (courses/:id)
 // interface DashboardProps {
 //   onCourseSelect: (id: string) => void;
 // }
+
+// TODO: Implement the onCourseSelect callback and pass it to the course cards.
+// TODO: Refactor the dashboard mainly teh stats row and course cards into smaller components.
+// TODO: Refactor notifications into a separate component with its own state management for read/unread status and clearing notifications.
+// TODO: impelement notification panel(overlay) that shows when user click on notification icon in the header, and move the notifications feed from dashboard to that panel.
 
 // needs refactoring - too much hardcoded data and UI logic in one component, but good enough for MVP phase. 
 // Will break down into smaller components in future iterations.

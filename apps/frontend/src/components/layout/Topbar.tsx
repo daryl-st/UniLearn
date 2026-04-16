@@ -1,6 +1,5 @@
 import { Search, Bell, HelpCircle } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
-import { useThemeController } from '@/components/ThemeController';
 
 interface TopBarProps {
   title: string;
@@ -8,10 +7,8 @@ interface TopBarProps {
 }
 
 export default function TopBar({ title, hideTitle }: TopBarProps) {
-  const { isDark, toggleTheme } = useThemeController();
-
   return (
-    <div className="flex items-center justify-between flex-1 gap-6">
+    <div className="flex items-center justify-between flex-1">
       <div className="flex items-center gap-8 flex-1">
         {!hideTitle && <h2 className="font-headline font-bold text-sm text-white uppercase tracking-widest">{title}</h2>}
         
@@ -26,12 +23,12 @@ export default function TopBar({ title, hideTitle }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-4">
-          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+        <div className="flex items-center gap-3">
           <button className="p-2 text-on-surface-variant hover:text-white hover:bg-surface-high rounded-full transition-all relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full border-2 border-surface"></span>
           </button>
+          <ThemeToggle />
           <button className="p-2 text-on-surface-variant hover:text-white hover:bg-surface-high rounded-full transition-all">
             <HelpCircle className="w-5 h-5" />
           </button>
