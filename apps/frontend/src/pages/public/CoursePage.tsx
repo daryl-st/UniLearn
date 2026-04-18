@@ -7,8 +7,8 @@ import { useCourseStore } from "@/stores/courseStrore";
 // skeleton needs ajustment to match the course card design
 // import { CourseSkeleton, CourseSkeletonGrid } from "@/components/features/public_pages/CourseSkeleton";
 
-// Placeholder data - representative of technical protocols
-const disciplines = ["All Disciplines", "Quantum Logic", "Neural Architecture", "Bio-Engineering", "Deep Space Ethics"];
+// Course filters for public browsing
+const disciplines = ["All Courses", "Computer Science", "Software Engineering", "Information Systems", "Mathematics"];
 // const catalogData = [
 //   { id: "UN-882", discipline: "NEURAL SYSTEMS", title: "Advanced Synthetic Cognition", description: "Master the core protocols of recursive neural grafting and ethical AI containment in modular environments.", instructor: { name: "Dr. Elias Thorne", avatar: "/avatar- Thorne.jpg" }, image: "/course-neural.jpg" },
 //   { id: "UN-419", discipline: "QUANTUM COMPUTING", title: "Quantum Cryptography Foundations", description: "Implementation of uncrackable communication channels using polarized entanglement and recursive proofing.", instructor: { name: "Prof. Sarah Chen", avatar: "/avatar-chen.jpg" }, image: "/course-quantum.jpg" },
@@ -43,7 +43,7 @@ export default function CoursesPage() {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader className="w-8 h-8 animate-spin text-blue-500" />
-        <span className="ml-2">Loading courses...</span>
+        <span className="ml-2">Loading catalog...</span>
         {/* <CourseSkeletonGrid count={6} /> */}
       </div>
     );
@@ -54,29 +54,29 @@ export default function CoursesPage() {
       <div className="flex justify-center items-center min-h-screen">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
           <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-          <span className="text-red-700">Error: {error}</span>
+          <span className="text-red-700">Unable to retrieve catalog data. {error}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-6 py-24">
+    <div className="mx-auto max-w-7xl px-8 py-24 lg:px-12">
       {/* Header & Technical Meta */}
       <section className="mb-12 border-b border-border/10 pb-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="max-w-xl">
             <h1 className="font-display text-5xl md:text-6xl font-bold text-on-surface mb-6">
-              Public Catalog
+              Course Catalog
             </h1>
             <p className="text-on-surface-variant text-base leading-relaxed">
-              Explore the vanguard of decentralized education. Access specialized protocols and technical masterclasses designed for the next era of development.
+              Discover available courses by department, academic year, and course code, then continue to sign in for full resource access.
             </p>
           </div>
           {/* Asymmetric Sidebar per DESIGN.md Section 7 */}
           <div className="shrink-0 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <span className="font-mono text-[10px] uppercase tracking-widest text-accent">System Status: Optimal</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-accent">Catalog Status: Ready</span>
           </div>
         </div>
       </section>
@@ -87,7 +87,7 @@ export default function CoursesPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant/50" />
           <input 
             type="search" 
-            placeholder="Search specialized protocols..." 
+            placeholder="Search by course code or name..." 
             className="w-full h-14 bg-surface-low rounded-sm pl-12 pr-6 text-on-surface placeholder:text-on-surface-variant/40 border border-border/10 focus:ring-1 focus:ring-brand outline-none transition-all"
           />
         </div>
@@ -114,7 +114,7 @@ export default function CoursesPage() {
       {/* if no courses available show 'no courses available' message */}
       {courses.length === 0 && !isLoading && (
         <div className="text-center py-12">
-          <p className="text-on-surface-variant">No courses available.</p>
+          <p className="text-on-surface-variant">No courses match your current filters.</p>
         </div>
       )}
 
@@ -128,7 +128,7 @@ export default function CoursesPage() {
       {/* Load Next Sequence Action */}
       <div className="text-center">
         <Button variant="secondary" className="px-10 h-14 font-mono text-xs uppercase tracking-widest flex items-center gap-3 mx-auto">
-          <span className="animate-spin text-brand/70">↻</span> Load Next Sequence
+          <span className="animate-spin text-brand/70">↻</span> Refresh Catalog
         </Button>
       </div>
     </div>

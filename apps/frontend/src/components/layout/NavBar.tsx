@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 // TODO: Conditional Rendering
 // TODO: Mark Active Pages using active color and underline
 // TODO: Edit the Typography
@@ -6,7 +8,9 @@ export function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
       <div className="flex justify-between items-center h-16 px-8 w-full max-w-7xl mx-auto">
-        <div className="text-2xl font-bold text-primary tracking-tighter font-headline">UniLearn</div>
+        <Link to="/" className="text-2xl font-bold text-primary tracking-tighter font-headline">
+          UniLearn
+        </Link>
         <div className="hidden md:flex items-center gap-8">
           {["About", "Courses", "Pricing", "Contact"].map((item) => (
             <a 

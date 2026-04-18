@@ -32,7 +32,7 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
     >
     <Surface level={1} className="overflow-hidden group flex flex-col h-full border border-border/10">
       {/* Visual Input - Asymmetric aspect ratio */}
-      <div className="aspect-[16/10] overflow-hidden relative">
+      <div className="aspect-16/10 overflow-hidden relative">
         <img 
           // src={name}
           src={image} 
@@ -41,7 +41,7 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
         />
         {/* Absolute Protocol ID - Section 5 Metadata Rule */}
         <Badge className="absolute top-3 right-3 font-mono text-[9px] bg-surface-high/70 backdrop-blur-sm border border-border/10">
-          ID: {code}
+          Course Code: {code}
         </Badge>
       </div>
 
@@ -49,16 +49,13 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
       <div className="p-6 flex-1 flex flex-col justify-between">
         <div className="space-y-3 mb-6">
           <Badge variant="status" className="font-mono text-[10px] uppercase tracking-widest text-accent">
-            {/* {code} */}
             {discipline}
           </Badge>
           <h3 className="font-display text-xl font-bold text-on-surface leading-snug group-hover:text-brand transition-colors">
             {name}
-            {/* {title} */}
           </h3>
           <p className="text-sm text-on-surface-variant leading-relaxed line-clamp-2">
-            {discipline}
-            {/* {description} */}
+            Course overview available after sign-in.
           </p>
         </div>
 
@@ -75,7 +72,7 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
             </span>
           </div>
           <span className="font-mono text-[9px] uppercase tracking-widest text-on-surface-variant/50">
-            Enrollment Required
+            Sign In for Resources
           </span>
         </div>
       </div>

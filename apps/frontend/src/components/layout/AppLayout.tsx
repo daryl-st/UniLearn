@@ -20,8 +20,17 @@ function isDashboardShell(pathname: string) {
   )
 }
 
+function isAuthShell(pathname: string) {
+  return (
+    pathname === "/log" ||
+    pathname === "/reg" ||
+    pathname === "/login" ||
+    pathname === "/register"
+  )
+}
+
 function isPublicShell(pathname: string) {
-  return !isDashboardShell(pathname)
+  return !isDashboardShell(pathname) && !isAuthShell(pathname)
 }
 
 function getDashboardTitle(pathname: string) {
@@ -49,9 +58,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const showSidebarLayout = isDashboardShell(pathname)
   const showPublicLayout = isPublicShell(pathname)
+  const showAuthLayout = isAuthShell(pathname)
 
-  // render navbar and footer only on public pages, and sidebar layout on dashboard pages.
+  // render navbar and footer only on public pages, hide the shell on auth pages, and show sidebar layout on dashboard pages.
   if (!showSidebarLayout) {
+    if (showAuthLayout) {
+      return <>{children}</>
+    }
+
     if (!showPublicLayout) {
       return <>{children}</>
     }
