@@ -15,42 +15,42 @@ import { cn } from '@/lib/utils';
 
 const courses = [
   { 
-    id: 'UNLN-90231', 
-    title: 'Neural Network Architectures v4', 
+    id: 'CoSc4411', 
+    title: 'Artificial Intelligence - Search Algorithms Lecture', 
     lastSync: '2h ago', 
-    date: 'Oct 14, 2023',
-    students: '1,248',
-    growth: '+12%',
+    date: 'Apr 14, 2026',
+    students: '124',
+    growth: 'v3',
     status: 'Published',
     image: 'https://picsum.photos/seed/nn/100/100'
   },
   { 
-    id: 'UNLN-88122', 
-    title: 'Advanced Quantum Cryptography', 
+    id: 'CoSc3312', 
+    title: 'Database Systems - Normalization Notes', 
     lastSync: '1d ago', 
-    date: 'Oct 10, 2023',
-    students: '842',
-    growth: '-3%',
+    date: 'Apr 13, 2026',
+    students: '98',
+    growth: 'v2',
     status: 'Draft',
     image: 'https://picsum.photos/seed/quantum/100/100'
   },
   { 
-    id: 'UNLN-44501', 
-    title: 'Ethical Frameworks in AI', 
+    id: 'CoSc2221', 
+    title: 'Software Engineering - Sprint Planning Slides', 
     lastSync: '5d ago', 
-    date: 'Sep 28, 2023',
-    students: '4,302',
-    growth: '+1.5%',
+    date: 'Apr 10, 2026',
+    students: '112',
+    growth: 'v1',
     status: 'Published',
     image: 'https://picsum.photos/seed/ethics/100/100'
   },
   { 
-    id: 'UNLN-10129', 
-    title: 'Legacy System Migration', 
+    id: 'CoSc1205', 
+    title: 'Programming Fundamentals - Intro Handout', 
     lastSync: '2w ago', 
-    date: 'Aug 15, 2023',
-    students: '124',
-    growth: '0%',
+    date: 'Mar 28, 2026',
+    students: '136',
+    growth: 'v1',
     status: 'Archived',
     image: 'https://picsum.photos/seed/legacy/100/100'
   },
@@ -73,22 +73,22 @@ export const CourseManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="font-headline text-3xl font-bold tracking-tight">Course Management</h1>
-          <p className="text-outline max-w-xl mt-2">Orchestrate your educational modules. Monitor deployment status and student engagement protocols across the infrastructure.</p>
+          <h1 className="font-headline text-3xl font-bold tracking-tight">Resource Management</h1>
+          <p className="text-outline max-w-xl mt-2">Maintain high-quality learning materials for your courses and keep the latest version available to students.</p>
         </div>
         <button className="flex items-center gap-2 bg-primary text-on-primary font-semibold px-6 py-3 rounded-sm active:scale-95 transition-all shadow-lg shadow-primary/10">
           <Plus size={20} />
-          <span>Create New Course</span>
+          <span>Upload Resource</span>
         </button>
       </div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Active', value: '42', color: 'border-primary' },
-          { label: 'Total Students', value: '12.4k', color: 'border-secondary' },
-          { label: 'Pending Review', value: '08', color: 'border-outline' },
-          { label: 'Completion Rate', value: '88.4%', color: 'border-primary' },
+          { label: 'Managed Courses', value: '03', color: 'border-primary' },
+          { label: 'Total Resources', value: '24', color: 'border-secondary' },
+          { label: 'Pending Updates', value: '08', color: 'border-outline' },
+          { label: 'Recent Uploads', value: '06', color: 'border-primary' },
         ].map((stat, i) => (
           <div key={i} className={cn("bg-surface-low p-5 rounded-lg border-l-2", stat.color)}>
             <p className="text-xs font-mono text-outline uppercase tracking-widest mb-1">{stat.label}</p>
@@ -99,25 +99,26 @@ export const CourseManagement: React.FC = () => {
 
       {/* Toolbar */}
       <div className="bg-surface-low p-4 rounded-lg flex flex-wrap items-center gap-4 shadow-sm border border-outline-variant/5">
-        <div className="flex-1 min-w-[280px] relative">
+        <div className="flex-1 min-w-70 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={18} />
           <input 
             type="text" 
-            placeholder="Filter by course title, ID or instructor..."
+            placeholder="Filter by resource title, course code, or file type..."
             className="w-full bg-surface-high border-none text-sm pl-10 pr-4 py-2.5 rounded-sm focus:ring-1 focus:ring-primary outline-none text-on-surface placeholder:text-outline"
           />
         </div>
         <div className="flex gap-2">
           <select className="bg-surface-high border-none text-sm px-4 py-2.5 rounded-sm focus:ring-1 focus:ring-primary outline-none cursor-pointer text-on-surface">
+            <option>Course: All</option>
+            <option>CoSc4411</option>
+            <option>CoSc3312</option>
+            <option>CoSc2221</option>
+          </select>
+          <select className="bg-surface-high border-none text-sm px-4 py-2.5 rounded-sm focus:ring-1 focus:ring-primary outline-none cursor-pointer text-on-surface">
             <option>Status: All</option>
             <option>Draft</option>
             <option>Published</option>
             <option>Archived</option>
-          </select>
-          <select className="bg-surface-high border-none text-sm px-4 py-2.5 rounded-sm focus:ring-1 focus:ring-primary outline-none cursor-pointer text-on-surface">
-            <option>Category: All</option>
-            <option>Neural Networks</option>
-            <option>Quantum Computing</option>
           </select>
         </div>
         <button className="p-2.5 text-outline hover:bg-surface-high rounded-sm transition-colors">
@@ -133,9 +134,9 @@ export const CourseManagement: React.FC = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-high/50 text-outline text-[10px] font-mono uppercase tracking-[0.2em]">
-                  <th className="px-6 py-4">Course Identity</th>
-                  <th className="px-6 py-4">Metadata</th>
-                  <th className="px-6 py-4">Students</th>
+                  <th className="px-6 py-4">Resource</th>
+                  <th className="px-6 py-4">Uploaded</th>
+                  <th className="px-6 py-4">Latest Version</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
@@ -144,7 +145,7 @@ export const CourseManagement: React.FC = () => {
                 {courses.map((course) => (
                   <tr key={course.id} className={cn(
                     "group transition-colors",
-                    course.id === 'UNLN-90231' ? "bg-surface-high" : "hover:bg-surface-high/40"
+                    course.id === 'CoSc4411' ? "bg-surface-high" : "hover:bg-surface-high/40"
                   )}>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
@@ -153,7 +154,7 @@ export const CourseManagement: React.FC = () => {
                         </div>
                         <div>
                           <div className="font-semibold leading-tight mb-1">{course.title}</div>
-                          <div className="text-[10px] font-mono text-outline">ID: {course.id}</div>
+                          <div className="text-[10px] font-mono text-outline">Course: {course.id}</div>
                         </div>
                       </div>
                     </td>
@@ -164,10 +165,7 @@ export const CourseManagement: React.FC = () => {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">{course.students}</span>
-                        <span className={cn(
-                          "text-[10px] font-mono",
-                          course.growth.startsWith('+') ? "text-secondary" : course.growth === '0%' ? "text-outline" : "text-error"
-                        )}>{course.growth}</span>
+                        <span className="text-[10px] font-mono text-secondary">{course.growth}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -182,9 +180,9 @@ export const CourseManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 text-outline hover:text-primary transition-colors"><Edit3 size={18} /></button>
-                        <button className="p-2 text-outline hover:text-secondary transition-colors"><BarChart2 size={18} /></button>
-                        <button className="p-2 text-outline hover:text-error transition-colors"><Trash2 size={18} /></button>
+                        <button className="p-2 text-outline hover:text-primary transition-colors" title="View Resource"><Edit3 size={18} /></button>
+                        <button className="p-2 text-outline hover:text-secondary transition-colors" title="Replace File"><BarChart2 size={18} /></button>
+                        <button className="p-2 text-outline hover:text-error transition-colors" title="Delete Resource"><Trash2 size={18} /></button>
                       </div>
                     </td>
                   </tr>
@@ -197,7 +195,7 @@ export const CourseManagement: React.FC = () => {
         {/* Sidebar Panel */}
         <aside className="w-full xl:w-96 glass-panel rounded-lg p-6 sticky top-24">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-headline font-bold text-lg text-primary">Curriculum Quick View</h2>
+            <h2 className="font-headline font-bold text-lg text-primary">Selected Course Resources</h2>
             <X size={20} className="text-outline cursor-pointer hover:text-on-surface transition-colors" />
           </div>
           
@@ -207,8 +205,8 @@ export const CourseManagement: React.FC = () => {
                 <img src="https://picsum.photos/seed/curriculum/100/100" alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm">Neural Network Architectures v4</h3>
-                <p className="text-[10px] font-mono text-secondary mt-1 uppercase">MODULES: 12 | HOURS: 24.5</p>
+                <h3 className="font-semibold text-sm">Artificial Intelligence (CoSc4411)</h3>
+                <p className="text-[10px] font-mono text-secondary mt-1 uppercase">RESOURCES: 8 | LATEST: V3</p>
               </div>
             </div>
 
@@ -231,11 +229,11 @@ export const CourseManagement: React.FC = () => {
             <div className="pt-6 border-t border-outline-variant/10 space-y-2">
               <button className="w-full py-2.5 bg-surface-high hover:bg-surface-highest text-sm font-medium rounded-sm transition-colors flex items-center justify-center gap-2">
                 <Edit size={16} />
-                Edit Full Curriculum
+                Update Resource Details
               </button>
               <button className="w-full py-2.5 border border-primary/20 text-primary text-sm font-medium rounded-sm hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
                 <ExternalLink size={16} />
-                Preview Student Experience
+                View Resource As Student
               </button>
             </div>
           </div>

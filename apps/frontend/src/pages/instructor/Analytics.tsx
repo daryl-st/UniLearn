@@ -5,9 +5,7 @@ import {
   AlertCircle, 
   Video, 
   BookOpen, 
-  Mail,
-  Zap,
-  Terminal
+  Mail
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -21,16 +19,16 @@ import {
 import { cn } from '@/lib/utils';
 
 const dropoffData = [
-  { mod: 'MOD_01', engagement: 100, status: 'normal' },
-  { mod: 'MOD_02', engagement: 98, status: 'normal' },
-  { mod: 'MOD_03', engagement: 94, status: 'normal' },
-  { mod: 'MOD_04', engagement: 65, status: 'critical' },
-  { mod: 'MOD_05', engagement: 62, status: 'normal' },
-  { mod: 'MOD_06', engagement: 60, status: 'normal' },
-  { mod: 'MOD_07', engagement: 58, status: 'normal' },
-  { mod: 'MOD_08', engagement: 55, status: 'normal' },
-  { mod: 'MOD_09', engagement: 40, status: 'critical' },
-  { mod: 'MOD_10', engagement: 38, status: 'normal' },
+  { mod: 'W1', engagement: 100, status: 'normal' },
+  { mod: 'W2', engagement: 98, status: 'normal' },
+  { mod: 'W3', engagement: 94, status: 'normal' },
+  { mod: 'W4', engagement: 65, status: 'critical' },
+  { mod: 'W5', engagement: 62, status: 'normal' },
+  { mod: 'W6', engagement: 60, status: 'normal' },
+  { mod: 'W7', engagement: 58, status: 'normal' },
+  { mod: 'W8', engagement: 55, status: 'normal' },
+  { mod: 'W9', engagement: 40, status: 'critical' },
+  { mod: 'W10', engagement: 38, status: 'normal' },
 ];
 
 const calibrationData = [
@@ -42,9 +40,9 @@ const calibrationData = [
 ];
 
 const atRiskCohort = [
-  { id: '1', name: 'Elena Rodriguez', uid: '8849-PROTO', gap: '12 Days', score: '48%', image: 'https://picsum.photos/seed/elena/100/100' },
-  { id: '2', name: 'Marcus Chen', uid: '1102-PROTO', gap: '09 Days', score: '52%', image: 'https://picsum.photos/seed/marcus/100/100' },
-  { id: '3', name: 'Sarah Jenkins', uid: '4492-PROTO', gap: '07 Days', score: '61%', image: 'https://picsum.photos/seed/sarah/100/100' },
+  { id: '1', name: 'Elena Rodriguez', uid: 'UGR/3643/15', gap: '12 Days', score: '48%', image: 'https://picsum.photos/seed/elena/100/100' },
+  { id: '2', name: 'Marcus Chen', uid: 'UGR/4211/15', gap: '09 Days', score: '52%', image: 'https://picsum.photos/seed/marcus/100/100' },
+  { id: '3', name: 'Sarah Jenkins', uid: 'UGR/4492/15', gap: '07 Days', score: '61%', image: 'https://picsum.photos/seed/sarah/100/100' },
 ];
 
 export const Analytics: React.FC = () => {
@@ -57,13 +55,13 @@ export const Analytics: React.FC = () => {
       <div className="flex items-end justify-between mb-10">
         <div>
           <nav className="flex gap-2 text-[10px] font-mono text-outline opacity-50 uppercase tracking-widest mb-1">
-            <span>Root</span> / <span>Instructor</span> / <span>Performance</span>
+            <span>Root</span> / <span>Instructor</span> / <span>Student Analytics</span>
           </nav>
-          <h1 className="font-headline text-4xl font-bold tracking-tight">Course Analytics</h1>
+          <h1 className="font-headline text-4xl font-bold tracking-tight">Student Analytics</h1>
         </div>
         <button className="bg-primary text-on-primary px-5 py-2 rounded-sm font-semibold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95">
           <Download size={16} />
-          <span>Export Report</span>
+          <span>Export View</span>
         </button>
       </div>
 
@@ -71,8 +69,8 @@ export const Analytics: React.FC = () => {
         <section className="col-span-12 lg:col-span-8 bg-surface-low p-6 rounded-lg border border-outline-variant/5">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="font-headline text-lg font-bold">Module Drop-off Intensity</h2>
-              <p className="text-xs text-outline">Engagement decay across curriculum sequence</p>
+              <h2 className="font-headline text-lg font-bold">Student Engagement Trends</h2>
+              <p className="text-xs text-outline">Resources viewed and activity trend across recent weeks</p>
             </div>
             <div className="flex gap-1">
               {[0.2, 0.4, 0.6, 0.8, 1].map(o => (
@@ -104,14 +102,14 @@ export const Analytics: React.FC = () => {
           <div className="mt-14 p-3 bg-surface-high/50 rounded flex items-start gap-3 border-l-2 border-error">
             <AlertCircle className="text-error shrink-0" size={18} />
             <p className="text-xs leading-relaxed">
-              <strong className="text-on-surface">Critical Drop-off Detected:</strong> Module 4 (Advanced Logic) shows a 32% increase in churn.
+              <strong className="text-on-surface">Low engagement detected:</strong> Week 4 shows a sharp drop in activity for CoSc4411.
             </p>
           </div>
         </section>
 
         <section className="col-span-12 lg:col-span-4 bg-surface-low p-6 rounded-lg border border-outline-variant/5 flex flex-col">
-          <h2 className="font-headline text-lg font-bold mb-1">Score Calibration</h2>
-          <p className="text-xs text-outline mb-6">Actual Avg. vs. Protocol Benchmarks</p>
+          <h2 className="font-headline text-lg font-bold mb-1">Average Quiz Score</h2>
+          <p className="text-xs text-outline mb-6">Current average versus target benchmark</p>
           <div className="flex-1 h-40">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={calibrationData}>
@@ -129,7 +127,7 @@ export const Analytics: React.FC = () => {
               <div className="font-headline text-3xl font-bold text-primary">82.4%</div>
             </div>
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-tighter opacity-50">Protocol Delta</div>
+              <div className="text-[10px] font-mono uppercase tracking-tighter opacity-50">Score Delta</div>
               <div className="font-headline text-3xl font-bold text-secondary">+4.2%</div>
             </div>
           </div>
@@ -138,13 +136,13 @@ export const Analytics: React.FC = () => {
 
       <div className="grid grid-cols-12 gap-5">
         <section className="col-span-12 lg:col-span-5 bg-surface-low p-6 rounded-lg border border-outline-variant/5">
-          <h2 className="font-headline text-lg font-bold mb-1">Instructional Efficiency</h2>
+          <h2 className="font-headline text-lg font-bold mb-1">Course-Wide Metrics</h2>
           <div className="space-y-8 mt-8">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Video className="text-secondary" size={18} />
-                  <span className="font-semibold text-sm">Video Completion</span>
+                  <span className="font-semibold text-sm">Resources Viewed</span>
                 </div>
                 <span className="font-mono text-xs text-secondary">92%</span>
               </div>
@@ -156,7 +154,7 @@ export const Analytics: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <BookOpen className="text-primary" size={18} />
-                  <span className="font-semibold text-sm">Documentation</span>
+                  <span className="font-semibold text-sm">Quiz Participation</span>
                 </div>
                 <span className="font-mono text-xs text-primary">64%</span>
               </div>
@@ -169,8 +167,8 @@ export const Analytics: React.FC = () => {
 
         <section className="col-span-12 lg:col-span-7 bg-surface-low p-6 rounded-lg border border-outline-variant/5">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-headline text-lg font-bold">At-Risk Cohort</h2>
-            <button className="text-[10px] font-mono font-bold text-secondary uppercase tracking-widest hover:underline">View All 42</button>
+            <h2 className="font-headline text-lg font-bold">At-Risk Students</h2>
+            <button className="text-[10px] font-mono font-bold text-secondary uppercase tracking-widest hover:underline">View All Students</button>
           </div>
           <div className="space-y-3">
             {atRiskCohort.map((student) => (
@@ -179,7 +177,7 @@ export const Analytics: React.FC = () => {
                   <img src={student.image} alt="" className="w-10 h-10 rounded-sm object-cover filter grayscale group-hover:grayscale-0" referrerPolicy="no-referrer" />
                   <div>
                     <div className="font-semibold text-sm">{student.name}</div>
-                    <div className="text-[10px] font-mono opacity-40">UID: {student.uid}</div>
+                    <div className="text-[10px] font-mono opacity-40">Student Number: {student.uid}</div>
                   </div>
                 </div>
                 <div className="flex gap-8 text-right">

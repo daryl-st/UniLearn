@@ -16,7 +16,7 @@ export default function Courses() {
     onCourseSelect: (id: string) => alert(`Selected course ID: ${id} (this will navigate to the course detail page in future iterations)`)
   };
 
-  const categories = ['All Courses', 'Neural Networks', 'Prompt Engineering', 'Data Privacy', 'LLM Architecture'];
+  const categories = ['All Courses', 'Year 1', 'Year 2', 'Year 3', 'Year 4'];
 
   return (
     <div className="p-8 space-y-8">
@@ -47,19 +47,19 @@ export default function Courses() {
       {/* Hero Feature */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 group relative overflow-hidden rounded-sm bg-surface-low p-1 border border-outline-variant/5 cursor-pointer" onClick={() => onCourseSelect(COURSES[0].id)}>
-          <div className="relative h-[400px] w-full overflow-hidden rounded-sm">
+          <div className="relative h-100 w-full overflow-hidden rounded-sm">
             <img 
               src={COURSES[0].thumbnail} 
               alt="Featured" 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-surface via-surface/40 to-transparent"></div>
             
             <div className="absolute bottom-0 left-0 p-8 w-full">
               <div className="flex items-center gap-2 mb-4">
-                <span className="px-2 py-0.5 rounded-sm bg-secondary/20 text-secondary text-[10px] font-mono font-bold tracking-tighter uppercase border border-secondary/30">Featured Protocol</span>
-                <span className="text-on-surface-variant font-mono text-[10px]">VER: 2049.4.0</span>
+                <span className="px-2 py-0.5 rounded-sm bg-secondary/20 text-secondary text-[10px] font-mono font-bold tracking-tighter uppercase border border-secondary/30">Course Spotlight</span>
+                <span className="text-on-surface-variant font-mono text-[10px]">Academic Year: 3</span>
               </div>
               <h3 className="font-headline text-4xl font-bold text-white mb-3 leading-tight tracking-tighter">{COURSES[0].title}</h3>
               <p className="text-on-surface-variant max-w-xl text-sm mb-8 leading-relaxed">{COURSES[0].description}</p>
@@ -67,11 +67,11 @@ export default function Courses() {
               <div className="flex items-center gap-8">
                 <button className="bg-primary text-on-primary px-8 py-3 rounded-sm font-bold text-sm flex items-center gap-2 transition-transform active:scale-95 shadow-lg shadow-primary/20">
                   <Play className="w-4 h-4 fill-current" />
-                  Resume Course
+                  Open Course
                 </button>
                 <div className="flex gap-6 text-on-surface-variant font-mono text-[11px] uppercase tracking-wider">
-                  <span className="flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> 14h 20m</span>
-                  <span className="flex items-center gap-2"><BarChart className="w-3.5 h-3.5" /> Advanced</span>
+                  <span className="flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> Last updated this week</span>
+                  <span className="flex items-center gap-2"><BarChart className="w-3.5 h-3.5" /> {COURSES[0].level}</span>
                 </div>
               </div>
             </div>
@@ -82,7 +82,7 @@ export default function Courses() {
           <div className="bg-surface-high rounded-sm p-6 border border-primary/10 glass-ai flex-1">
             <h4 className="font-headline text-lg font-bold text-white mb-6 flex items-center gap-2">
               <Sparkles className="text-secondary w-5 h-5" />
-              Quick Start
+              Quick Actions
             </h4>
             <div className="space-y-6">
               <div className="flex items-center gap-4 group cursor-pointer">
@@ -90,8 +90,8 @@ export default function Courses() {
                   <Terminal className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">AI Sandbox</p>
-                  <p className="text-[10px] font-mono text-on-surface-variant mt-1">Instance: US-EAST-1</p>
+                  <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">Filter by Department</p>
+                  <p className="text-[10px] font-mono text-on-surface-variant mt-1">Computer Science</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 group cursor-pointer">
@@ -99,8 +99,8 @@ export default function Courses() {
                   <BookOpen className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">Ethical Guidelines</p>
-                  <p className="text-[10px] font-mono text-on-surface-variant mt-1">PDF • 4.2 MB</p>
+                  <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">Reset Filters</p>
+                  <p className="text-[10px] font-mono text-on-surface-variant mt-1">Show all enrolled courses</p>
                 </div>
               </div>
             </div>
@@ -110,11 +110,11 @@ export default function Courses() {
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <Box className="w-16 h-16" />
             </div>
-            <h4 className="font-headline text-[11px] font-bold text-on-surface-variant mb-6 uppercase tracking-[0.2em]">Active Learning</h4>
+            <h4 className="font-headline text-[11px] font-bold text-on-surface-variant mb-6 uppercase tracking-[0.2em]">Course Progress</h4>
             <div className="space-y-6">
               <div>
                 <div className="flex justify-between text-[11px] mb-2 font-mono">
-                  <span className="text-white">NLP Foundations</span>
+                  <span className="text-white">Database Systems</span>
                   <span className="text-on-surface-variant">68%</span>
                 </div>
                 <div className="h-1 bg-surface-high rounded-full overflow-hidden">
@@ -123,7 +123,7 @@ export default function Courses() {
               </div>
               <div>
                 <div className="flex justify-between text-[11px] mb-2 font-mono">
-                  <span className="text-white">Vector Databases</span>
+                  <span className="text-white">Software Engineering</span>
                   <span className="text-on-surface-variant">12%</span>
                 </div>
                 <div className="h-1 bg-surface-high rounded-full overflow-hidden">
@@ -139,10 +139,10 @@ export default function Courses() {
       <section className="space-y-6 pt-8">
         <div className="flex items-end justify-between">
           <div>
-            <h3 className="font-headline text-2xl font-bold text-white tracking-tight">Exploration Catalog</h3>
-            <p className="text-on-surface-variant text-[11px] font-mono mt-1 uppercase tracking-widest">Refining 1,248 available modules</p>
+            <h3 className="font-headline text-2xl font-bold text-white tracking-tight">My Courses</h3>
+            <p className="text-on-surface-variant text-[11px] font-mono mt-1 uppercase tracking-widest">Access all courses assigned to your academic track</p>
           </div>
-          <button className="text-primary text-xs font-bold hover:underline uppercase tracking-widest">View All Modules</button>
+          <button className="text-primary text-xs font-bold hover:underline uppercase tracking-widest">Reset Filters</button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -179,8 +179,8 @@ export default function Courses() {
             <div className="w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center mb-4">
               <Plus className="w-6 h-6" />
             </div>
-            <h4 className="font-headline text-lg font-bold text-white">Advanced Learning Protocols</h4>
-            <p className="text-on-surface-variant text-xs max-w-xs mt-2 leading-relaxed">More enterprise modules are currently being indexed for your organization's permissions.</p>
+            <h4 className="font-headline text-lg font-bold text-white">No Courses Found</h4>
+            <p className="text-on-surface-variant text-xs max-w-xs mt-2 leading-relaxed">No courses found for your current filters.</p>
           </div>
         </div>
       </section>

@@ -38,18 +38,16 @@ export const Analytics: React.FC = () => {
       <header className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-headline font-bold text-on-surface tracking-tight mb-2 uppercase">Platform Analytics</h1>
-          <p className="text-on-surface-variant font-mono text-xs uppercase tracking-[0.2em]">
-            Operational Status: <span className="text-secondary">Nominal</span> // Data Sync: Active
-          </p>
+          <p className="text-on-surface-variant font-mono text-xs uppercase tracking-[0.2em]">Understand usage trends and educational impact across users, courses, and assessments</p>
         </div>
         <div className="flex gap-2">
           <button className="bg-surface-high text-on-surface px-4 py-2 rounded flex items-center gap-2 hover:bg-primary/10 transition-colors">
             <Calendar className="w-4 h-4" />
-            <span className="text-xs font-mono">L30D</span>
+            <span className="text-xs font-mono">LAST 90 DAYS</span>
           </button>
           <button className="bg-primary text-on-primary px-4 py-2 rounded flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Download className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Export Protocol</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Export Report</span>
           </button>
         </div>
       </header>
@@ -58,18 +56,18 @@ export const Analytics: React.FC = () => {
         <div className="col-span-12 lg:col-span-8 bg-surface-low rounded-lg p-6 flex flex-col min-h-104 border border-border">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h3 className="font-headline text-xl font-bold uppercase">Active Processing Nodes</h3>
-              <p className="text-on-surface-variant text-xs font-mono">Concurrent Session Throughput</p>
+              <h3 className="font-headline text-xl font-bold uppercase">User Growth Trend</h3>
+              <p className="text-on-surface-variant text-xs font-mono">New and active platform users over time</p>
             </div>
             <div className="flex gap-4 text-right">
               <div>
-                <span className="block text-secondary font-mono text-lg font-bold">12,482</span>
-                <span className="text-[10px] text-on-surface-variant uppercase">Current</span>
+                <span className="block text-secondary font-mono text-lg font-bold">601</span>
+                <span className="text-[10px] text-on-surface-variant uppercase">Active Students</span>
               </div>
               <div className="w-px h-8 bg-border"></div>
               <div>
-                <span className="block text-primary font-mono text-lg font-bold">+18.4%</span>
-                <span className="text-[10px] text-on-surface-variant uppercase">Growth</span>
+                <span className="block text-primary font-mono text-lg font-bold">+124</span>
+                <span className="text-[10px] text-on-surface-variant uppercase">New Users</span>
               </div>
             </div>
           </div>
@@ -102,10 +100,10 @@ export const Analytics: React.FC = () => {
               <Zap className="text-primary w-5 h-5 fill-primary" />
               <span className="text-[10px] font-mono text-primary/80 px-2 py-0.5 bg-primary/10 rounded uppercase">Peak Load</span>
             </div>
-            <h4 className="text-on-surface-variant text-xs font-mono uppercase tracking-widest mb-1">Compute Efficiency</h4>
-            <p className="text-4xl font-headline font-bold text-on-surface">98.2<span className="text-primary text-xl">%</span></p>
+            <h4 className="text-on-surface-variant text-xs font-mono uppercase tracking-widest mb-1">Average Quiz Score</h4>
+            <p className="text-4xl font-headline font-bold text-on-surface">76.8<span className="text-primary text-xl">%</span></p>
             <div className="mt-4 h-1 w-full bg-surface-high rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[98.2%]"></div>
+              <div className="h-full bg-primary w-[76.8%]"></div>
             </div>
           </div>
           <div className="bg-surface-low rounded-lg p-6 flex-1 border border-border">
@@ -113,9 +111,9 @@ export const Analytics: React.FC = () => {
               <Users className="text-secondary w-5 h-5 fill-secondary" />
               <span className="text-[10px] font-mono text-secondary/80 px-2 py-0.5 bg-secondary/10 rounded uppercase">Engagement</span>
             </div>
-            <h4 className="text-on-surface-variant text-xs font-mono uppercase tracking-widest mb-1">Daily Active Users</h4>
-            <p className="text-4xl font-headline font-bold text-on-surface">42,091</p>
-            <p className="text-secondary text-[10px] font-mono mt-2 uppercase">↑ 4.2% from yesterday</p>
+            <h4 className="text-on-surface-variant text-xs font-mono uppercase tracking-widest mb-1">Resources Viewed</h4>
+            <p className="text-4xl font-headline font-bold text-on-surface">9,234</p>
+            <p className="text-secondary text-[10px] font-mono mt-2 uppercase">Across selected date range</p>
           </div>
         </div>
       </div>
@@ -124,7 +122,7 @@ export const Analytics: React.FC = () => {
         <div className="space-y-4">
           <h3 className="font-headline text-lg font-bold uppercase tracking-tight flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-            Activity Heatmap (Regional)
+            Activity Heatmap (Department)
           </h3>
           <div className="bg-surface-low rounded-lg p-6 overflow-hidden relative min-h-80 border border-border">
             <div className="grid grid-cols-12 gap-1 opacity-80">
@@ -139,6 +137,7 @@ export const Analytics: React.FC = () => {
             <div className="absolute inset-0 bg-linear-to-t from-surface-low via-transparent to-transparent pointer-events-none"></div>
             <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center bg-surface-high/60 backdrop-blur p-3 rounded-sm">
               <span className="text-[10px] font-mono uppercase tracking-widest">Global Interaction Density</span>
+              
               <div className="flex items-center gap-1.5">
                 <span className="text-[8px] font-mono text-on-surface-variant">MIN</span>
                 <div className="flex gap-0.5">
@@ -155,14 +154,14 @@ export const Analytics: React.FC = () => {
         <div className="space-y-4">
           <h3 className="font-headline text-lg font-bold uppercase tracking-tight flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-secondary rounded-full"></span>
-            Operational Intelligence
+            Platform Intelligence
           </h3>
           <div className="bg-surface-low rounded-lg p-1 divide-y divide-border border border-border">
             {[
-              { icon: Database, label: 'Data Ingest Rate', sub: 'Storage Cluster A', val: '840 MB/s', status: 'Normal Params', color: 'text-secondary' },
-              { icon: Shield, label: 'Auth Requests', sub: 'Token Validator', val: '12.8k/min', status: 'Verified 99.9%', color: 'text-primary' },
-              { icon: Router, label: 'Edge Latency', sub: 'Nodes 1-14', val: '14 ms', status: 'Optimized', color: 'text-secondary' },
-              { icon: Cpu, label: 'CPU Allocation', sub: 'Neural Engine', val: '92%', status: 'High Load', color: 'text-destructive' },
+              { icon: Database, label: 'Course Activity', sub: 'Courses accessed this week', val: '73', status: 'Within expected range', color: 'text-secondary' },
+              { icon: Shield, label: 'Access Reliability', sub: 'Login and role checks', val: '99.9%', status: 'Stable', color: 'text-primary' },
+              { icon: Router, label: 'Average Response Time', sub: 'Platform APIs', val: '14 ms', status: 'Optimized', color: 'text-secondary' },
+              { icon: Cpu, label: 'Pending Governance Tasks', sub: 'Reviews and assignments', val: '12', status: 'Needs attention', color: 'text-destructive' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between p-4 hover:bg-surface-high transition-colors">
                 <div className="flex items-center gap-4">
@@ -194,12 +193,12 @@ export const Analytics: React.FC = () => {
             <div className="absolute inset-0 bg-linear-to-t from-surface-low to-transparent"></div>
             <div className="absolute bottom-4 left-6">
               <span className="bg-secondary/20 text-secondary text-[10px] px-2 py-0.5 rounded font-mono uppercase">Predictive</span>
-              <h4 className="text-2xl font-headline font-bold uppercase mt-2">Next Cycle Growth</h4>
+              <h4 className="text-2xl font-headline font-bold uppercase mt-2">Projected Platform Growth</h4>
             </div>
           </div>
           <div className="p-6 pt-0">
             <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-              Neural forecasting models indicate a potential <span className="text-primary font-bold">14.2% spike</span> in user onboarding within the APAC region over the next 72 hours based on current content velocity.
+              Forecasting indicates a potential <span className="text-primary font-bold">14.2% increase</span> in user onboarding over the next cycle based on current course activity and engagement trends.
             </p>
             <div className="flex items-center justify-between font-mono text-[11px] uppercase border-t border-border pt-4">
               <span className="text-on-surface-variant">Confidence Index</span>
@@ -231,8 +230,8 @@ export const Analytics: React.FC = () => {
           </div>
           <div className="bg-primary rounded-lg p-6 col-span-2 flex items-center justify-between text-on-primary">
             <div>
-              <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-80 mb-1">Global System Reach</h5>
-              <p className="text-2xl font-headline font-bold uppercase">142 Countries Operational</p>
+              <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-80 mb-1">Department Reach</h5>
+              <p className="text-2xl font-headline font-bold uppercase">Computer Science Platform Active</p>
             </div>
             <Globe className="w-12 h-12 opacity-20" />
           </div>

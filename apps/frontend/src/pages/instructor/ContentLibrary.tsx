@@ -17,10 +17,10 @@ import {
 import { cn } from '@/lib/utils';
 
 const assets = [
-  { id: '1', name: 'Intro_to_Quantum_Computing_v2.mp4', type: 'VIDEO', size: '1.2 GB', date: 'OCT 12, 2023', icon: Video, color: 'text-primary' },
-  { id: '2', name: 'Module_04_Assessment_Final.pdf', type: 'PDF', size: '4.5 MB', date: 'OCT 14, 2023', icon: FileText, color: 'text-secondary', active: true },
-  { id: '3', name: 'Interactive_Lab_Simulation_v4.zip', type: 'SCORM', size: '88.2 MB', date: 'OCT 15, 2023', icon: Package, color: 'text-primary' },
-  { id: '4', name: 'Schema_Architecture_v1.png', type: 'IMAGE', size: '12.1 MB', date: 'OCT 18, 2023', icon: ImageIcon, color: 'text-error' },
+  { id: '1', name: 'Search_Algorithms_Lecture_v3.ppt', type: 'PPT', size: '12.4 MB', date: 'APR 12, 2026', icon: Video, color: 'text-primary' },
+  { id: '2', name: 'Module_04_Assessment_Final.pdf', type: 'PDF', size: '4.5 MB', date: 'APR 14, 2026', icon: FileText, color: 'text-secondary', active: true },
+  { id: '3', name: 'Database_Normalization_Notes.doc', type: 'DOC', size: '2.1 MB', date: 'APR 15, 2026', icon: Package, color: 'text-primary' },
+  { id: '4', name: 'Course_Outline_AI_v1.png', type: 'IMAGE', size: '1.2 MB', date: 'APR 18, 2026', icon: ImageIcon, color: 'text-error' },
 ];
 
 export const ContentLibrary: React.FC = () => {
@@ -32,17 +32,17 @@ export const ContentLibrary: React.FC = () => {
     >
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-headline font-bold tracking-tight">Content Library</h1>
-          <p className="text-outline max-w-xl mt-2">Central repository for pedagogical assets. Use the tonal explorer to manage SCORM packages, media, and documentation.</p>
+          <h1 className="text-4xl font-headline font-bold tracking-tight">Content Upload</h1>
+          <p className="text-outline max-w-xl mt-2">Upload course materials for student access. Supported document formats include PDF, PPT, and DOC.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="bg-surface-high text-on-surface px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 hover:bg-surface-highest active:scale-95 transition-all">
             <FolderPlus size={20} />
-            <span>New Folder</span>
+            <span>Select File</span>
           </button>
           <button className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/10">
             <Upload size={20} />
-            <span>Upload Asset</span>
+            <span>Upload Resource</span>
           </button>
         </div>
       </div>
@@ -54,10 +54,10 @@ export const ContentLibrary: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-high/50 text-outline text-[11px] font-mono uppercase tracking-[0.2em]">
-                    <th className="px-6 py-4 font-medium">Filename</th>
-                    <th className="px-4 py-4 font-medium">Type</th>
+                    <th className="px-6 py-4 font-medium">Resource</th>
+                    <th className="px-4 py-4 font-medium">File Type</th>
                     <th className="px-4 py-4 font-medium text-right">Size</th>
-                    <th className="px-6 py-4 font-medium text-right">Date Added</th>
+                    <th className="px-6 py-4 font-medium text-right">Uploaded Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/5">
@@ -94,12 +94,12 @@ export const ContentLibrary: React.FC = () => {
           </div>
           
           <div className="flex items-center justify-between px-2">
-            <p className="text-[11px] font-mono text-outline">SHOWING 24 OF 1,042 OBJECTS</p>
+            <p className="text-[11px] font-mono text-outline">SHOWING 24 OF 24 RESOURCES</p>
             <div className="flex items-center gap-2">
               <button className="p-1.5 rounded bg-surface-high text-outline hover:text-on-surface disabled:opacity-30" disabled>
                 <ChevronLeft size={16} />
               </button>
-              <span className="text-[11px] font-mono text-primary px-3">PAGE 01 / 44</span>
+              <span className="text-[11px] font-mono text-primary px-3">PAGE 01 / 01</span>
               <button className="p-1.5 rounded bg-surface-high text-outline hover:text-on-surface">
                 <ChevronRight size={16} />
               </button>
@@ -110,7 +110,7 @@ export const ContentLibrary: React.FC = () => {
         <div className="col-span-12 xl:col-span-3 space-y-6">
           <div className="bg-surface-high rounded-xl p-6 border border-outline-variant/5 glass-panel">
             <div className="flex items-center justify-between mb-6">
-              <span className="text-[10px] font-mono text-secondary tracking-widest uppercase">File Preview</span>
+              <span className="text-[10px] font-mono text-secondary tracking-widest uppercase">Recent Upload</span>
               <button className="text-outline hover:text-on-surface"><MoreVertical size={16} /></button>
             </div>
             <div className="aspect-video w-full rounded-lg bg-surface-low overflow-hidden mb-6 relative group">
@@ -123,24 +123,24 @@ export const ContentLibrary: React.FC = () => {
               <h3 className="font-headline font-bold text-lg leading-tight">Module_04_Assessment_Final.pdf</h3>
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-outline-variant/10">
                 <div>
-                  <p className="text-[10px] font-mono text-outline uppercase tracking-wider">Owner</p>
+                  <p className="text-[10px] font-mono text-outline uppercase tracking-wider">Instructor</p>
                   <p className="text-xs font-medium">Dr. Aris Thorne</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-mono text-outline uppercase tracking-wider">Status</p>
-                  <p className="text-xs font-medium text-secondary">Verified</p>
+                  <p className="text-xs font-medium text-secondary">Uploaded</p>
                 </div>
               </div>
               <div className="pt-6 flex flex-col gap-2">
-                <button className="w-full bg-on-surface text-surface py-2 rounded font-bold text-sm hover:opacity-90 active:scale-95 transition-all">Download Asset</button>
-                <button className="w-full bg-surface-highest text-on-surface py-2 rounded font-bold text-sm hover:bg-surface-variant active:scale-95 transition-all">Link to Course</button>
+                <button className="w-full bg-on-surface text-surface py-2 rounded font-bold text-sm hover:opacity-90 active:scale-95 transition-all">View Resource</button>
+                <button className="w-full bg-surface-highest text-on-surface py-2 rounded font-bold text-sm hover:bg-surface-variant active:scale-95 transition-all">Update Resource</button>
               </div>
             </div>
           </div>
 
           <div className="bg-surface-low rounded-xl p-6 border border-outline-variant/5">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-mono text-primary tracking-widest uppercase">Storage Integrity</span>
+              <span className="text-[10px] font-mono text-primary tracking-widest uppercase">Upload Queue</span>
               <span className="text-xs font-mono">78%</span>
             </div>
             <div className="h-2 w-full bg-surface-highest rounded-full overflow-hidden mb-6">
@@ -148,12 +148,12 @@ export const ContentLibrary: React.FC = () => {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-outline">Allocated</span>
-                <span className="font-mono">1.0 TB</span>
+                <span className="text-outline">Processed</span>
+                <span className="font-mono">18 files</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-outline">Consumed</span>
-                <span className="font-mono">784.2 GB</span>
+                <span className="text-outline">Pending</span>
+                <span className="font-mono">5 files</span>
               </div>
             </div>
           </div>

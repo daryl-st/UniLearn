@@ -153,7 +153,8 @@ export default function LandingPage() {
                   id="L-01"
                   name="Machine Learning Basics"
                   discipline="Computer Science"
-                  instructor="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&h=200&q=80"
+                  instructor="Jane Smith"
+                  // instructor="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&h=200&q=80"
                   code="CoSc4411"
                   image="https://lh3.googleusercontent.com/aida-public/AB6AXuA7LCvhxVDiHX0r1T3j7SdeYYY4hy6hJW7sDxHN_E6bwwJHHipx8eUWmciFkgmDRTkhNb-xywkuh79xpo301EvHwKeA1w9fs0s9e85imNHsS-XiQUgmFhtRsZmKAaXUj9Ymf1TPPyqf6axfz8tPcIL2iy_vOLU2XlsQg5TwLChAq3R0aTfUdBDfBsG1AnBVII65wpH_GUg2N51UDsUXv9OW3FfcbBjRoXULuu5rjRbgBnLO5OIdEs_KrDV-3nNOik39T8L4gJl0rGfE"
                 />
@@ -161,7 +162,8 @@ export default function LandingPage() {
                   id="L-02"
                   name="Data Mining"
                   discipline="Computer Science"
-                  instructor="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&h=200&q=80"
+                  instructor="Lucy Maine"
+                  // instructor="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&h=200&q=80"
                   code="CoSc4510"
                   image="https://lh3.googleusercontent.com/aida-public/AB6AXuDOwFxb3LEAoQPrKB-wxhHni_2xVt1q0LZuLkmCpRRYynn7eJYyWAi4ciSrPEiRdIu5Ez8j3oEyhmBtbrZBoNJEirbND7wMSUnexOKSthx7KIb8R13V__mVKIHVWMV6ux-wmww8MDnHVrmOQKIS-kMkeDhJoCpFEAIAk63zhcVKGNzDTEHUdJwN8QNzsU7xg47FSVm7PqWIo5P1nEy2Nx64xHaEHMiYTe1QStwA_QYKRhIAo1DRIHTePVPGDBVOVZVHBZRDDu_E7SWz"
                 />
@@ -169,7 +171,8 @@ export default function LandingPage() {
                   id="L-03"
                   name="Database Systems"
                   discipline="Computer Science"
-                  instructor="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&h=200&q=80"
+                  instructor="John Doe"
+                  // instructor="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&h=200&q=80"
                   code="CoSc3213"
                   image="https://lh3.googleusercontent.com/aida-public/AB6AXuAaFUNsa5KoQGKFVgtJLXfesn_Vl907lzr6MXB6G-f_nTB7wqgZwhYOIk3cV6gvMtLeyqUjPCJTm-uDqHn361h849S7ICVJYu0ihkP5fsOuxgluXb4DWzCLAgs44Gls0yuotQPEB8bb0UGgQ5QTrWYUVxCAQGrdV0TL7qH_dss64pdU17gUPq-UNzlCDDs_2yjWDjcXhPKLpyFcBn9G0q6mXDHAj_KLmvIMhgsAStXtBjVeFMYWlGCsH1Fym-FI2l5gnYb7wwBV5SZM"
                 />

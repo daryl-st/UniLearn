@@ -6,7 +6,6 @@ import {
   Users, 
   CheckCircle2, 
   Zap, 
-  DollarSign,
   PlusCircle,
   UploadCloud,
   ClipboardCheck,
@@ -29,47 +28,47 @@ import {
 import { cn } from '@/lib/utils';
 
 const stats = [
-  { label: 'Total Students', value: '12.4K', change: '+14.2%', trend: 'up', icon: Users },
-  { label: 'Completion Rate', value: '84.3%', change: 'Optimal', trend: 'up', icon: CheckCircle2 },
-  { label: 'Engagement Score', value: '9.2', subValue: '/10', change: 'Peak Sync', trend: 'up', icon: Zap },
-  { label: 'Revenue (Enterprise)', value: '$42.8K', change: '+8.4%', trend: 'up', icon: DollarSign },
+  { label: 'Managed Courses', value: '03', change: '+1 this term', trend: 'up', icon: Users },
+  { label: 'Total Resources', value: '24', change: 'Updated today', trend: 'up', icon: CheckCircle2 },
+  { label: 'Recent Quiz Attempts', value: '47', subValue: '/7d', change: '+8.5%', trend: 'up', icon: Zap },
+  { label: 'Avg. Student Score', value: '81.4%', change: '+2.1%', trend: 'up', icon: Brain },
 ];
 
 const chartData = [
-  { name: 'Cycle 01', value: 42 },
-  { name: 'Cycle 05', value: 55 },
-  { name: 'Cycle 10', value: 70 },
-  { name: 'Cycle 15', value: 60 },
-  { name: 'Cycle 20', value: 85 },
-  { name: 'Cycle 25', value: 95, isPeak: true },
-  { name: 'Cycle 28', value: 75 },
-  { name: 'Cycle 30', value: 80 },
+  { name: 'W1', value: 42 },
+  { name: 'W2', value: 55 },
+  { name: 'W3', value: 70 },
+  { name: 'W4', value: 60 },
+  { name: 'W5', value: 85 },
+  { name: 'W6', value: 95, isPeak: true },
+  { name: 'W7', value: 75 },
+  { name: 'W8', value: 80 },
 ];
 
 const activities = [
-  { id: '1', user: 'Alex Rivera', action: 'completed', target: 'Module 04: Logic Gates', time: '3m ago', status: 'Verified', type: 'success', icon: CheckCircle },
-  { id: '2', user: 'Sarah Chen', action: 'attempted', target: 'Final Quiz: Neural Nets', time: '14m ago', status: 'Score: 98%', type: 'info', icon: Brain },
-  { id: '3', user: 'Marcus Thorne', action: 'enrolled in', target: 'Advanced AI', time: '1h ago', type: 'neutral', icon: UserPlus },
-  { id: '4', user: 'User #8901', action: 'failed authentication check', time: '2h ago', status: 'Logged', type: 'warning', icon: AlertTriangle },
+  { id: '1', user: 'Ruth Teklu', action: 'completed', target: 'Quiz: Search Algorithms', time: '3m ago', status: 'Score: 82%', type: 'success', icon: CheckCircle },
+  { id: '2', user: 'Samuel Bekele', action: 'viewed', target: 'CoSc4411 Week 8 Resource', time: '14m ago', status: 'Tracked', type: 'info', icon: Brain },
+  { id: '3', user: 'Meklit Yonas', action: 'generated', target: 'AI Summary for CoSc3312', time: '1h ago', type: 'neutral', icon: UserPlus },
+  { id: '4', user: 'System', action: 'recorded', target: 'new student quiz attempts', time: '2h ago', status: 'Updated', type: 'warning', icon: AlertTriangle },
 ];
 
 const courses = [
   { 
     id: '1', 
-    title: 'Neural Network Architectures', 
-    description: 'Foundations of deep learning systems.', 
+    title: 'Artificial Intelligence (CoSc4411)', 
+    description: 'Core lectures, resources, and revision quizzes.', 
     progress: 64, 
-    enrolled: '4,281', 
-    tag: 'ADVANCED',
+    enrolled: '124', 
+    tag: 'YEAR 4',
     image: 'https://picsum.photos/seed/neural/800/400'
   },
   { 
     id: '2', 
-    title: 'Bio-Digital Interfaces', 
-    description: 'Ethics and mechanics of neural links.', 
+    title: 'Database Systems (CoSc3312)', 
+    description: 'Course materials, summaries, and assessment prep.', 
     progress: 32, 
-    enrolled: '1,102', 
-    tag: 'ESSENTIAL',
+    enrolled: '98', 
+    tag: 'YEAR 3',
     image: 'https://picsum.photos/seed/bio/800/400'
   },
 ];
@@ -85,11 +84,11 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Instructor Dashboard</h1>
-          <p className="text-outline font-sans mt-1">System operational. Performance metrics within nominal range.</p>
+          <p className="text-outline font-sans mt-1">Manage course materials and monitor learning impact across your assigned courses.</p>
         </div>
         <div className="bg-surface-low px-3 py-1.5 rounded flex items-center gap-2 border border-outline-variant/10">
           <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(78,222,163,0.5)]"></span>
-          <span className="text-xs font-mono text-secondary uppercase tracking-widest">Live: 1,248 Nodes</span>
+          <span className="text-xs font-mono text-secondary uppercase tracking-widest">Live: Assigned Courses Active</span>
         </div>
       </div>
 
@@ -131,7 +130,7 @@ export const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="font-headline font-semibold text-lg">Engagement Over Time</h3>
-                <p className="text-xs text-outline font-mono uppercase tracking-widest">Temporal Protocol Sync</p>
+                <p className="text-xs text-outline font-mono uppercase tracking-widest">Student activity by week</p>
               </div>
               <div className="flex gap-2">
                 {['7D', '30D', '90D'].map((t) => (
@@ -185,7 +184,7 @@ export const Dashboard: React.FC = () => {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-headline font-semibold text-lg">Active Courses</h3>
-              <button className="text-xs font-mono text-primary hover:underline">View All Protocols</button>
+              <button className="text-xs font-mono text-primary hover:underline">Manage Resources</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {courses.map((course) => (
@@ -197,11 +196,11 @@ export const Dashboard: React.FC = () => {
                       className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-surface-low to-transparent"></div>
+                    <div className="absolute inset-0 bg-linear-to-t from-surface-low to-transparent"></div>
                     <div className="absolute bottom-3 left-4">
                       <span className={cn(
                         "backdrop-blur-md text-[10px] px-2 py-1 font-mono rounded-sm border",
-                        course.tag === 'ADVANCED' ? "bg-primary/20 text-primary border-primary/20" : "bg-secondary/20 text-secondary border-secondary/20"
+                        course.tag === 'YEAR 4' ? "bg-primary/20 text-primary border-primary/20" : "bg-secondary/20 text-secondary border-secondary/20"
                       )}>
                         {course.tag}
                       </span>
@@ -219,7 +218,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                       <div className="h-1 bg-surface-highest rounded-full overflow-hidden">
                         <div 
-                          className={cn("h-full transition-all duration-1000", course.tag === 'ADVANCED' ? "bg-primary" : "bg-secondary")} 
+                          className={cn("h-full transition-all duration-1000", course.tag === 'YEAR 4' ? "bg-primary" : "bg-secondary")} 
                           style={{ width: `${course.progress}%` }}
                         ></div>
                       </div>
@@ -250,21 +249,21 @@ export const Dashboard: React.FC = () => {
               <button className="w-full flex items-center justify-between p-4 bg-primary text-on-primary rounded-sm group active:scale-[0.98] transition-all">
                 <div className="flex items-center gap-3">
                   <PlusCircle size={20} />
-                  <span className="font-semibold text-sm">Create New Course</span>
+                  <span className="font-semibold text-sm">Manage Resources</span>
                 </div>
                 <ArrowRight size={16} className="opacity-50 group-hover:translate-x-1 transition-transform" />
               </button>
               <button className="w-full flex items-center justify-between p-4 bg-surface-high hover:bg-surface-highest rounded-sm group active:scale-[0.98] transition-all">
                 <div className="flex items-center gap-3">
                   <UploadCloud size={20} className="text-outline" />
-                  <span className="font-semibold text-sm">Upload Assets</span>
+                  <span className="font-semibold text-sm">Upload New Content</span>
                 </div>
                 <ArrowRight size={16} className="opacity-50 group-hover:translate-x-1 transition-transform" />
               </button>
               <button className="w-full flex items-center justify-between p-4 bg-surface-high hover:bg-surface-highest rounded-sm group active:scale-[0.98] transition-all">
                 <div className="flex items-center gap-3">
                   <ClipboardCheck size={20} className="text-outline" />
-                  <span className="font-semibold text-sm">Review Quizzes</span>
+                  <span className="font-semibold text-sm">View Course Analytics</span>
                 </div>
                 <div className="bg-error-container text-error text-[10px] font-mono px-1.5 py-0.5 rounded">12</div>
               </button>
@@ -275,7 +274,7 @@ export const Dashboard: React.FC = () => {
           <section className="bg-surface-low p-6 rounded-sm border border-outline-variant/5">
             <h3 className="font-headline font-semibold text-lg mb-6">Recent Student Activity</h3>
             <div className="space-y-6 relative">
-              <div className="absolute left-[15px] top-2 bottom-2 w-[1px] bg-surface-highest"></div>
+              <div className="absolute left-3.75 top-2 bottom-2 w-px bg-surface-highest"></div>
               {activities.map((activity) => (
                 <div key={activity.id} className="relative flex gap-4">
                   <div className={cn(
@@ -311,7 +310,7 @@ export const Dashboard: React.FC = () => {
               ))}
             </div>
             <button className="w-full mt-8 py-2 border border-outline-variant/20 rounded-sm text-xs font-mono uppercase tracking-widest text-outline hover:bg-surface-high hover:text-on-surface transition-all">
-              Download Log Protocol
+              Export Activity Log
             </button>
           </section>
         </div>

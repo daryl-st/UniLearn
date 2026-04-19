@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Verified, Clock, Rocket, PlayCircle, Share2, ChevronLeft, ChevronRight, CheckCircle2, MessageSquare, Sparkles } from 'lucide-react';
-import { COURSES, NOTIFICATIONS } from '@/utils/constants';
+import { COURSES } from '@/utils/constants';
 
 // this call back is here mainly to handle navigation to course details page when user clicks on a course card.
 // through props and letting the parent component hanlde the routing logic.
@@ -19,14 +19,44 @@ import { COURSES, NOTIFICATIONS } from '@/utils/constants';
 // Will break down into smaller components in future iterations.
 // export default function Dashboard({ onCourseSelect }: DashboardProps) {
 export default function Dashboard() {
+  const studentNotifications = [
+    {
+      id: 'sn-1',
+      title: 'New resource added to CoSc4411',
+      description: 'Your instructor uploaded an additional revision file for this week.',
+      time: '2h ago',
+      type: 'instructor',
+    },
+    {
+      id: 'sn-2',
+      title: 'Summary generated successfully',
+      description: 'Your AI summary for Normalization Lecture is now available.',
+      time: 'Yesterday',
+      type: 'system',
+    },
+    {
+      id: 'sn-3',
+      title: 'Quiz feedback is ready',
+      description: 'Review incorrect answers to improve your next attempt.',
+      time: '2 days ago',
+      type: 'sandbox',
+    },
+  ] as const;
+
   const stats = [
-    { label: 'Completion Rate', value: '92.4%', change: '+4.2%', trend: 'up', icon: Verified },
-    { label: 'Total Hours', value: '148.5', status: 'Active session', icon: Clock },
-    { label: 'Active Courses', value: '04', detail: '2 due this week', icon: Rocket },
+    { label: 'Enrolled Courses', value: '04', detail: '2 with activity this week', icon: Rocket },
+    { label: 'Average Quiz Score', value: '78.5%', change: '+3.2%', trend: 'up', icon: Verified },
+    { label: 'Resources Viewed', value: '27', status: 'Last studied today', icon: Clock },
   ];
 
   return (
     <div className="p-8 space-y-10">
+      <section className="space-y-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">Student Dashboard</p>
+        <h1 className="font-headline text-3xl font-bold text-white">Track your learning and continue your study plan.</h1>
+        <p className="text-on-surface-variant text-sm max-w-3xl">Review your course activity, summaries, and quiz performance in one place.</p>
+      </section>
+
       {/* Stats Row */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
@@ -61,7 +91,7 @@ export default function Dashboard() {
       <section>
         <div className="mb-6 flex items-center justify-between">
           <h4 className="font-headline text-lg font-bold text-white uppercase tracking-tight">Continue Learning</h4>
-          <button className="text-primary text-[11px] font-mono uppercase tracking-widest hover:underline">View All History</button>
+          <button className="text-primary text-[11px] font-mono uppercase tracking-widest hover:underline">View My Courses</button>
         </div>
         
         <div className="glass-ai rounded-sm p-8 flex flex-col md:flex-row gap-8 items-center border border-primary/10 cursor-pointer"
@@ -74,18 +104,18 @@ export default function Dashboard() {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent opacity-60"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-surface via-transparent to-transparent opacity-60"></div>
             <div className="absolute bottom-4 left-4 flex items-center gap-2">
               <PlayCircle className="text-white w-4 h-4" />
-              <span className="text-white text-[10px] font-mono">Module 08: Backpropagation</span>
+              <span className="text-white text-[10px] font-mono">Resource: Week 8 Lecture Notes</span>
             </div>
           </div>
           
           <div className="flex-1 space-y-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-mono rounded-sm border border-secondary/20">ADVANCED</span>
-                <span className="text-on-surface-variant font-mono text-[10px]">CO-P049</span>
+                <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-mono rounded-sm border border-secondary/20">CORE COURSE</span>
+                <span className="text-on-surface-variant font-mono text-[10px]">Course code: CoSc4411</span>
               </div>
               <h3 className="font-headline text-3xl font-bold text-white leading-tight">{COURSES[0].title}</h3>
               <p className="text-on-surface-variant text-sm max-w-xl mt-2">{COURSES[0].description}</p>
@@ -94,7 +124,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-end">
                 <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Progress: {COURSES[0].progress}%</span>
-                <span className="text-[10px] font-mono text-primary uppercase tracking-widest">12h 45m left</span>
+                <span className="text-[10px] font-mono text-primary uppercase tracking-widest">Last activity: Today</span>
               </div>
               <div className="w-full h-1 bg-surface-high rounded-full overflow-hidden">
                 <motion.div 
@@ -108,7 +138,7 @@ export default function Dashboard() {
             
             <div className="pt-4 flex items-center gap-4">
               <button className="px-8 py-3 bg-primary text-on-primary font-headline font-bold rounded-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10">
-                Resume Session
+                Continue Learning
               </button>
               <button className="p-3 bg-surface-high text-on-surface rounded-sm hover:bg-surface-high/80 transition-colors border border-outline-variant/10">
                 <Share2 className="w-4 h-4" />
@@ -122,7 +152,7 @@ export default function Dashboard() {
         {/* Recommended */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h4 className="font-headline text-lg font-bold text-white uppercase tracking-tight">Recommended for your Path</h4>
+            <h4 className="font-headline text-lg font-bold text-white uppercase tracking-tight">Current Courses</h4>
             <div className="flex gap-2">
               <button className="w-8 h-8 flex items-center justify-center rounded-sm bg-surface-low text-on-surface-variant hover:text-white transition-colors border border-outline-variant/10">
                 <ChevronLeft className="w-4 h-4" />
@@ -167,9 +197,9 @@ export default function Dashboard() {
 
         {/* System Feed */}
         <div className="space-y-6">
-          <h4 className="font-headline text-lg font-bold text-white uppercase tracking-tight">System Feed</h4>
+          <h4 className="font-headline text-lg font-bold text-white uppercase tracking-tight">Recent Activity</h4>
           <div className="bg-surface-low rounded-sm border border-outline-variant/5 divide-y divide-outline-variant/5">
-            {NOTIFICATIONS.map((notif) => (
+            {studentNotifications.map((notif) => (
               <div key={notif.id} className="p-4 flex gap-4 hover:bg-surface-high/30 transition-colors">
                 <div className={`w-8 h-8 rounded-sm flex items-center justify-center shrink-0 ${
                   notif.type === 'system' ? 'bg-secondary/10 text-secondary' :

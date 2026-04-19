@@ -35,7 +35,7 @@ export default function Learning() {
 
   const course = COURSES.find(c => c.id === courseId) || COURSES[0];
   const [messages, setMessages] = useState([
-    { role: 'ai', content: `Welcome to the learning workspace for **${course.title}**. I'm your AI Copilot. How can I assist you today?` }
+    { role: 'ai', content: `Welcome to the learning workspace for **${course.title}**. I can help you summarize resources, generate quiz questions, and explain concepts.` }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -118,13 +118,19 @@ export default function Learning() {
                 <div className="space-y-2">
                   <h2 className="font-headline text-3xl font-bold text-white tracking-tight">{activeLesson?.title}</h2>
                   <p className="text-on-surface-variant leading-relaxed text-lg max-w-3xl">
-                    In this session, we deep dive into the practical implementation of {activeLesson?.title} within the context of {course.title}.
+                    In this session, review the selected learning resource, extract key points with AI summary support, and test understanding with a generated quiz.
                   </p>
                 </div>
-                <button className="flex items-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary px-6 py-3 rounded-sm font-headline font-bold text-sm whitespace-nowrap hover:bg-secondary/20 transition-all shrink-0">
-                  <CheckCircle className="w-4 h-4" />
-                  Complete Lesson
-                </button>
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                  <button className="flex items-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary px-6 py-3 rounded-sm font-headline font-bold text-sm whitespace-nowrap hover:bg-secondary/20 transition-all">
+                    <CheckCircle className="w-4 h-4" />
+                    Generate Summary
+                  </button>
+                  <button className="flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-6 py-3 rounded-sm font-headline font-bold text-sm whitespace-nowrap hover:bg-primary/20 transition-all">
+                    <PlayCircle className="w-4 h-4" />
+                    Generate Quiz
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-10 border-t border-outline-variant/10">
@@ -140,8 +146,8 @@ export default function Learning() {
                           <FileText className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-white">Lecture Transcript</p>
-                          <p className="text-[10px] font-mono text-on-surface-variant mt-1 uppercase">PDF • 1.2 MB</p>
+                          <p className="text-xs font-bold text-white">Open Resource</p>
+                          <p className="text-[10px] font-mono text-on-surface-variant mt-1 uppercase">Lecture PDF • 1.2 MB</p>
                         </div>
                       </div>
                       <div className="p-4 bg-surface-low rounded-sm border border-outline-variant/5 flex items-center gap-4 group cursor-pointer hover:bg-surface-high transition-all">
@@ -149,8 +155,8 @@ export default function Learning() {
                           <Cpu className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-white">Code Repository</p>
-                          <p className="text-[10px] font-mono text-on-surface-variant mt-1 uppercase">GITHUB • PROTOCOL-NAS</p>
+                          <p className="text-xs font-bold text-white">Quiz & Summary History</p>
+                          <p className="text-[10px] font-mono text-on-surface-variant mt-1 uppercase">View Attempts • Latest First</p>
                         </div>
                       </div>
                     </div>
@@ -162,9 +168,9 @@ export default function Learning() {
                       About this Lesson
                     </h3>
                     <p className="text-on-surface-variant text-sm leading-relaxed">
-                      This module focuses on the core mathematical foundations required to understand {activeLesson?.title}. We will cover the derivation of key algorithms and their application in real-world enterprise environments. 
+                      This lesson is part of your course learning flow in UniLearn. Start by reading the core resource, then generate a summary to review key ideas quickly.
                       <br /><br />
-                      Ensure you have completed the prerequisite reading on Search Space Definition before proceeding with the hands-on lab section.
+                      After that, generate a practice quiz and review feedback to identify topics that need more study.
                     </p>
                   </div>
                 </div>
@@ -181,11 +187,11 @@ export default function Learning() {
                       />
                       <div>
                         <p className="text-sm font-bold text-white">{course.instructor}</p>
-                        <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter mt-1">Lead Architect</p>
+                        <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter mt-1">Course Instructor</p>
                       </div>
                     </div>
                     <button className="w-full mt-6 py-2 border border-outline-variant/10 rounded-sm text-[10px] font-mono uppercase tracking-widest text-on-surface-variant hover:text-white hover:bg-surface-high transition-all">
-                      View Profile
+                      View Course Details
                     </button>
                   </div>
                 </div>
@@ -200,7 +206,7 @@ export default function Learning() {
         <div className="p-4 border-b border-outline-variant/10 bg-surface/40 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-            <span className="font-headline font-bold text-sm text-white uppercase tracking-tighter">AI Copilot v4.2</span>
+            <span className="font-headline font-bold text-sm text-white uppercase tracking-tighter">AI Learning Assistant</span>
           </div>
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-on-surface-variant" />
@@ -211,8 +217,8 @@ export default function Learning() {
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 subtle-scrollbar">
           <div className="bg-primary/5 border border-primary/10 p-4 rounded-sm text-[11px] text-on-surface-variant leading-relaxed">
-            <span className="text-primary font-bold block mb-1 uppercase tracking-widest">Contextual Analysis Active</span>
-            I am currently synchronized with **{activeLesson?.title}**. Ask me to explain concepts, summarize transcripts, or generate code snippets based on this lesson.
+            <span className="text-primary font-bold block mb-1 uppercase tracking-widest">Course Context Active</span>
+            I am currently synchronized with **{activeLesson?.title}**. Ask me to summarize this resource, generate practice questions, or explain difficult concepts.
           </div>
 
           {messages.map((msg, i) => (
@@ -267,7 +273,7 @@ export default function Learning() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
               className="bg-transparent border-none focus:ring-0 text-[13px] w-full min-h-10 max-h-32 text-on-surface resize-none subtle-scrollbar placeholder:text-on-surface-variant/40" 
-              placeholder="Ask the Protocol..." 
+              placeholder="Ask about this lesson..." 
               rows={1}
             />
             <button 
@@ -282,7 +288,7 @@ export default function Learning() {
               <Mic className="w-4 h-4 text-on-surface-variant hover:text-primary cursor-pointer transition-colors" />
               <Paperclip className="w-4 h-4 text-on-surface-variant hover:text-primary cursor-pointer transition-colors" />
             </div>
-            <span className="font-mono text-[9px] text-on-surface-variant/30 uppercase tracking-tighter">SHIFT+ENTER TO SEND</span>
+            <span className="font-mono text-[9px] text-on-surface-variant/30 uppercase tracking-tighter">ENTER TO SEND</span>
           </div>
         </div>
       </aside>

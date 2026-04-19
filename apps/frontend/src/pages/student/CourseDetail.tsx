@@ -37,14 +37,14 @@ export default function CourseDetail() {
   return (
     <div className="min-h-full bg-surface">
       {/* Hero Section */}
-      <section className="relative h-[400px] w-full overflow-hidden">
+      <section className="relative h-100 w-full overflow-hidden">
         <img 
           src={course.thumbnail} 
           alt={course.title} 
           className="w-full h-full object-cover opacity-40"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-surface via-surface/60 to-transparent"></div>
         
         <div className="absolute inset-0 p-8 md:p-12 flex flex-col justify-end max-w-7xl mx-auto w-full">
           <button 
@@ -52,7 +52,7 @@ export default function CourseDetail() {
             className="absolute top-8 left-8 flex items-center gap-2 text-on-surface-variant hover:text-white transition-colors font-mono text-[10px] uppercase tracking-widest"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back to Catalog
+            Back to My Courses
           </button>
 
           <div className="space-y-6 max-w-3xl">
@@ -61,7 +61,7 @@ export default function CourseDetail() {
                 {course.category}
               </span>
               <span className="text-on-surface-variant font-mono text-[10px] uppercase tracking-widest">
-                Protocol ID: {course.id.toUpperCase()}
+                Course ID: {course.id.toUpperCase()}
               </span>
             </div>
             
@@ -83,9 +83,9 @@ export default function CourseDetail() {
         {/* Left Column: Curriculum */}
         <div className="lg:col-span-8 space-y-10">
           <div className="space-y-4">
-            <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight">Curriculum Overview</h3>
+            <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight">Course Learning</h3>
             <p className="text-on-surface-variant leading-relaxed">
-              {course.description}
+              Learn from uploaded materials and reinforce understanding. Use AI-generated summaries and quizzes to review each resource effectively.
             </p>
           </div>
 
@@ -141,16 +141,16 @@ export default function CourseDetail() {
                 className="w-full py-4 bg-primary text-on-primary font-headline font-bold rounded-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3"
               >
                 <Play className="w-4 h-4 fill-current" />
-                Start Learning
+                Start Quiz
               </button>
               <div className="grid grid-cols-2 gap-3">
                 <button className="py-3 bg-surface-high text-on-surface-variant hover:text-white rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest">
                   <Bookmark className="w-3.5 h-3.5" />
-                  Save
+                  Generate Summary
                 </button>
                 <button className="py-3 bg-surface-high text-on-surface-variant hover:text-white rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest">
                   <Share2 className="w-3.5 h-3.5" />
-                  Share
+                  Generate Quiz
                 </button>
               </div>
             </div>
@@ -170,19 +170,19 @@ export default function CourseDetail() {
               </div>
 
               <div className="space-y-4">
-                <h5 className="font-headline text-[11px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">Course Includes</h5>
+                <h5 className="font-headline text-[11px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">Learning Tools</h5>
                 <ul className="space-y-3">
                   <li className="flex items-center gap-3 text-[13px] text-on-surface-variant">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span>Full lifetime access</span>
+                    <span>Open course resources online or download offline</span>
                   </li>
                   <li className="flex items-center gap-3 text-[13px] text-on-surface-variant">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span>Certificate of completion</span>
+                    <span>Generate concise summary from selected resources</span>
                   </li>
                   <li className="flex items-center gap-3 text-[13px] text-on-surface-variant">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span>Access on mobile and TV</span>
+                    <span>Generate quizzes and review attempt history</span>
                   </li>
                 </ul>
               </div>
@@ -192,7 +192,7 @@ export default function CourseDetail() {
               <div className="bg-primary/5 border border-primary/10 p-4 rounded-sm flex gap-4">
                 <Info className="w-5 h-5 text-primary shrink-0" />
                 <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                  This protocol is part of the <span className="text-white font-bold">UniLearn Enterprise Tier</span>. Your organization has full clearance for all modules.
+                  This course space is part of UniLearn's centralized learning repository for the Computer Science department. You can keep revising with summaries, quizzes, and saved feedback.
                 </p>
               </div>
             </div>
