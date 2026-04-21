@@ -8,7 +8,9 @@ export class UserService {
         return this.userRepository.findAll();
     }
 
-    async createUser(data: {email: string, firstName: string, lastName: string, passwordHash: string, role: Role}) {
+    // This should be admin functionality, but for now let's keep it simple.
+    // Admins can create instructors and students.
+    async createUser(data: {email: string, name: string, password: string, role: Role}) {
         // check if user exists and other business logic
         return this.userRepository.create(data);
     }

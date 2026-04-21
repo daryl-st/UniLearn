@@ -7,7 +7,17 @@ export class ResourceRepository {
         const resources = await prisma.resource.findMany({
             where: { courseId: courseId }
         });
-        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl, u.version, u.instructorId));
+
+        return resources.map(u => new Resource({ 
+            id: u.id, 
+            title: u.title, 
+            type: u.type, 
+            fileUrl: u.fileUrl, 
+            version: u.version, 
+            instructorId: u.instructorId, 
+            courseId: u.courseId, 
+            isDeleted: u.isDeleted 
+        }));
     }
 
     async findOne(data: {id: string}): Promise<Resource | null> {
@@ -15,7 +25,17 @@ export class ResourceRepository {
             where: { id: data.id}
         });
         if (!resource) return null; // Not found
-        return new Resource(resource?.id, resource?.title, resource?.type, resource?.fileUrl, resource?.version, resource?.instructorId);
+
+        return new Resource({ 
+            id: resource?.id, 
+            title: resource?.title, 
+            type: resource?.type, 
+            fileUrl: resource?.fileUrl, 
+            version: resource?.version, 
+            instructorId: resource?.instructorId, 
+            courseId: resource?.courseId, 
+            isDeleted: resource?.isDeleted 
+        });
     }
 
     async findByCourseId(data: {id: string}): Promise<Resource[] | null> {
@@ -23,7 +43,16 @@ export class ResourceRepository {
             where: { courseId: data.id }
         });
         if (!resources) return null; // no resources found
-        return resources.map(u => new Resource(u.id, u.title, u.type, u.fileUrl, u.version));
+        return resources.map(u => new Resource({ 
+            id: u.id, 
+            title: u.title, 
+            type: u.type, 
+            fileUrl: u.fileUrl, 
+            version: u.version, 
+            instructorId: u.instructorId, 
+            courseId: u.courseId, 
+            isDeleted: u.isDeleted 
+        }));
     }
 
     async create(data: {title: string, type: FileType, fileUrl: string, version: number, instructorId: string, courseId: string}) : Promise<Resource | null> {
@@ -32,7 +61,16 @@ export class ResourceRepository {
         if (existingResource) return null;
 
         const resource = await prisma.resource.create({ data });
-        return new Resource(resource.id, resource.title, resource.type, resource.fileUrl, resource.version);
+        return new Resource({ 
+            id: resource.id, 
+            title: resource.title, 
+            type: resource.type, 
+            fileUrl: resource.fileUrl, 
+            version: resource.version, 
+            instructorId: resource.instructorId, 
+            courseId: resource.courseId, 
+            isDeleted: resource.isDeleted 
+        });
     }
 
     async delete(data: { id: string }): Promise<Resource | null > { 
@@ -47,24 +85,52 @@ export class ResourceRepository {
 export class CourseRepository {
     async findAll(): Promise<Course[]> {
         const courses = await prisma.course.findMany(); // we might not need to fetch id for this request
-        return courses.map(u => new Course(u.id, u.name, u.code, u.acadamicYear, u.instructorId, u.departmentId)); 
+        return courses.map(u => new Course({ 
+            id: u.id, 
+            name: u.name, 
+            code: u.code, 
+            acadamicYear: u.acadamicYear, 
+            instructorId: u.instructorId, 
+            departmentId: u.departmentId 
+        })); 
     };
 
     async findOne(data: {id: string}): Promise<Course | null> {
         const course = await prisma.course.findUnique({ where: {id: data.id} });
         if (!course) return null;
-        return new Course(course.id, course.name, course.code, course.acadamicYear, course.instructorId, course.departmentId);
+        return new Course({ 
+            id: course.id, 
+            name: course.name, 
+            code: course.code, 
+            acadamicYear: course.acadamicYear, 
+            instructorId: course.instructorId, 
+            departmentId: course.departmentId 
+        });
     }
 
     async findOneByCode(code: string): Promise<Course | null> { // we can just make this boolean if the use-case allows it
         const course = await prisma.course.findUnique({ where: {code: code }});
         if (!course) return null;
-        return new Course(course.id, course.name, course.code, course.acadamicYear, course.instructorId, course.departmentId);
+        return new Course({ 
+            id: course.id, 
+            name: course.name, 
+            code: course.code, 
+            acadamicYear: course.acadamicYear, 
+            instructorId: course.instructorId, 
+            departmentId: course.departmentId 
+        });
     }
 
     async create(data: {name: string, code: string, acadamicYear: number, instructorId: string, departmentId: string}): Promise<Course> {
         const course = await prisma.course.create({ data });
-        return new Course(course.id, course.name, course.code, course.acadamicYear, course.instructorId, course.departmentId);
+        return new Course({ 
+            id: course.id,
+            name: course.name, 
+            code: course.code, 
+            acadamicYear: course.acadamicYear, 
+            instructorId: course.instructorId, 
+            departmentId: course.departmentId 
+        });
     }
 
     // can we delete a course without deleting it's resources? if so, is that valid?

@@ -1,6 +1,6 @@
-import type { FileType } from "@unilearn/shared-types";
+import type { CreateCourseInput, FileType } from "@unilearn/shared-types";
 import type { CourseRepository, ResourceRepository } from "./resource.repository.js";
-import { CourseResponse, Resource, type Course } from "./resource.entity.js";
+import { Course, Resource } from "./resource.entity.js";
 import type { UserRepository } from "../user/user.repository.js";
 
 export class ResourceService {
@@ -34,14 +34,14 @@ export class ResourceService {
         const resource = await this.resourceRepositor.findOne(data)
         if (!resource) return "Course Not Found!" // centralize
         if (resource?.instructorId != instructorId) return "Permission Denied!"; // centralize
-        return this.resourceRepositor.delete(data);
+        return this.resourceRepositor.delete(data); // is this a soft delete or hard delete?
     }
 }
 
 export class CourseService {
     constructor(private courseRepositor: CourseRepository, private userRepository: UserRepository) {}
 
-    async getCourses(): Promise<CourseResponse[]> {
+    async getCourses(): Promise<CreateCourseInput[]> {
         // before returning the courses i need to get the instructor name and department name and attach it in the course object.
         const response = await this.courseRepositor.findAll();
         const instructorIds = response.map(course => course.instructorId);
@@ -49,7 +49,14 @@ export class CourseService {
 
         const instructorNames = await Promise.all(instructorIds.map(id => this.userRepository.getUserNameById(id)));
         // const departmentNames = await Promise.all(departmentIds.map(id => this.userRepository.getDepartmentName(id)));
-        return response.map(course => new CourseResponse(course.id ,course.name, course.code, course.acadamicYear, instructorNames[instructorIds.indexOf(course.instructorId)], 'CS')); // department name is hardcoded for now
+        return response.map(course => new Course({
+            id: course.id, 
+            name: course.name, 
+            code: course.code, 
+            acadamicYear: course.acadamicYear, 
+            instructorId: instructorNames[instructorIds.indexOf(course.instructorId)] || "", // for now 
+            departmentId: 'CS'
+        })); // department name is hardcoded for now
     }
 
     async getCourseById(data: { id: string }) {
