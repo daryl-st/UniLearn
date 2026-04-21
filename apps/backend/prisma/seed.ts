@@ -5,22 +5,20 @@ async function main() {
         where: { email: "John@uni.test"},
         update: {},
         create: {
-            firstName: "John",
-            lastName: "Don",
+            name: "John Doe",
             email: "John@uni.test",
-            passwordHash: "12345678",
+            password: "12345678",
             role: "STUDENT",
         }
     });
 
     const Instructor = await prisma.user.upsert({
-        where: {email: "Ins@uni.test"},
+        where: { email: "Ins@uni.test" },
         update: {},
         create: {
-            firstName: "Mike",
-            lastName: "Mosby",
+            name: "Jane Smith",
             email: "Ins@uni.test",
-            passwordHash: "12345678",
+            password: "12345678",
             role: "INSTRUCTOR",
         }
     });
@@ -29,10 +27,9 @@ async function main() {
         where: {email: "Admin@uni.test"},
         update: {},
         create: {
-            firstName: "Joe",
-            lastName: "Herald",
+            name: "Joe Herald",
             email: "Admin@uni.test",
-            passwordHash: "12345678",
+            password: "12345678",
             role: "ADMIN",
         }
     });

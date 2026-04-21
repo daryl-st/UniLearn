@@ -1,44 +1,50 @@
 export type Role = "STUDENT" | "INSTRUCTOR" | "ADMIN";
 
-// This is returned to the frontend
+// base user type.
 export interface User {
-    id: string; // Not neccessary i think
-    email: string; // No password too
-    username: string;
-    firstName: string;
-    lastName: string;
-    role: Role;
-    createdAt: Date;
-}
-
-// Recieved from the frontend
-export interface CreateUserInput {
+    id: string;
+    name: string
     email: string;
-    passwordHash: string;
-    username: string;
-    firstName: string;
-    lastName: string;
+    password: string;
+    username?: string;
     role: Role;
-    createdAt: Date;
+    // createdAt: Date;
 }
 
+// we can use extends to describe the StudentUser...using basic inheritance.
+export interface Student extends User {
+    studentId: string;
+    departmentId: string;
+    academicYear: number;
+}
+
+export interface Instructor extends User {
+    instructorId: string;
+}
+
+// API response for user detailes when registering
+export interface CreateUserInputRegister {
+    email: string;
+    password: string; 
+    username?: string;
+    name: string
+    // role: Role; // i don't need to receive this from the frontend, it is set to STUDENT by default
+    // createdAt: Date; // why? only need it when storing in the database, not when receiving from the frontend
+}
+
+// API response for user detailes when logging in.
 export interface CreateUserInputLogin {
     email: string;
-    passwordHash: string;
+    password: string;
 }
 
+// API response for user detailes when updating the profile.
+// We will keep everything optional here, because the user can update any of these fields, or even just one of them.
 export interface UpdateUserInput {
     username?: string;
     firstName?: string;
     lastName?: string;
 }
 
-// we can use extends to describe the StudentUser...
-export interface Student extends User {
-    studnetId: string;
-    acadamicYear: Number;
-}
-
-export interface Instructor extends User {
-    instructorId: string;
-}
+// there's something called intersection types in TypeScript, 
+// in which we can create a type based on two types as combination and it's very flexible
