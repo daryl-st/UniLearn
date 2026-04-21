@@ -20,8 +20,6 @@
         "noUnusedParameters": true,
         "noImplicitReturns": true,
 
-        "baseUrl": ".",
-
         "paths": {
             "@unilearn/shared-types": ["../shared-types/src"]
         }
