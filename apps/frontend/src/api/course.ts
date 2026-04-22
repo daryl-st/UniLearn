@@ -1,16 +1,10 @@
 import { api, ApiError } from "./client"
-
-interface CourseResponse {
-    id: string,
-    name: string,
-    code: string,
-    acadamicYear: number,
-}
+import type { Course, UpdateCourseInput } from "@unilearn/shared-types";
 
 export const CourseAPI = {
     getAllCourses: async () => {
         try {
-            const response = await api.get<CourseResponse[]>('course');
+            const response = await api.get<Course[]>('course');
 
             if (!response || !Array.isArray(response)) {
                 throw new Error("Invalid response format!");
@@ -28,7 +22,7 @@ export const CourseAPI = {
     },
     getCourse: async () => {
         try {
-            const response = await api.get<CourseResponse>('course/:id');
+            const response = await api.get<Course>('course/:id');
 
             return response;
         } catch (err) {
@@ -39,9 +33,9 @@ export const CourseAPI = {
             throw new Error("Fetching course failed!");
         }
     },
-    createCourse: async (courseData: any) => {
+    createCourse: async (courseData: UpdateCourseInput) => {
         try {
-            const response = await api.post<CourseResponse>('course', courseData);
+            const response = await api.post<Course>('course', courseData);
             return response;
         } catch (err) {
             if (err instanceof ApiError) {
@@ -53,7 +47,7 @@ export const CourseAPI = {
     },
     deleteCourse: async (courseId: string) => {
         try {
-            const response = await api.delete<CourseResponse>(`course/${courseId}`);
+            const response = await api.delete<Course>(`course/${courseId}`);
             return response;
         } catch (err) {
             if (err instanceof ApiError) {

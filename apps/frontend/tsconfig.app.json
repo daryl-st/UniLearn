@@ -25,7 +25,8 @@
     "noUncheckedSideEffectImports": true,
 
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@unilearn/shared-types": ["../../packages/shared-types/src/index.ts"]
     }
   },
   "include": ["src"]

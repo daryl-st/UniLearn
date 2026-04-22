@@ -41,7 +41,7 @@ export class ResourceService {
 export class CourseService {
     constructor(private courseRepositor: CourseRepository, private userRepository: UserRepository) {}
 
-    async getCourses(): Promise<CreateCourseInput[]> {
+    async getCourses(): Promise<Course[]> {
         // before returning the courses i need to get the instructor name and department name and attach it in the course object.
         const response = await this.courseRepositor.findAll();
         const instructorIds = response.map(course => course.instructorId);

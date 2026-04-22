@@ -1,17 +1,9 @@
-// src/components/features/courses/CourseCard.tsx
 import { Surface } from "@/components/ui/Surface";
 import { Badge } from "@/components/ui/Badge";
 import { motion } from "motion/react";
+import type { CreateCourseInput } from "@unilearn/shared-types";
 
-interface CourseCardProps {
-    id: string,
-    name: string,
-    code: string,
-    // acadamicYear: number,
-    instructor: string,
-    discipline: string,
-    image?: string,
-}
+const imageUrl = "https://media.istockphoto.com/id/2215967400/vector/smart-education-and-online-learning-with-digital-graduation-cap-vector-illustration.jpg?s=612x612&w=0&k=20&c=cdM8xg9s0cP_26UweU1HD0TrP5q9bL9xGKXxHtnJdbM="
 
 // interface CourseCardProps {
 //   id: string;
@@ -23,7 +15,7 @@ interface CourseCardProps {
 // }
 
 // export function CourseCard({ id, discipline, title, description, instructor, image }: CourseCardProps) {
-export function CourseCard({ name, code, discipline, instructor, image }: CourseCardProps) {
+export function CourseCard({ name, code, acadamicYear, instructorId, departmentId }: CreateCourseInput) {
   return (
     // let's wrap it with motion.div for hover effects
     <motion.div 
@@ -35,7 +27,7 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
       <div className="aspect-16/10 overflow-hidden relative">
         <img 
           // src={name}
-          src={image} 
+          src="https://media.istockphoto.com/id/2215967400/vector/smart-education-and-online-learning-with-digital-graduation-cap-vector-illustration.jpg?s=612x612&w=0&k=20&c=cdM8xg9s0cP_26UweU1HD0TrP5q9bL9xGKXxHtnJdbM="
           alt={name} 
           className="object-cover w-full h-full grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" 
         />
@@ -49,7 +41,7 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
       <div className="p-6 flex-1 flex flex-col justify-between">
         <div className="space-y-3 mb-6">
           <Badge variant="status" className="font-mono text-[10px] uppercase tracking-widest text-accent">
-            {discipline}
+            {acadamicYear} - {departmentId}
           </Badge>
           <h3 className="font-display text-xl font-bold text-on-surface leading-snug group-hover:text-brand transition-colors">
             {name}
@@ -63,12 +55,12 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
         <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/10 mt-auto">
           <div className="flex items-center gap-2.5">
             <img 
-              src={instructor} 
-              alt={instructor} 
+              src={imageUrl} 
+              alt={departmentId} 
               className="w-7 h-7 rounded-full object-cover grayscale" 
             />
             <span className="font-sans text-xs text-on-surface-variant/80">
-              {instructor}
+              {instructorId}
             </span>
           </div>
           <span className="font-mono text-[9px] uppercase tracking-widest text-on-surface-variant/50">
@@ -80,30 +72,3 @@ export function CourseCard({ name, code, discipline, instructor, image }: Course
     </motion.div>
   );
 }
-
-// const CourseCard = ({ id, title, description, modules, level, image }: any) => (
-//   <motion.div 
-//     whileHover={{ y: -10 }}
-//     className="group cursor-pointer"
-//   >
-//     <div className="relative overflow-hidden mb-6 aspect-[4/3] border border-outline-variant">
-//       <img 
-//         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100" 
-//         src={image} 
-//         alt={title}
-//         referrerPolicy="no-referrer"
-//       />
-//       <div className="absolute top-4 right-4 px-2 py-1 bg-surface-highest text-secondary font-mono text-[10px] tracking-widest rounded-sm border border-outline-variant">
-//         {id}
-//       </div>
-//     </div>
-//     <div className="space-y-3">
-//       <h4 className="text-xl font-headline font-bold text-white group-hover:text-primary transition-colors">{title}</h4>
-//       <p className="text-sm text-on-surface-variant leading-relaxed">{description}</p>
-//       <div className="flex items-center gap-4 pt-2">
-//         <span className="text-[10px] font-mono text-on-surface-variant uppercase">{modules} Modules</span>
-//         <span className="text-[10px] font-mono text-on-surface-variant uppercase">{level}</span>
-//       </div>
-//     </div>
-//   </motion.div>
-// );

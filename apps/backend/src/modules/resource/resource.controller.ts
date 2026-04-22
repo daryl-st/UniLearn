@@ -22,8 +22,17 @@ export class ResourceController {
         // course resorces should not be returned at this request and a course might have 0 resources
         // this will be requested when the user is presented with a list of courses.
         const courses = await courseService.getCourses();
-        console.log(courses);
-        res.status(200).json(courses);
+
+        const courseData = courses.map(course => ({
+            id: course.id,
+            name: course.name,
+            code: course.code,
+            acadamicYear: course.acadamicYear,
+            instructorId: course.instructorId,
+            departmentId: course.departmentId,
+        }));
+        console.log(courseData);
+        res.status(200).json(courseData);
     }
 
     async getResourceById(req: Request, res: Response) {

@@ -1,21 +1,23 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CourseAPI } from '@/api/course';
+import type { Course, UpdateCourseInput } from "@unilearn/shared-types";
 
-interface Course {
-    id: string; // i believe we don't need this for now.
-    name: string;
-    code: string;
-    instructor: string;
-    discipline: string;
-    image?: string;
-    acadamicYear: number;
-    // description: string;
-    // instructor: {
-    //     name: string;
-    //     avatar: string;
-    // };
-}
+// we need to replace these with the shared types so it matches the backend.
+// interface Course {
+//     id: string; // i believe we don't need this for now.
+//     name: string;
+//     code: string;
+//     instructor: string;
+//     discipline: string;
+//     image?: string;
+//     acadamicYear: number;
+//     // description: string;
+//     // instructor: {
+//     //     name: string;
+//     //     avatar: string;
+//     // };
+// }
 
 // interface CourseResponse {
 //     id: string;
@@ -27,15 +29,15 @@ interface Course {
 //     acadamicYear: number;
 // }   
 
-interface CourseUploadData {
-    name: string;
-    code: string;
-    instructor: string;
-    discipline: string;
-    image?: string; // course image
-    acadamicYear: number;
-    // description: string;
-}
+// interface CourseUploadData {
+//     name: string;
+//     code: string;
+//     instructor: string;
+//     discipline: string;
+//     image?: string; // course image
+//     acadamicYear: number;
+//     // description: string;
+// }
 
 interface CourseState {
     courses: Course[];
@@ -44,7 +46,7 @@ interface CourseState {
 
     fetchCourses: () => Promise<void>;
     getCourseById: (courseId: string) => Course | undefined;
-    uploadCourse: (courseData: CourseUploadData) => Promise<void>;
+    uploadCourse: (courseData: UpdateCourseInput) => Promise<void>;
     deleteCourse: (courseId: string) => Promise<void>;
 }
 
@@ -59,15 +61,16 @@ export const useCourseStore = create<CourseState>() (
                 set({ isLoading: true, error: null });
                 try {
                     const response = await CourseAPI.getAllCourses();
+                
                     // Map CourseResponse to Course
-                    const courses: Course[] = response.map((course: any) => ({ // will be edited later to course response
+                    const courses: Course[] = response.map((course: Course) => ({ // will be edited later to course response
                         id: course.id,
                         name: course.name,
                         code: course.code,
                         acadamicYear: course.acadamicYear,
-                        instructor: course.instructorName ?? '',
-                        discipline: course.departmentName ?? '',
-                        image: course.image,
+                        instructorId: course.instructorId,
+                        departmentId: course.departmentId,
+                        // resource: course.resources ?? [],
                     }));
                     set({ courses, isLoading: false });
                 } catch (err: unknown) {
@@ -85,11 +88,11 @@ export const useCourseStore = create<CourseState>() (
                 return courses.find(course => course.id === courseId);
             },
 
-            uploadCourse: async (courseData: CourseUploadData) => {
+            uploadCourse: async (courseData: UpdateCourseInput) => {
                 set({ isLoading: true, error: null });
                 try {
                     const response = await CourseAPI.createCourse(courseData);
-                    set((state: { courses: any; }) => ({ courses: [...state.courses, response], isLoading: false }));
+                    set((state: { courses: Course[]; }) => ({ courses: [...state.courses, response], isLoading: false }));
                 } catch (err: unknown) {
                     set({
                         error: err instanceof Error ? err.message : 'Failed to upload course!',
@@ -103,7 +106,7 @@ export const useCourseStore = create<CourseState>() (
                 set({ isLoading: true, error: null });
                 try {
                     await CourseAPI.deleteCourse(courseId);
-                    set((state) => ({ courses: state.courses.filter(course => course.id !== courseId), isLoading: false }));
+                    set((state: { courses: Course[]; }) => ({ courses: state.courses.filter(course => course.id !== courseId), isLoading: false }));
                 } catch (err: unknown) {
                     set({
                         error: err instanceof Error ? err.message : 'Failed to delete course!',

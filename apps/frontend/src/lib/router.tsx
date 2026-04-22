@@ -22,8 +22,8 @@ import { useAuthStore } from "@/stores/authStore";
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
-const LoginPageNew = lazy(() => import('@/pages/public/LoginPage'));
-const RegisterPageNew = lazy(() => import('@/pages/public/RegitsterPage'));
+// const LoginPageNew = lazy(() => import('@/pages/public/LoginPage'));
+// const RegisterPageNew = lazy(() => import('@/pages/public/RegitsterPage'));
 
 // shared page
 const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
@@ -31,7 +31,6 @@ const NotFoundPage = lazy(() => import('@/pages/shared/NotFoundPage'));
 // const UnauthorizedPage = lazy(() => import('@/pages/shared/UnauthorizedPage'));
 
 // public pages
-const HomePage = lazy(() => import('@/pages/marketing/HeroPage'));
 const LandingPage = lazy(() => import('@/pages/public/LandingPage'));
 const AboutPage = lazy(() => import('@/pages/public/AboutPage'));
 const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
@@ -54,10 +53,6 @@ const AdminCourseManagementPage = lazy(() => import('@/pages/admin/CourseMangeme
 const AdminAnalyticsPage = lazy(() => import('@/pages/admin/Analytics').then((module) => ({ default: module.Analytics })));
 const AdminSettingsPage = lazy(() => import('@/pages/admin/Settings').then((module) => ({ default: module.Settings })));
 const AdminUserManagementPage = lazy(() => import('@/pages/admin/UserManagement').then((module) => ({ default: module.UserManagement })));
-
-// const StudnetDashboardPage = lazy(() => import('@/pages/dashboards/student/StudentDashboardPage'));
-// const InstructorDashboardPage = lazy(() => import('@/pages/dashboards/instructor/TeacherDashboardPage'));
-// const AdminDashboardPage = lazy(() => import('@/pages/dashboards/admin/AdminDashboardPage'));
 
 function DashboardDemoPage({
   title,
@@ -119,13 +114,12 @@ type RouteEntry = {
 };
 
 const publicRoutes: RouteEntry[] = [
-  { path: '/', element: <HomePage /> },
-  { path: '/home', element: <LandingPage /> },
+  { path: '/', element: <LandingPage /> },
   { path: '/about', element: <AboutPage /> },
   { path: '/contact', element: <ContactPage /> },
   { path: '/courses', element: <CoursesPage /> },
-  { path: '/log', element: <LoginPageNew /> },
-  { path: '/reg', element: <RegisterPageNew /> },
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
 ];
 
 const protectedRoutes: RouteEntry[] = [
@@ -221,7 +215,7 @@ export function AppRouter() {
           ))}
 
           {/* Public Routes */}
-          <Route path="/login" element={
+          {/* <Route path="/login" element={
             <PublicRoute>
               <LoginPage />
             </PublicRoute>
@@ -230,7 +224,7 @@ export function AppRouter() {
             <PublicRoute>
               <RegisterPage />
             </PublicRoute>
-          } />
+          } /> */}
 
           {/* For debugging purpose */}
           {protectedRoutes.map((route) => (
