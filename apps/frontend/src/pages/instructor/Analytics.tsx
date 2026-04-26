@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Download, 
   AlertCircle, 
@@ -46,6 +47,8 @@ const atRiskCohort = [
 ];
 
 export const Analytics: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -168,7 +171,12 @@ export const Analytics: React.FC = () => {
         <section className="col-span-12 lg:col-span-7 bg-surface-low p-6 rounded-lg border border-outline-variant/5">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-headline text-lg font-bold">At-Risk Students</h2>
-            <button className="text-[10px] font-mono font-bold text-secondary uppercase tracking-widest hover:underline">View All Students</button>
+            <button
+              className="text-[10px] font-mono font-bold text-secondary uppercase tracking-widest hover:underline"
+              onClick={() => navigate('/instructor/courses')}
+            >
+              View All Students
+            </button>
           </div>
           <div className="space-y-3">
             {atRiskCohort.map((student) => (
@@ -182,7 +190,14 @@ export const Analytics: React.FC = () => {
                 </div>
                 <div className="flex gap-8 text-right">
                   <div className="text-sm font-semibold text-error">{student.score}</div>
-                  <button className="text-primary hover:bg-primary/10 p-2 rounded-sm"><Mail size={18} /></button>
+                  <button
+                    className="text-primary hover:bg-primary/10 p-2 rounded-sm"
+                    onClick={() => {
+                      window.location.href = `mailto:${student.name.toLowerCase().replace(' ', '.')}@unilearn.edu?subject=Course%20support`;
+                    }}
+                  >
+                    <Mail size={18} />
+                  </button>
                 </div>
               </div>
             ))}

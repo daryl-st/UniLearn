@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { 
   User, 
   Shield, 
@@ -10,6 +11,8 @@ import {
 import { cn } from '@/lib/utils';
 
 export const Settings: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -39,17 +42,21 @@ export const Settings: React.FC = () => {
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-mono text-outline uppercase tracking-wider">Profile Image</label>
-                  <div className="flex items-center gap-6 group">
-                    <div className="relative w-24 h-24 rounded-sm overflow-hidden bg-surface-high">
-                      <img src="https://picsum.photos/seed/instructor/200/200" alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" referrerPolicy="no-referrer" />
+                  <div className="flex items-center gap-6 group rounded-sm border border-outline-variant/10 bg-surface p-4">
+                    <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-high border border-outline-variant/20 shrink-0">
+                      <img src="https://picsum.photos/seed/instructor/200/200" alt="Instructor profile" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" referrerPolicy="no-referrer" />
                     </div>
-                    <button className="text-xs bg-surface-high px-4 py-2 hover:bg-surface-highest transition-colors font-semibold uppercase tracking-tighter">Upload Image</button>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-on-surface truncate">Dr. Aris Thorne</p>
+                      <p className="text-[10px] font-mono uppercase tracking-wider text-outline mt-1">Lead Instructor</p>
+                    </div>
+                    <button className="text-xs bg-surface-high px-4 py-2 hover:bg-surface-highest transition-colors font-semibold uppercase tracking-tighter rounded-sm">Upload Image</button>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-mono text-outline uppercase tracking-wider">Bio</label>
                   <textarea 
-                    className="bg-surface border-none text-sm p-4 focus:ring-1 focus:ring-primary rounded-sm text-on-surface resize-none h-32"
+                    className="bg-surface border border-outline-variant/10 text-sm p-4 focus:ring-1 focus:ring-primary rounded-sm text-on-surface resize-none h-32"
                     defaultValue="Instructor in Computer Science focused on AI and software engineering courses. Keeps course resources current and aligned with departmental learning outcomes."
                   />
                 </div>
@@ -60,12 +67,12 @@ export const Settings: React.FC = () => {
                   <label className="text-xs font-mono text-outline uppercase tracking-wider">Specialties</label>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {['Neural Networks', 'Data Ethics', 'Quantum Computing'].map(s => (
-                      <span key={s} className="bg-surface-high text-secondary text-[11px] font-mono px-2 py-1 rounded-sm">{s}</span>
+                      <span key={s} className="bg-surface-high text-secondary text-[11px] font-mono px-2.5 py-1 rounded-sm border border-secondary/20">{s}</span>
                     ))}
                     <button className="border border-dashed border-outline text-outline text-[11px] px-2 py-1 rounded-sm hover:border-primary hover:text-primary transition-all">+ Add Specialty</button>
                   </div>
                 </div>
-                <div className="p-6 bg-surface rounded-sm border-l-2 border-primary">
+                <div className="p-6 bg-surface rounded-sm border-l-2 border-l-primary shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
                   <h4 className="text-xs font-bold text-primary mb-1">Profile Visibility</h4>
                   <p className="text-[12px] text-outline">Your profile is visible to students enrolled in your assigned courses.</p>
                 </div>
@@ -127,8 +134,18 @@ export const Settings: React.FC = () => {
                 </select>
               </div>
               <div className="pt-4 space-y-3">
-                <button className="w-full bg-surface-high text-on-surface py-3 text-xs font-semibold uppercase tracking-wider hover:bg-surface-highest transition-all">Change Password</button>
-                <button className="w-full bg-transparent text-error border border-error/30 py-3 text-xs font-semibold uppercase tracking-wider hover:bg-error/10 transition-all">Deactivate Account</button>
+                <button
+                  className="w-full bg-surface-high text-on-surface py-3 text-xs font-semibold uppercase tracking-wider hover:bg-surface-highest transition-all"
+                  onClick={() => navigate('/instructor/settings')}
+                >
+                  Change Password
+                </button>
+                <button
+                  className="w-full bg-transparent text-error border border-error/30 py-3 text-xs font-semibold uppercase tracking-wider hover:bg-error/10 transition-all"
+                  onClick={() => navigate('/contact')}
+                >
+                  Deactivate Account
+                </button>
               </div>
             </div>
           </div>
@@ -147,8 +164,18 @@ export const Settings: React.FC = () => {
       </div>
 
       <footer className="mt-12 pt-8 border-t border-outline-variant/10 flex justify-end gap-4">
-        <button className="px-6 py-2 text-sm font-medium text-outline hover:text-on-surface transition-colors">Cancel</button>
-        <button className="px-8 py-2 bg-primary text-on-primary text-sm font-bold rounded-sm active:scale-95 transition-transform">Save Changes</button>
+        <button
+          className="px-6 py-2 text-sm font-medium text-outline hover:text-on-surface transition-colors"
+          onClick={() => navigate('/instructor/dashboard')}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-8 py-2 bg-primary text-on-primary text-sm font-bold rounded-sm active:scale-95 transition-transform"
+          onClick={() => navigate('/instructor/dashboard')}
+        >
+          Save Changes
+        </button>
       </footer>
     </motion.div>
   );

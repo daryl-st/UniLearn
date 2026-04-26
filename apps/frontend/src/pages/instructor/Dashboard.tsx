@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -74,6 +75,8 @@ const courses = [
 ];
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -184,11 +187,21 @@ export const Dashboard: React.FC = () => {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-headline font-semibold text-lg">Active Courses</h3>
-              <button className="text-xs font-mono text-primary hover:underline">Manage Resources</button>
+              <button
+                className="text-xs font-mono text-primary hover:underline"
+                onClick={() => navigate('/instructor/courses')}
+              >
+                Manage Resources
+              </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {courses.map((course) => (
-                <div key={course.id} className="bg-surface-low rounded-sm overflow-hidden group border border-outline-variant/5">
+                <button
+                  key={course.id}
+                  type="button"
+                  onClick={() => navigate('/instructor/courses')}
+                  className="bg-surface-low rounded-sm overflow-hidden group border border-outline-variant/5 text-left"
+                >
                   <div className="h-32 bg-surface-high relative overflow-hidden">
                     <img 
                       src={course.image} 
@@ -234,7 +247,7 @@ export const Dashboard: React.FC = () => {
                       <div className="text-[10px] font-mono text-outline">{course.enrolled} Enrolled</div>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </section>
@@ -246,21 +259,30 @@ export const Dashboard: React.FC = () => {
           <section className="bg-surface-low p-6 rounded-sm border border-outline-variant/5">
             <h3 className="font-headline font-semibold text-lg mb-6">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="w-full flex items-center justify-between p-4 bg-primary text-on-primary rounded-sm group active:scale-[0.98] transition-all">
+              <button
+                className="w-full flex items-center justify-between p-4 bg-primary text-on-primary rounded-sm group active:scale-[0.98] transition-all"
+                onClick={() => navigate('/instructor/courses')}
+              >
                 <div className="flex items-center gap-3">
                   <PlusCircle size={20} />
                   <span className="font-semibold text-sm">Manage Resources</span>
                 </div>
                 <ArrowRight size={16} className="opacity-50 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="w-full flex items-center justify-between p-4 bg-surface-high hover:bg-surface-highest rounded-sm group active:scale-[0.98] transition-all">
+              <button
+                className="w-full flex items-center justify-between p-4 bg-surface-high hover:bg-surface-highest rounded-sm group active:scale-[0.98] transition-all"
+                onClick={() => navigate('/instructor/content')}
+              >
                 <div className="flex items-center gap-3">
                   <UploadCloud size={20} className="text-outline" />
                   <span className="font-semibold text-sm">Upload New Content</span>
                 </div>
                 <ArrowRight size={16} className="opacity-50 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="w-full flex items-center justify-between p-4 bg-surface-high hover:bg-surface-highest rounded-sm group active:scale-[0.98] transition-all">
+              <button
+                className="w-full flex items-center justify-between p-4 bg-surface-high hover:bg-surface-highest rounded-sm group active:scale-[0.98] transition-all"
+                onClick={() => navigate('/instructor/analytics')}
+              >
                 <div className="flex items-center gap-3">
                   <ClipboardCheck size={20} className="text-outline" />
                   <span className="font-semibold text-sm">View Course Analytics</span>
@@ -309,7 +331,10 @@ export const Dashboard: React.FC = () => {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-8 py-2 border border-outline-variant/20 rounded-sm text-xs font-mono uppercase tracking-widest text-outline hover:bg-surface-high hover:text-on-surface transition-all">
+            <button
+              className="w-full mt-8 py-2 border border-outline-variant/20 rounded-sm text-xs font-mono uppercase tracking-widest text-outline hover:bg-surface-high hover:text-on-surface transition-all"
+              onClick={() => navigate('/instructor/analytics')}
+            >
               Export Activity Log
             </button>
           </section>

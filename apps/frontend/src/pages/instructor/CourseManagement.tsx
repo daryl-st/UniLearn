@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Search, 
@@ -64,6 +65,8 @@ const modules = [
 ];
 
 export const CourseManagement: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -76,7 +79,10 @@ export const CourseManagement: React.FC = () => {
           <h1 className="font-headline text-3xl font-bold tracking-tight">Resource Management</h1>
           <p className="text-outline max-w-xl mt-2">Maintain high-quality learning materials for your courses and keep the latest version available to students.</p>
         </div>
-        <button className="flex items-center gap-2 bg-primary text-on-primary font-semibold px-6 py-3 rounded-sm active:scale-95 transition-all shadow-lg shadow-primary/10">
+        <button
+          className="flex items-center gap-2 bg-primary text-on-primary font-semibold px-6 py-3 rounded-sm active:scale-95 transition-all shadow-lg shadow-primary/10"
+          onClick={() => navigate('/instructor/content')}
+        >
           <Plus size={20} />
           <span>Upload Resource</span>
         </button>
@@ -129,48 +135,59 @@ export const CourseManagement: React.FC = () => {
       {/* Main Layout */}
       <div className="flex flex-col xl:flex-row gap-6 items-start">
         {/* Table */}
-        <div className="flex-1 w-full bg-surface-low rounded-lg overflow-hidden border border-outline-variant/5">
+        <div className="flex-1 w-full bg-surface-low rounded-lg overflow-hidden border border-outline-variant/10 shadow-[0_10px_30px_rgba(0,0,0,0.16)]">
+          <div className="flex items-center justify-between px-6 py-3 border-b border-outline-variant/10 bg-surface-high/30">
+            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">Resource Inventory</p>
+            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">4 Items</p>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
+              <colgroup>
+                <col className="w-[44%]" />
+                <col className="w-[20%]" />
+                <col className="w-[16%]" />
+                <col className="w-[12%]" />
+                <col className="w-[8%]" />
+              </colgroup>
               <thead>
-                <tr className="bg-surface-high/50 text-outline text-[10px] font-mono uppercase tracking-[0.2em]">
-                  <th className="px-6 py-4">Resource</th>
-                  <th className="px-6 py-4">Uploaded</th>
-                  <th className="px-6 py-4">Latest Version</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                <tr className="bg-surface-high/70 text-outline text-[10px] font-mono uppercase tracking-[0.18em] border-b border-outline-variant/10">
+                  <th className="px-6 py-4 font-medium">Resource</th>
+                  <th className="px-6 py-4 font-medium">Uploaded</th>
+                  <th className="px-6 py-4 font-medium">Latest Version</th>
+                  <th className="px-6 py-4 font-medium">Status</th>
+                  <th className="px-6 py-4 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant/10">
+              <tbody className="divide-y divide-outline-variant/5">
                 {courses.map((course) => (
                   <tr key={course.id} className={cn(
-                    "group transition-colors",
-                    course.id === 'CoSc4411' ? "bg-surface-high" : "hover:bg-surface-high/40"
+                    "group transition-all duration-200",
+                    course.id === 'CoSc4411' ? "bg-primary/5" : "hover:bg-surface-high/55"
                   )}>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4.5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-sm bg-surface-highest overflow-hidden shrink-0">
+                        <div className="w-12 h-12 rounded-md bg-surface-highest overflow-hidden shrink-0 border border-outline-variant/10">
                           <img src={course.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         </div>
-                        <div>
-                          <div className="font-semibold leading-tight mb-1">{course.title}</div>
-                          <div className="text-[10px] font-mono text-outline">Course: {course.id}</div>
+                        <div className="min-w-0">
+                          <div className="font-semibold leading-tight mb-1 group-hover:text-primary transition-colors truncate">{course.title}</div>
+                          <div className="text-[10px] font-mono text-outline uppercase tracking-wider">Course: {course.id}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm">{course.date}</div>
-                      <div className="text-xs text-outline">Last sync: {course.lastSync}</div>
+                    <td className="px-6 py-4.5 align-middle">
+                      <div className="text-sm font-medium">{course.date}</div>
+                      <div className="text-[11px] text-outline">Last sync: {course.lastSync}</div>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4.5 align-middle">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">{course.students}</span>
-                        <span className="text-[10px] font-mono text-secondary">{course.growth}</span>
+                        <span className="text-[10px] font-mono px-2 py-1 rounded-sm border border-secondary/20 bg-secondary/10 text-secondary uppercase">{course.growth}</span>
+                        <span className="text-xs text-outline">{course.students} learners</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4.5 align-middle">
                       <span className={cn(
-                        "px-2 py-1 text-[10px] font-mono uppercase rounded-sm border",
+                        "inline-flex items-center px-2.5 py-1 text-[10px] font-mono uppercase rounded-sm border",
                         course.status === 'Published' ? "bg-secondary/10 text-secondary border-secondary/20" :
                         course.status === 'Draft' ? "bg-primary/10 text-primary border-primary/20" :
                         "bg-surface-highest text-outline border-outline/20"
@@ -178,17 +195,41 @@ export const CourseManagement: React.FC = () => {
                         {course.status}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 text-outline hover:text-primary transition-colors" title="View Resource"><Edit3 size={18} /></button>
-                        <button className="p-2 text-outline hover:text-secondary transition-colors" title="Replace File"><BarChart2 size={18} /></button>
-                        <button className="p-2 text-outline hover:text-error transition-colors" title="Delete Resource"><Trash2 size={18} /></button>
+                    <td className="px-6 py-4.5 text-right align-middle">
+                      <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                        <button
+                          className="p-2 rounded-sm text-outline hover:text-primary hover:bg-primary/10 transition-colors"
+                          title="View Resource"
+                          onClick={() => navigate('/instructor/content')}
+                        >
+                          <Edit3 size={18} />
+                        </button>
+                        <button
+                          className="p-2 rounded-sm text-outline hover:text-secondary hover:bg-secondary/10 transition-colors"
+                          title="Replace File"
+                          onClick={() => navigate('/instructor/content')}
+                        >
+                          <BarChart2 size={18} />
+                        </button>
+                        <button
+                          className="p-2 rounded-sm text-outline hover:text-error hover:bg-error/10 transition-colors"
+                          title="Delete Resource"
+                          onClick={() => navigate('/instructor/content')}
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="px-6 py-3 border-t border-outline-variant/10 bg-surface-high/20 flex items-center justify-between">
+            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">Showing 4 Resources</span>
+            <button className="text-[10px] font-mono uppercase tracking-[0.18em] text-primary hover:underline" onClick={() => navigate('/instructor/content')}>
+              View Full Library
+            </button>
           </div>
         </div>
 
@@ -227,11 +268,17 @@ export const CourseManagement: React.FC = () => {
             </div>
 
             <div className="pt-6 border-t border-outline-variant/10 space-y-2">
-              <button className="w-full py-2.5 bg-surface-high hover:bg-surface-highest text-sm font-medium rounded-sm transition-colors flex items-center justify-center gap-2">
+              <button
+                className="w-full py-2.5 bg-surface-high hover:bg-surface-highest text-sm font-medium rounded-sm transition-colors flex items-center justify-center gap-2"
+                onClick={() => navigate('/instructor/content')}
+              >
                 <Edit size={16} />
                 Update Resource Details
               </button>
-              <button className="w-full py-2.5 border border-primary/20 text-primary text-sm font-medium rounded-sm hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+              <button
+                className="w-full py-2.5 border border-primary/20 text-primary text-sm font-medium rounded-sm hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+                onClick={() => navigate('/dashboard/courses')}
+              >
                 <ExternalLink size={16} />
                 View Resource As Student
               </button>
