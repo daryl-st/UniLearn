@@ -1,24 +1,25 @@
 import { motion } from 'motion/react';
 import { Verified, Clock, Rocket, PlayCircle, Share2, ChevronLeft, ChevronRight, CheckCircle2, MessageSquare, Sparkles } from 'lucide-react';
-import { COURSES } from '@/utils/constants';
+import { COURSES } from '@/utils/constants'; 
+import { Link, useNavigate } from 'react-router-dom';
 
-// this call back is here mainly to handle navigation to course details page when user clicks on a course card.
-// through props and letting the parent component hanlde the routing logic.
-// when a course is selected either from resume course or additional course section, it will call the onCourseSelect callback 
-// with the course id, and parent component can then navigate to the course details page using that id. (courses/:id)
-// interface DashboardProps {
-//   onCourseSelect: (id: string) => void;
-// }
-
-// TODO: Implement the onCourseSelect callback and pass it to the course cards.
 // TODO: Refactor the dashboard mainly teh stats row and course cards into smaller components.
 // TODO: Refactor notifications into a separate component with its own state management for read/unread status and clearing notifications.
 // TODO: impelement notification panel(overlay) that shows when user click on notification icon in the header, and move the notifications feed from dashboard to that panel.
 
 // needs refactoring - too much hardcoded data and UI logic in one component, but good enough for MVP phase. 
 // Will break down into smaller components in future iterations.
-// export default function Dashboard({ onCourseSelect }: DashboardProps) {
 export default function Dashboard() {
+  const navigate = useNavigate();
+
+  const openCourseDetails = (courseId: string) => {
+    navigate(`/dashboard/courses/${courseId}`);
+  };
+
+  const openLearningWorkspace = (courseId: string) => {
+    navigate(`/dashboard/learning/${courseId}`);
+  };
+
   const studentNotifications = [
     {
       id: 'sn-1',
@@ -91,12 +92,15 @@ export default function Dashboard() {
       <section>
         <div className="mb-6 flex items-center justify-between">
           <h4 className="font-headline text-lg font-bold text-white uppercase tracking-tight">Continue Learning</h4>
-          <button className="text-primary text-[11px] font-mono uppercase tracking-widest hover:underline">View My Courses</button>
+          <Link to="/dashboard/courses">
+            <button className="text-primary text-[11px] font-mono uppercase tracking-widest hover:underline">View My Courses</button>
+          </Link>
         </div>
         
-        <div className="glass-ai rounded-sm p-8 flex flex-col md:flex-row gap-8 items-center border border-primary/10 cursor-pointer"
-        //  onClick={() => onCourseSelect(COURSES[0].id)}
-         >
+        <div
+          className="glass-ai rounded-sm p-8 flex flex-col md:flex-row gap-8 items-center border border-primary/10 cursor-pointer"
+          onClick={() => openCourseDetails(COURSES[0].id)}
+        >
           <div className="w-full md:w-1/3 aspect-video rounded-sm overflow-hidden relative shadow-2xl group cursor-pointer">
             <img 
               src={COURSES[0].thumbnail} 
@@ -137,7 +141,13 @@ export default function Dashboard() {
             </div>
             
             <div className="pt-4 flex items-center gap-4">
-              <button className="px-8 py-3 bg-primary text-on-primary font-headline font-bold rounded-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10">
+              <button
+                className="px-8 py-3 bg-primary text-on-primary font-headline font-bold rounded-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openLearningWorkspace(COURSES[0].id);
+                }}
+              >
                 Continue Learning
               </button>
               <button className="p-3 bg-surface-high text-on-surface rounded-sm hover:bg-surface-high/80 transition-colors border border-outline-variant/10">
@@ -167,7 +177,7 @@ export default function Dashboard() {
             {COURSES.slice(1, 3).map((course) => (
               <div 
                 key={course.id} 
-                // onClick={() => onCourseSelect(course.id)}
+                onClick={() => openCourseDetails(course.id)}
                 className="bg-surface-low rounded-sm p-4 group cursor-pointer hover:bg-surface-high transition-all border border-outline-variant/5"
               >
                 <div className="aspect-video w-full rounded-sm mb-4 overflow-hidden relative">

@@ -14,25 +14,24 @@ import {
   Info
 } from 'lucide-react';
 import { COURSES } from '@/utils/constants';
-
-interface CourseDetailProps {
-  courseId: string;
-  onBack: () => void;
-  onStart: () => void;
-}
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Needs refactrowing - too much hardcoded data and UI logic in one component, but good enough for MVP phase. 
 // Will break down into smaller components in future iterations.
 // export default function CourseDetail({ courseId, onBack, onStart }: CourseDetailProps) {
 export default function CourseDetail() {
-    // courseId has to passed from the dashboard page when user clicks on a course card, but for now we will hardcode it for development purpose.
-    const { courseId, onBack, onStart }: CourseDetailProps = {
-        courseId: "course-001",
-        onBack: () => window.history.back(),
-        onStart: () => alert("Starting course... (this will navigate to the learning workspace in future iterations)")
-    };
-    
-  const course = COURSES.find(c => c.id === courseId) || COURSES[0];
+  const navigate = useNavigate();
+  const { courseId } = useParams<{ courseId: string }>();
+
+  const course = COURSES.find((c) => c.id === courseId) || COURSES[0];
+
+  const handleBack = () => {
+    navigate('/dashboard/courses');
+  };
+
+  const handleStart = () => {
+    navigate(`/dashboard/learning/${course.id}`);
+  };
 
   return (
     <div className="min-h-full bg-surface">
@@ -48,7 +47,7 @@ export default function CourseDetail() {
         
         <div className="absolute inset-0 p-8 md:p-12 flex flex-col justify-end max-w-7xl mx-auto w-full">
           <button 
-            onClick={onBack}
+            onClick={handleBack}
             className="absolute top-8 left-8 flex items-center gap-2 text-on-surface-variant hover:text-white transition-colors font-mono text-[10px] uppercase tracking-widest"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -120,7 +119,10 @@ export default function CourseDetail() {
                         </div>
                       </div>
                       {!module.isLocked && (
-                        <button className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-primary hover:bg-primary/10 rounded-sm">
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-primary hover:bg-primary/10 rounded-sm"
+                          onClick={handleStart}
+                        >
                           <ArrowRight className="w-4 h-4" />
                         </button>
                       )}
@@ -137,7 +139,7 @@ export default function CourseDetail() {
           <div className="bg-surface-low rounded-sm p-8 border border-outline-variant/5 space-y-8 sticky top-24">
             <div className="space-y-4">
               <button 
-                onClick={onStart}
+                onClick={handleStart}
                 className="w-full py-4 bg-primary text-on-primary font-headline font-bold rounded-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3"
               >
                 <Play className="w-4 h-4 fill-current" />

@@ -1,19 +1,16 @@
 import { motion } from 'motion/react';
 import { ChevronDown, Play, Clock, BarChart, Terminal, BookOpen, Plus, Box } from 'lucide-react';
 import { COURSES } from '@/utils/constants';
-
-interface CoursesProps {
-  onCourseSelect: (id: string) => void;
-}
+import { useNavigate } from 'react-router-dom';
 
 // TODO: Refactor this component into smaller components like course card and catalog grid.
 // TODO: Implement the onCourseSelect callback and pass it to the course cards.
 
-// Needs refactroring - too much hardcoded data and UI logic in one component, but good enough for MVP phase.
-// export default function Courses({ onCourseSelect }: CoursesProps) {
 export default function Courses() {
-  const { onCourseSelect }: CoursesProps = {
-    onCourseSelect: (id: string) => alert(`Selected course ID: ${id} (this will navigate to the course detail page in future iterations)`)
+  const navigate = useNavigate();
+
+  const openCourseDetails = (courseId: string) => {
+    navigate(`/dashboard/courses/${courseId}`);
   };
 
   const categories = ['All Courses', 'Year 1', 'Year 2', 'Year 3', 'Year 4'];
@@ -46,7 +43,7 @@ export default function Courses() {
 
       {/* Hero Feature */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 group relative overflow-hidden rounded-sm bg-surface-low p-1 border border-outline-variant/5 cursor-pointer" onClick={() => onCourseSelect(COURSES[0].id)}>
+        <div className="lg:col-span-8 group relative overflow-hidden rounded-sm bg-surface-low p-1 border border-outline-variant/5 cursor-pointer" onClick={() => openCourseDetails(COURSES[0].id)}>
           <div className="relative h-100 w-full overflow-hidden rounded-sm">
             <img 
               src={COURSES[0].thumbnail} 
@@ -65,7 +62,13 @@ export default function Courses() {
               <p className="text-on-surface-variant max-w-xl text-sm mb-8 leading-relaxed">{COURSES[0].description}</p>
               
               <div className="flex items-center gap-8">
-                <button className="bg-primary text-on-primary px-8 py-3 rounded-sm font-bold text-sm flex items-center gap-2 transition-transform active:scale-95 shadow-lg shadow-primary/20">
+                <button
+                  className="bg-primary text-on-primary px-8 py-3 rounded-sm font-bold text-sm flex items-center gap-2 transition-transform active:scale-95 shadow-lg shadow-primary/20"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    openCourseDetails(COURSES[0].id);
+                  }}
+                >
                   <Play className="w-4 h-4 fill-current" />
                   Open Course
                 </button>
@@ -150,7 +153,7 @@ export default function Courses() {
             <motion.div 
               key={course.id}
               whileHover={{ y: -4 }}
-              onClick={() => onCourseSelect(course.id)}
+              onClick={() => openCourseDetails(course.id)}
               className="group cursor-pointer bg-surface-low rounded-sm overflow-hidden flex flex-col border border-outline-variant/5 hover:bg-surface-high transition-all"
             >
               <div className="h-44 w-full overflow-hidden relative">

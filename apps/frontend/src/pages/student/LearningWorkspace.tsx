@@ -19,19 +19,15 @@ import {
 } from 'lucide-react';
 // import { getChatResponse } from '@/utils/service';
 import { COURSES } from '@/utils/constants';
-
-interface LearningProps {
-  courseId: string;
-}
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Needs refactrowing - too much hardcoded data and UI logic in one component, but good enough for MVP phase. 
 // Will break down into smaller components in future iterations.
 // state management is also a bit messy here - will likely migrate to zustand or similar in future iterations as the app grows in complexity.
 // export default function Learning({ courseId }: LearningProps) {
 export default function Learning() {
-  const { courseId }: LearningProps = {
-    courseId: "course-001"
-  };
+  const navigate = useNavigate();
+  const { courseId } = useParams<{ courseId: string }>();
 
   const course = COURSES.find(c => c.id === courseId) || COURSES[0];
   const [messages, setMessages] = useState([
@@ -190,7 +186,10 @@ export default function Learning() {
                         <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter mt-1">Course Instructor</p>
                       </div>
                     </div>
-                    <button className="w-full mt-6 py-2 border border-outline-variant/10 rounded-sm text-[10px] font-mono uppercase tracking-widest text-on-surface-variant hover:text-white hover:bg-surface-high transition-all">
+                    <button
+                      className="w-full mt-6 py-2 border border-outline-variant/10 rounded-sm text-[10px] font-mono uppercase tracking-widest text-on-surface-variant hover:text-white hover:bg-surface-high transition-all"
+                      onClick={() => navigate(`/dashboard/courses/${course.id}`)}
+                    >
                       View Course Details
                     </button>
                   </div>
