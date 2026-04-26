@@ -31,7 +31,7 @@ export class ResourceController {
             instructorId: course.instructorId,
             departmentId: course.departmentId,
         }));
-        console.log(courseData);
+
         res.status(200).json(courseData);
     }
 

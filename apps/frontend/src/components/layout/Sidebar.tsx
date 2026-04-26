@@ -183,11 +183,19 @@ export default function Sidebar() {
         )}
 
         <div className="space-y-1 border-t border-outline-variant/10 pt-4">
-          <button className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-white">
+          <button
+            className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-white"
+            onClick={() => handleNavigate('/contact')}
+          >
             <HelpCircle className="h-4 w-4" />
             <span>Support</span>
           </button>
-          <button className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-white">
+          <button
+            className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-white"
+            onClick={() =>
+              handleNavigate(isDashboard ? '/dashboard/settings' : isAdmin ? '/admin/settings' : '/instructor/settings')
+            }
+          >
             <UserCircle className="h-4 w-4" />
             <span>Account</span>
           </button>

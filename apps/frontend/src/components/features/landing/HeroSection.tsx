@@ -52,6 +52,7 @@ export function HeroSection() {
     );
 }
 
+// TODO: Refactor this to fetch a few courses from the backend and display them here as featured courses.
 export function ActiveRegistries() {
     return (
         <section className="bg-surface-low py-24">
@@ -61,9 +62,11 @@ export function ActiveRegistries() {
                   <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Featured Courses</h2>
                   <p className="text-on-surface-variant max-w-md">A few representative courses from the department catalog to help students begin exploring available resources.</p>
               </div>
-              <button className="font-mono text-xs uppercase tracking-widest text-primary border-b border-primary/30 pb-1 hover:border-primary transition-all">
+              <Link to="/courses">
+                <button className="font-mono text-xs uppercase tracking-widest text-primary border-b border-primary/30 pb-1 hover:border-primary transition-all">
                   Browse Full Catalog
-              </button>
+                </button>
+              </Link>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { MoreVertical, Edit2, Trash2, Ban, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { StatusPill } from '@/components/features/admin/StatusPill';
 import type { User, Course } from '@/types/admin';
 
@@ -9,6 +10,16 @@ type DataTableProps = {
 };
 
 export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
+    const navigate = useNavigate();
+    const [page, setPage] = React.useState(1);
+    const rowsPerPage = 4;
+    const totalPages = Math.max(1, Math.ceil(data.length / rowsPerPage));
+    const startIndex = (page - 1) * rowsPerPage;
+    const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
+
+    const goToUserManagement = () => navigate('/admin/users');
+    const goToCourseManagement = () => navigate('/admin/courses');
+
     return (
         <div className="bg-surface-low rounded-2xl overflow-hidden border border-border shadow-sm">
         <div className="overflow-x-auto">
@@ -23,7 +34,7 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
                 </tr>
             </thead>
             <tbody className="divide-y divide-border">
-                {data.map((item) => (
+                {paginatedData.map((item) => (
                 <tr key={item.id} className="h-16 hover:bg-primary/10 transition-colors group">
                     <td className="px-6">
                     <div className="flex items-center gap-3">
@@ -91,17 +102,17 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
                         {type === 'users' ? (
                         <>
                             {(item as User).status === 'Suspended' ? (
-                            <button className="p-1.5 text-on-surface-variant hover:text-secondary transition-colors" title="Reactivate"><RefreshCw className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-secondary transition-colors" title="Reactivate" onClick={goToUserManagement}><RefreshCw className="w-4 h-4" /></button>
                             ) : (
-                            <button className="p-1.5 text-on-surface-variant hover:text-destructive transition-colors" title="Suspend"><Ban className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-destructive transition-colors" title="Suspend" onClick={goToUserManagement}><Ban className="w-4 h-4" /></button>
                             )}
-                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Edit"><Edit2 className="w-4 h-4" /></button>
-                            <button className="p-1.5 text-on-surface-variant hover:text-destructive transition-colors" title="Remove"><Trash2 className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Edit" onClick={goToUserManagement}><Edit2 className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-destructive transition-colors" title="Remove" onClick={goToUserManagement}><Trash2 className="w-4 h-4" /></button>
                         </>
                         ) : (
                         <>
-                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors"><Edit2 className="w-4 h-4" /></button>
-                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors"><MoreVertical className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors" onClick={goToCourseManagement}><Edit2 className="w-4 h-4" /></button>
+                            <button className="p-1.5 text-on-surface-variant hover:text-primary transition-colors" onClick={goToCourseManagement}><MoreVertical className="w-4 h-4" /></button>
                         </>
                         )}
                     </div>
@@ -113,13 +124,21 @@ export const DataTable: React.FC<DataTableProps> = ({ type, data }) => {
         </div>
         <div className="px-6 py-4 bg-surface-high/5 flex items-center justify-between border-t border-border">
             <div className="text-xs text-on-surface-variant">
-            Showing <span className="font-bold text-on-surface">1-{data.length}</span> of <span className="font-bold text-on-surface">482</span> records
+            Showing <span className="font-bold text-on-surface">{data.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, data.length)}</span> of <span className="font-bold text-on-surface">{data.length}</span> records
             </div>
             <div className="flex gap-2">
-            <button className="px-3 py-1.5 rounded-lg bg-surface-low border border-border text-xs font-bold hover:bg-surface transition-colors disabled:opacity-30">
+            <button
+              className="px-3 py-1.5 rounded-lg bg-surface-low border border-border text-xs font-bold hover:bg-surface transition-colors disabled:opacity-30"
+              disabled={page === 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
                 Prev
             </button>
-            <button className="px-3 py-1.5 rounded-lg bg-surface-low border border-border text-xs font-bold hover:bg-surface transition-colors">
+            <button
+              className="px-3 py-1.5 rounded-lg bg-surface-low border border-border text-xs font-bold hover:bg-surface transition-colors disabled:opacity-30"
+              disabled={page === totalPages}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            >
                 Next
             </button>
             </div>

@@ -108,6 +108,17 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  return children;
+}
+
 type RouteEntry = {
   path: string;
   element: React.ReactNode;
@@ -118,8 +129,22 @@ const publicRoutes: RouteEntry[] = [
   { path: '/about', element: <AboutPage /> },
   { path: '/contact', element: <ContactPage /> },
   { path: '/courses', element: <CoursesPage /> },
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
+  {
+    path: '/login',
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/register',
+    element: (
+      <PublicRoute>
+        <RegisterPage />
+      </PublicRoute>
+    ),
+  },
 ];
 
 const protectedRoutes: RouteEntry[] = [
@@ -180,12 +205,12 @@ const protectedRoutes: RouteEntry[] = [
   {
     path: '/dashboard/settings',
     element: (
-      <PublicRoute>
+      <ProtectedRoute>
         <DashboardDemoPage
           title="Settings"
           description="This demo route will contain profile preferences, workspace options, and notification controls."
         />
-      </PublicRoute>
+      </ProtectedRoute>
     ),
   },
   // instructor pages here

@@ -10,7 +10,7 @@ export function Navbar() {
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
       <div className="flex justify-between items-center h-16 px-8 w-full max-w-7xl mx-auto">
         <div className="flex justify-start gap-7">
-          <Link to="/home" className="text-2xl font-bold text-primary tracking-tighter font-headline">
+          <Link to="/" className="text-2xl font-bold text-primary tracking-tighter font-headline">
             UniLearn
           </Link>
           <div className="hidden md:flex items-center gap-8">

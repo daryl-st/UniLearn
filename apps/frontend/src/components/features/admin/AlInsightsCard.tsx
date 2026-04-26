@@ -1,7 +1,10 @@
 import React from 'react';
 import { BrainCircuit, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const AIInsightCard: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="mt-8 grid grid-cols-3 gap-6">
       <div className="col-span-2 glass-card p-8 rounded-2xl relative overflow-hidden group">
@@ -10,7 +13,10 @@ export const AIInsightCard: React.FC = () => {
           <p className="text-on-surface-variant text-sm mt-2 max-w-md">
             3 nodes exhibiting irregular authentication patterns across geographical regions. Immediate review recommended.
           </p>
-          <button className="mt-6 bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:shadow-lg hover:brightness-110 transition-all active:scale-95">
+          <button
+            className="mt-6 bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:shadow-lg hover:brightness-110 transition-all active:scale-95"
+            onClick={() => navigate('/admin/users')}
+          >
             Initiate Validation
           </button>
         </div>
