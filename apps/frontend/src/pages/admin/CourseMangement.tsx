@@ -1,5 +1,6 @@
 import React from 'react';
 import { Filter, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/features/admin/StatCard';
 import { DataTable } from '@/components/features/admin/DataTable';
 import type { Course } from '@/types/admin';
@@ -13,6 +14,20 @@ const mockCourses: Course[] = [
 ];
 
 export const CourseManagement: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleExportAudit = () => {
+    const blob = new Blob([
+      'course,status,lastSync\nCoSc2210 - Computer Networks,Published,2026.04.15\nCoSc4411 - Artificial Intelligence,Draft,2026.04.14\n'
+    ], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'course-audit.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex justify-between items-end mb-10">
@@ -21,11 +36,17 @@ export const CourseManagement: React.FC = () => {
           <p className="text-on-surface-variant mt-1 text-sm font-medium">Manage course records and instructor assignments across the department.</p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-surface-low text-on-surface-variant px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border border-border shadow-sm hover:bg-primary/10 transition-colors">
+          <button
+            className="bg-surface-low text-on-surface-variant px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border border-border shadow-sm hover:bg-primary/10 transition-colors"
+            onClick={() => navigate('/admin/courses')}
+          >
             <Filter className="w-4 h-4" />
             Filter Courses
           </button>
-          <button className="bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20">
+          <button
+            className="bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20"
+            onClick={() => navigate('/admin/courses')}
+          >
             <Plus className="w-4 h-4" />
             Create Course
           </button>
@@ -96,7 +117,10 @@ export const CourseManagement: React.FC = () => {
                 <div className="h-full bg-primary w-[93%] rounded-full"></div>
               </div>
             </div>
-            <button className="w-full py-4 bg-surface hover:bg-border transition-colors text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface rounded-xl border border-border">
+            <button
+              className="w-full py-4 bg-surface hover:bg-border transition-colors text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface rounded-xl border border-border"
+              onClick={handleExportAudit}
+            >
               Export Course Audit
             </button>
           </div>

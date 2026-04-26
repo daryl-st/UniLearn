@@ -1,7 +1,26 @@
 import React from 'react';
 import { Plus, Shield, Terminal, Settings as SettingsIcon, CheckCircle2, Lock, Cpu } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Settings: React.FC = () => {
+  const navigate = useNavigate();
+  const [policySync, setPolicySync] = React.useState(true);
+  const [quizDifficulty, setQuizDifficulty] = React.useState(false);
+  const [extraRules, setExtraRules] = React.useState(0);
+
+  const ruleRows = [
+    { icon: CheckCircle2, label: 'Admin Role', tags: ['USER_MANAGE', 'COURSE_MANAGE'], count: '3 USERS', color: 'text-secondary' },
+    { icon: SettingsIcon, label: 'Instructor Role', tags: ['RESOURCE_MANAGE', 'ANALYTICS_VIEW'], count: '73 USERS', color: 'text-on-surface-variant' },
+    { icon: Terminal, label: 'Student Role', tags: ['LEARNING_ACCESS'], count: '766 USERS', color: 'text-on-surface-variant' },
+    ...Array.from({ length: extraRules }, (_, index) => ({
+      icon: Plus,
+      label: `Custom Rule ${index + 1}`,
+      tags: ['PENDING'],
+      count: 'NEW',
+      color: 'text-primary',
+    })),
+  ];
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
       <div className="mb-10 flex justify-between items-end">
@@ -10,8 +29,8 @@ export const Settings: React.FC = () => {
           <p className="text-on-surface-variant max-w-xl">Configure platform-wide operational rules for secure access and stable administration.</p>
         </div>
         <div className="flex gap-4">
-          <button className="px-5 py-2 rounded bg-surface-high text-on-surface font-medium hover:bg-surface-highest transition-colors active:scale-95">Cancel</button>
-          <button className="px-5 py-2 rounded bg-primary text-on-primary font-bold hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/10">Save Settings</button>
+          <button className="px-5 py-2 rounded bg-surface-high text-on-surface font-medium hover:bg-surface-highest transition-colors active:scale-95" onClick={() => navigate('/admin/dashboard')}>Cancel</button>
+          <button className="px-5 py-2 rounded bg-primary text-on-primary font-bold hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/10" onClick={() => navigate('/admin/dashboard')}>Save Settings</button>
         </div>
       </div>
 
@@ -63,18 +82,26 @@ export const Settings: React.FC = () => {
                   <div className="font-medium">Instructor Archive Permission</div>
                   <div className="text-xs text-on-surface-variant">Allow instructors to archive outdated course resources</div>
                 </div>
-                <div className="w-12 h-6 bg-secondary/20 rounded-full relative">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-secondary rounded-full shadow-sm"></div>
-                </div>
+                <button
+                  type="button"
+                  className={"w-12 h-6 rounded-full relative transition-colors " + (policySync ? 'bg-secondary/20' : 'bg-surface')}
+                  onClick={() => setPolicySync((current) => !current)}
+                >
+                  <div className={"absolute top-1 w-4 h-4 bg-secondary rounded-full shadow-sm transition-all " + (policySync ? 'right-1' : 'left-1 bg-on-surface-variant/50')}></div>
+                </button>
               </div>
               <div className="flex items-center justify-between p-4 bg-surface-high rounded-lg group hover:bg-surface-highest transition-colors cursor-pointer">
                 <div>
                   <div className="font-medium">Default Quiz Difficulty</div>
                   <div className="text-xs text-on-surface-variant">Apply a platform default for generated quiz levels</div>
                 </div>
-                <div className="w-12 h-6 bg-surface-high rounded-full relative">
-                  <div className="absolute left-1 top-1 w-4 h-4 bg-on-surface-variant/40 rounded-full"></div>
-                </div>
+                <button
+                  type="button"
+                  className={"w-12 h-6 rounded-full relative transition-colors " + (quizDifficulty ? 'bg-primary/20' : 'bg-surface')}
+                  onClick={() => setQuizDifficulty((current) => !current)}
+                >
+                  <div className={"absolute top-1 w-4 h-4 rounded-full shadow-sm transition-all " + (quizDifficulty ? 'right-1 bg-primary' : 'left-1 bg-on-surface-variant/40')}></div>
+                </button>
               </div>
             </div>
           </div>
@@ -83,23 +110,22 @@ export const Settings: React.FC = () => {
         <div className="col-span-12 lg:col-span-7 bg-surface-low rounded-xl p-8 border border-outline-variant/10">
           <div className="flex justify-between items-center mb-8">
             <h2 className="font-headline text-2xl font-semibold">Access Control Rules</h2>
-            <button className="flex items-center gap-2 text-xs font-mono bg-primary/10 text-primary px-3 py-1.5 rounded hover:bg-primary/20 transition-all">
+            <button
+              className="flex items-center gap-2 text-xs font-mono bg-primary/10 text-primary px-3 py-1.5 rounded hover:bg-primary/20 transition-all"
+              onClick={() => setExtraRules((current) => current + 1)}
+            >
               <Plus className="w-4 h-4" />
               ADD RULE
             </button>
           </div>
           <div className="space-y-4">
-            {[
-              { icon: CheckCircle2, label: 'Admin Role', tags: ['USER_MANAGE', 'COURSE_MANAGE'], count: '3 USERS', color: 'text-secondary' },
-              { icon: SettingsIcon, label: 'Instructor Role', tags: ['RESOURCE_MANAGE', 'ANALYTICS_VIEW'], count: '73 USERS', color: 'text-on-surface-variant' },
-              { icon: Terminal, label: 'Student Role', tags: ['LEARNING_ACCESS'], count: '766 USERS', color: 'text-on-surface-variant' },
-            ].map((role, i) => (
+            {ruleRows.map((role, i) => (
               <div key={i} className="grid grid-cols-12 items-center p-4 bg-surface rounded hover:bg-surface-high transition-all group border border-outline-variant/10">
                 <div className="col-span-4 flex items-center gap-3">
                   <role.icon className={`${role.color} opacity-60 w-5 h-5`} />
                   <span className="font-medium">{role.label}</span>
                 </div>
-                <div className="col-span-5 flex gap-1">
+                <div className="col-span-5 flex gap-1 flex-wrap">
                   {role.tags.map(tag => (
                     <span key={tag} className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-mono">{tag}</span>
                   ))}
@@ -109,6 +135,7 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
 
@@ -146,6 +173,5 @@ export const Settings: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };

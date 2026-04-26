@@ -1,5 +1,6 @@
 import React from 'react';
 import { Filter, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/features/admin/StatCard';
 import { DataTable } from '@/components/features/admin/DataTable';
 import { AIInsightCard } from '@/components/features/admin/AlInsightsCard';
@@ -14,6 +15,8 @@ const mockUsers: User[] = [
 ];
 
 export const UserManagement: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex justify-between items-end mb-10">
@@ -22,11 +25,17 @@ export const UserManagement: React.FC = () => {
           <p className="text-on-surface-variant mt-1 text-sm font-medium">Control user access and role assignments for students and instructors.</p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-surface-low text-on-surface-variant px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border border-border shadow-sm hover:bg-primary/10 transition-colors">
+          <button
+            className="bg-surface-low text-on-surface-variant px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border border-border shadow-sm hover:bg-primary/10 transition-colors"
+            onClick={() => navigate('/admin/users')}
+          >
             <Filter className="w-4 h-4" />
             Filters
           </button>
-          <button className="bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20">
+          <button
+            className="bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20"
+            onClick={() => navigate('/admin/users')}
+          >
             <UserPlus className="w-4 h-4" />
             Add User
           </button>

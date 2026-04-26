@@ -5,6 +5,8 @@ import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'rechar
 const heatmapOpacity = Array.from({ length: 72 }, (_, i) => 0.18 + ((i * 37) % 10) / 14);
 
 export const Analytics: React.FC = () => {
+  const [rangeLabel, setRangeLabel] = React.useState<'LAST 90 DAYS' | 'LAST 30 DAYS'>('LAST 90 DAYS');
+
   const palette = {
     muted: 'var(--color-surface-highest)',
     primary: 'var(--color-primary)',
@@ -33,6 +35,18 @@ export const Analytics: React.FC = () => {
     { name: 'T', value: 800, tone: 'secondary' },
   ];
 
+  const handleExportReport = () => {
+    const blob = new Blob([
+      'metric,value\nActive Students,601\nNew Users,+124\nAverage Quiz Score,76.8%\nResources Viewed,9234\n'
+    ], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'platform-analytics.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
       <header className="mb-10 flex justify-between items-end">
@@ -41,11 +55,17 @@ export const Analytics: React.FC = () => {
           <p className="text-on-surface-variant font-mono text-xs uppercase tracking-[0.2em]">Understand usage trends and educational impact across users, courses, and assessments</p>
         </div>
         <div className="flex gap-2">
-          <button className="bg-surface-high text-on-surface px-4 py-2 rounded flex items-center gap-2 hover:bg-primary/10 transition-colors">
+          <button
+            className="bg-surface-high text-on-surface px-4 py-2 rounded flex items-center gap-2 hover:bg-primary/10 transition-colors"
+            onClick={() => setRangeLabel((prev) => (prev === 'LAST 90 DAYS' ? 'LAST 30 DAYS' : 'LAST 90 DAYS'))}
+          >
             <Calendar className="w-4 h-4" />
-            <span className="text-xs font-mono">LAST 90 DAYS</span>
+            <span className="text-xs font-mono">{rangeLabel}</span>
           </button>
-          <button className="bg-primary text-on-primary px-4 py-2 rounded flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <button
+            className="bg-primary text-on-primary px-4 py-2 rounded flex items-center gap-2 hover:opacity-90 transition-opacity"
+            onClick={handleExportReport}
+          >
             <Download className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Export Report</span>
           </button>

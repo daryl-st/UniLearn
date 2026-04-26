@@ -1,8 +1,23 @@
 import React from 'react';
 import { Download, Plus, Users, Layers, Database, Activity, Shield, FileCheck, AlertTriangle, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 // import { StatCard } from '@/components/StatCard';
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleExportReport = () => {
+    const blob = new Blob([
+      'section,value\nTotal Users,842\nTotal Courses,73\nTotal Resources,1190\nDaily Quiz Attempts,286\n'
+    ], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'admin-report.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
       <header className="mb-10 flex justify-between items-end">
@@ -11,10 +26,16 @@ export const Dashboard: React.FC = () => {
           <p className="text-on-surface-variant text-sm">Monitor platform operations and maintain quality standards from one centralized view.</p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-surface-low px-4 py-2 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-high transition-colors flex items-center gap-2 border border-border shadow-sm">
+          <button
+            className="bg-surface-low px-4 py-2 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-high transition-colors flex items-center gap-2 border border-border shadow-sm"
+            onClick={handleExportReport}
+          >
             <Download className="w-4 h-4" /> Export Report
           </button>
-          <button className="bg-primary text-on-primary px-5 py-2 rounded-xl text-sm font-bold hover:brightness-110 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-primary/20">
+          <button
+            className="bg-primary text-on-primary px-5 py-2 rounded-xl text-sm font-bold hover:brightness-110 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-primary/20"
+            onClick={() => navigate('/admin/users')}
+          >
             <Plus className="w-4 h-4" /> Manage Users
           </button>
         </div>
@@ -111,7 +132,12 @@ export const Dashboard: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="w-full py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-colors border-t border-border">View Full Activity</button>
+          <button
+            className="w-full py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-colors border-t border-border"
+            onClick={() => navigate('/admin/analytics')}
+          >
+            View Full Activity
+          </button>
         </div>
 
         <div className="col-span-12 lg:col-span-5 bg-surface-low p-8 rounded-2xl border border-border shadow-sm">
