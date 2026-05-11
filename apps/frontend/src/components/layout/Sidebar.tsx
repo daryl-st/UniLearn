@@ -12,9 +12,12 @@ import {
   Layers,
   Library,
   ShieldCheck,
+  LogOut,
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/authStore';
+import { ROUTES } from '@/lib/route-paths';
 
 type SidebarVariant = 'dashboard' | 'instructor' | 'admin';
 
@@ -37,6 +40,7 @@ function getSidebarVariant(pathname: string): SidebarVariant | null {
 export default function Sidebar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
   const variant = getSidebarVariant(pathname);
 
   if (!variant) {
@@ -198,6 +202,17 @@ export default function Sidebar() {
           >
             <UserCircle className="h-4 w-4" />
             <span>Account</span>
+          </button>
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-destructive"
+            onClick={async () => {
+              await logout();
+              navigate(ROUTES.LOGIN);
+            }}
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Log out</span>
           </button>
         </div>
       </div>

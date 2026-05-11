@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useAuthStore } from "@/stores/authStore";
+import { asBackendRole, dashboardPathForBackendRole } from "@/utils/auth";
+import { RoleGate } from "@/components/guards/RoleGate";
 
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
@@ -84,18 +86,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <div>Loading...</div>;
 
-  if (user) return <Navigate to="/dashboard" replace />;
-
-  return children;
-}
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const isLoading = useAuthStore((state) => state.isLoading);
-
-  if (isLoading) return <div>Loading...</div>;
-
-  if (!user) return <Navigate to="/login" replace />;
+  if (user) return <Navigate to={dashboardPathForBackendRole(asBackendRole(user.role))} replace />;
 
   return children;
 }
@@ -132,90 +123,158 @@ const protectedRoutes: RouteEntry[] = [
   {
     path: '/dashboard',
     element: (
-      <PublicRoute>
+      <RoleGate allowed={['STUDENT']}>
         <StudnetDashboardPage />
-      </PublicRoute>
+      </RoleGate>
     ),
   },
   {
     path: '/dashboard/courses/:courseId',
     element: (
-      <PublicRoute>
+      <RoleGate allowed={['STUDENT']}>
         <CourseDetail />
-      </PublicRoute>
+      </RoleGate>
     ),
   },
   {
     path: '/dashboard/courses',
     element: (
-      <PublicRoute>
+      <RoleGate allowed={['STUDENT']}>
         <CourseExplorer />
-      </PublicRoute>
+      </RoleGate>
     ),
   },
   {
     path: '/dashboard/learning/:courseId',
     element: (
-      <PublicRoute>
+      <RoleGate allowed={['STUDENT']}>
         <LearningWorkspace />
-      </PublicRoute>
+      </RoleGate>
     ),
   },
   {
     path: '/dashboard/learning',
     element: (
-      <PublicRoute>
+      <RoleGate allowed={['STUDENT']}>
         <LearningWorkspace />
-      </PublicRoute>
+      </RoleGate>
     ),
   },
   {
     path: '/dashboard/analytics',
     element: (
-      <PublicRoute>
+      <RoleGate allowed={['STUDENT']}>
         <DashboardDemoPage
           title="Analytics"
           description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
         />
-      </PublicRoute>
+      </RoleGate>
     ),
   },
   {
     path: '/dashboard/ai-tools',
     element: (
-      <PublicRoute>
+      <RoleGate allowed={['STUDENT']}>
         <DashboardDemoPage
           title="AI Tools"
           description="This demo route will host assistants, prompt labs, and course generation tools."
         />
-      </PublicRoute>
+      </RoleGate>
     ),
   },
   {
     path: '/dashboard/settings',
     element: (
-      <ProtectedRoute>
+      <RoleGate allowed={['STUDENT']}>
         <DashboardDemoPage
           title="Settings"
           description="This demo route will contain profile preferences, workspace options, and notification controls."
         />
-      </ProtectedRoute>
+      </RoleGate>
     ),
   },
-  // instructor pages here
   { path: '/instructor', element: <Navigate to="/instructor/dashboard" replace /> },
-  { path: '/instructor/dashboard', element: <InstructorDashboardPage /> },
-  { path: '/instructor/courses', element: <InstructorCourseManagementPage /> },
-  { path: '/instructor/content', element: <InstructorContentLibraryPage /> },
-  { path: '/instructor/analytics', element: <InstructorAnalyticsPage /> },
-  { path: '/instructor/settings', element: <InstructorSettingsPage /> },
-  // admin pages here (same style grouping as instructor routes)
+  {
+    path: '/instructor/dashboard',
+    element: (
+      <RoleGate allowed={['INSTRUCTOR']}>
+        <InstructorDashboardPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/instructor/courses',
+    element: (
+      <RoleGate allowed={['INSTRUCTOR']}>
+        <InstructorCourseManagementPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/instructor/content',
+    element: (
+      <RoleGate allowed={['INSTRUCTOR']}>
+        <InstructorContentLibraryPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/instructor/analytics',
+    element: (
+      <RoleGate allowed={['INSTRUCTOR']}>
+        <InstructorAnalyticsPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/instructor/settings',
+    element: (
+      <RoleGate allowed={['INSTRUCTOR']}>
+        <InstructorSettingsPage />
+      </RoleGate>
+    ),
+  },
   { path: '/admin', element: <Navigate to="/admin/dashboard" replace /> },
-  { path: '/admin/dashboard', element: <AdminDashboardPage /> },
-  { path: '/admin/users', element: <AdminUserManagementPage /> },
-  { path: '/admin/courses', element: <AdminCourseManagementPage /> },
-  { path: '/admin/analytics', element: <AdminAnalyticsPage /> },
-  { path: '/admin/settings', element: <AdminSettingsPage /> },
+  {
+    path: '/admin/dashboard',
+    element: (
+      <RoleGate allowed={['ADMIN']}>
+        <AdminDashboardPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/admin/users',
+    element: (
+      <RoleGate allowed={['ADMIN']}>
+        <AdminUserManagementPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/admin/courses',
+    element: (
+      <RoleGate allowed={['ADMIN']}>
+        <AdminCourseManagementPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/admin/analytics',
+    element: (
+      <RoleGate allowed={['ADMIN']}>
+        <AdminAnalyticsPage />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/admin/settings',
+    element: (
+      <RoleGate allowed={['ADMIN']}>
+        <AdminSettingsPage />
+      </RoleGate>
+    ),
+  },
 ];
 
 export function AppRouter() {
@@ -257,12 +316,7 @@ export function AppRouter() {
             </PublicRoute>
           } /> */}
 
-          {/* 404 - Not Found  */}
-          <Route path="*" element={
-            <PublicRoute>
-              <NotFoundPage />
-            </PublicRoute>
-          } />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AppLayout>
     </Suspense>

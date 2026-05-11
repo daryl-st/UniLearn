@@ -4,6 +4,7 @@ import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { asBackendRole, dashboardPathForBackendRole } from '@/utils/auth';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -37,16 +38,17 @@ export default function RegisterPage() {
 
     try {
       // restructure the data for the backend
-      const name = formData.name.split(' ');
+      const name = formData.name.trim().split(/\s+/);
       const userData = {
         role: "STUDENT",
-        firstName: name[0],
-        lastName: name[1],
+        firstName: name[0] ?? "Student",
+        lastName: name.slice(1).join(" ") || "User",
         password: formData.password,
         email: formData.email,
-      }
+      };
       await register(userData);
-      navigate('/dashboard'); // role based
+      const u = useAuthStore.getState().user;
+      navigate(dashboardPathForBackendRole(asBackendRole(u?.role)), { replace: true });
     } catch (err) {
       // Error already in store, no need to handle here
       console.log('Registration failed', err);

@@ -1,13 +1,16 @@
-import { Navigate, Outlet } from "react-router-dom";
+import type { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
+import { ROUTES } from "@/lib/route-paths";
 import { asBackendRole, dashboardPathForBackendRole, type BackendRole } from "@/utils/auth";
 
-type RequireRoleProps = {
+type RoleGateProps = {
     allowed: readonly BackendRole[];
+    children: ReactNode;
 };
 
-/** Layout route: requires auth + role in `allowed`, else redirect to login or role home. */
-export function RequireRole({ allowed }: RequireRoleProps) {
+/** Requires signed-in user whose role is in `allowed`; otherwise redirects to login or role home. */
+export function RoleGate({ allowed, children }: RoleGateProps) {
     const user = useAuthStore((s) => s.user);
     const isLoading = useAuthStore((s) => s.isLoading);
 
@@ -20,7 +23,7 @@ export function RequireRole({ allowed }: RequireRoleProps) {
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to={ROUTES.LOGIN} replace />;
     }
 
     const role = asBackendRole(user.role);
@@ -28,5 +31,5 @@ export function RequireRole({ allowed }: RequireRoleProps) {
         return <Navigate to={dashboardPathForBackendRole(role)} replace />;
     }
 
-    return <Outlet />;
+    return <>{children}</>;
 }

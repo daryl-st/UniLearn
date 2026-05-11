@@ -1,17 +1,28 @@
-// import type { Role } from "@unilearn/shared-types";
 import type { UserRepository } from "../user/user.repository.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../../config/db.js";
 import { generateAccessToken, generateRefreshToken } from "./auth.tokens.js";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN as string;
+const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export class AuthService {
     constructor(private userRepository: UserRepository) {}
 
-    async registerUser(data: {email: string, firstName: string, lastName: string, password: string}) {
+    private async issueSession(userId: string, role: string): Promise<{ accessToken: string; refreshToken: string }> {
+        const accessToken = generateAccessToken(userId, role);
+        const refreshToken = generateRefreshToken(userId);
+        const tokenHash = await bcrypt.hash(refreshToken, 10);
+        await this.userRepository.createRefreshToken({
+            tokenHash,
+            userId,
+            expiredAt: new Date(Date.now() + REFRESH_TTL_MS),
+        });
+        return { accessToken, refreshToken };
+    }
+
+    /** Public self-registration: always STUDENT regardless of body role (instructor/admin via admin only). */
+    async registerUser(data: { email: string; firstName: string; lastName: string; password: string }) {
         const existingUser = await this.userRepository.findUserByEmail(data.email);
         if (existingUser) throw new Error("Email already registered!");
 
@@ -19,46 +30,29 @@ export class AuthService {
 
         const user = await this.userRepository.create({
             email: data.email,
-            name: data.firstName + " " + data.lastName,
-            role: "STUDENT", // needs to be changed
-            password: hashedPass
+            name: `${data.firstName} ${data.lastName}`,
+            role: "STUDENT",
+            password: hashedPass,
         });
 
-        const token = jwt.sign(
-            { userId: user.id, role: user.role },
-            JWT_SECRET, {
-            expiresIn: JWT_EXPIRES_IN,
-        } as jwt.SignOptions);
+        const { accessToken, refreshToken } = await this.issueSession(user.id, user.role);
 
-        return { user, token };
-    };
+        return { user, accessToken, refreshToken };
+    }
 
-    async loginUser(data: { email: string, password: string }) {
-        // centralize error handling using separate AppError class 
+    async loginUser(data: { email: string; password: string }) {
         const existingUser = await this.userRepository.findUserByEmail(data.email);
-        if (!existingUser) throw new Error("User not found!"); // return 500 that don't say much
+        if (!existingUser) throw new Error("User not found!");
 
         const isPassValid = await bcrypt.compare(data.password, existingUser.password);
         if (!isPassValid) throw new Error("Invalid email or password!");
 
-        const accessToken = generateAccessToken(existingUser.id, existingUser.role);
-        const refreshToken = generateRefreshToken(existingUser.id);
+        const { accessToken, refreshToken } = await this.issueSession(existingUser.id, existingUser.role);
 
-        const tokenHash = await bcrypt.hash(refreshToken, 10);
+        return { existingUser, accessToken, refreshToken };
+    }
 
-        this.userRepository.createRefreshToken({
-            tokenHash, userId: existingUser.id, expiredAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        });
-
-        const token = jwt.sign(
-            { userId: existingUser.id, role: existingUser.role }, 
-            JWT_SECRET, 
-            { expiresIn: JWT_EXPIRES_IN, } as jwt.SignOptions);
-
-        return { existingUser, token, accessToken, refreshToken };
-    };
-
-    async refresh(refreshToken: any) {
+    async refresh(refreshToken: string) {
         const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as { sub: string };
 
         const tokens = await prisma.refreshToken.findMany({
@@ -80,9 +74,9 @@ export class AuthService {
         const user = await this.userRepository.findUserById(payload.sub);
         if (!user) throw new Error("Invalid refresh token!");
 
-        await prisma.refreshToken.update( {
+        await prisma.refreshToken.update({
             where: { id: matchedToken.id },
-            data: { revoked: true }
+            data: { revoked: true },
         });
 
         const newRefreshToken = generateRefreshToken(payload.sub);
@@ -92,8 +86,8 @@ export class AuthService {
             data: {
                 userId: payload.sub,
                 tokenHash: newHash,
-                expiredAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-            }
+                expiredAt: new Date(Date.now() + REFRESH_TTL_MS),
+            },
         });
 
         const newAccessToken = generateAccessToken(payload.sub, user.role);
@@ -101,28 +95,35 @@ export class AuthService {
         return { newRefreshToken, newAccessToken };
     }
 
-    async logout(refreshToken: any) {
-        const tokens = await prisma.refreshToken.findMany();
+    async logout(refreshToken: string): Promise<void> {
+        let payload: { sub: string };
+        try {
+            payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as { sub: string };
+        } catch {
+            return;
+        }
+
+        const tokens = await prisma.refreshToken.findMany({
+            where: { userId: payload.sub, revoked: false },
+        });
 
         for (const token of tokens) {
             const match = await bcrypt.compare(refreshToken, token.tokenHash);
-
             if (match) {
                 await prisma.refreshToken.update({
-                    where: {id: token.id},
-                    data: { revoked: true }
-                })
+                    where: { id: token.id },
+                    data: { revoked: true },
+                });
+                return;
             }
         }
     }
 
-    // Needs refactoring
-    async createStudentProfile(data: { studentId: string, year: number}, email: string) {
+    async createStudentProfile(data: { studentId: string; year: number }, email: string) {
         const existing = await this.userRepository.findUserByEmail(email);
         if (!existing) throw new Error("Internal Error!");
 
-        // temporary
-        const department = await prisma.department.findUnique({ where: {code: "CS101"}});
+        const department = await prisma.department.findUnique({ where: { code: "CS101" } });
         if (!department) throw new Error("Invalid Department");
 
         const userProfile = await this.userRepository.createStudentProfile(data, existing.id, department);
@@ -134,8 +135,7 @@ export class AuthService {
         const existing = await this.userRepository.findUserByEmail(email);
         if (!existing) throw new Error("Internal Error!");
 
-        // temporary
-        const department = await prisma.department.findUnique({ where: {code: "CS101"}});
+        const department = await prisma.department.findUnique({ where: { code: "CS101" } });
         if (!department) throw new Error("Invalid Department");
 
         const instructorProfile = await this.userRepository.createInstructorProfile(data, existing.id, department);
