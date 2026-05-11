@@ -1,9 +1,15 @@
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load apps/ai/.env before reading any configuration from the environment.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health
+from app.api.routes import extract, health
 
 
 def _parse_cors_origins() -> list[str]:
@@ -30,3 +36,4 @@ if _origins:
     )
 
 app.include_router(health.router, tags=["health"])
+app.include_router(extract.router)

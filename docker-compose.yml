@@ -14,6 +14,7 @@ services:
     ports:
       - "5433:5432"
 
+  # Root .env: set AI_SERVICE_URL=http://ai:8000 and AI_INTERNAL_API_KEY (same secret for backend + ai).
   backend:
     build:
       context: .
@@ -28,6 +29,7 @@ services:
     ports:
       - "4000:4000"
 
+  # Optional: EXTRACT_URL_ALLOWED_HOSTS for POST /extract/url allowlist.
   ai:
     build:
       context: .
