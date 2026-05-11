@@ -34,19 +34,23 @@ export type ProfileUpdateBody = z.infer<typeof updateProfile>
 export const createCourseSchema = z.object({
     name: name,
     code: z.string().min(2).max(50),
-    acadamicYear: z.number().min(1).max(4)
-})
+    acadamicYear: z.number().min(1).max(4),
+    instructorId: z.string().uuid(),
+    departmentId: z.string().uuid(),
+});
 export type createCourseBody = z.infer<typeof createCourseSchema>
 
 export const uploadResourceSchema = z.object({
     title: name,
     type: z.enum(["PDF", "PPT", "DOC"]),
-    fileUrl: z.string().min(1).max(100),
+    fileUrl: z.string().min(1).max(2048),
+    courseId: z.string().uuid(),
+    instructorId: z.string().uuid(),
 });
 export type uploadResourceBody = z.infer<typeof uploadResourceSchema>
 
-// needs better implementaion
-export const deleteResourceSchema = z.object({
-    id: z.string() 
+/** Body for DELETE /course/resource/:id — resource id is in the URL. */
+export const deleteResourceBodySchema = z.object({
+    instructorId: z.string().uuid(),
 });
-export type deleteResourceBody = z.infer<typeof deleteResourceSchema> // or just use the params and still validate through this
+export type deleteResourceBody = z.infer<typeof deleteResourceBodySchema>

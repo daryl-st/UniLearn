@@ -1,8 +1,15 @@
 import type { Request, Response } from "express";
+import { z } from "zod";
 import { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { CourseService, ResourceService } from "./resource.service.js";
 import type { createCourseBody, deleteResourceBody, uploadResourceBody } from "../../schemas/index.js";
 import { UserRepository } from "../user/user.repository.js";
+
+// This will get me the id from req.params.id.
+function paramId(value: string | string[] | undefined): string | undefined {
+    if (value === undefined) return undefined;
+    return Array.isArray(value) ? value[0] : value;
+}
 
 const resourceRepo = new ResourceRepository();
 const resourceService = new ResourceService(resourceRepo);
@@ -10,83 +17,102 @@ const courseRepo = new CourseRepository();
 const userRepository = new UserRepository();
 const courseService = new CourseService(courseRepo, userRepository);
 
+// we might need to move this validation schema somewhere.
+const courseIdQuerySchema = z.object({
+    courseId: z.string().uuid(),
+});
+
 export class ResourceController {
     async getResources(req: Request, res: Response) {
-        // the basic idea is this func will return all resources specific to a course
-        const resources = await resourceService.getResources("ca010cdb-9a41-4512-8300-bb5f60fc25c0"); 
-        res.status(200).json(resources);
-    };
+        // parsing and validating the courseId query parameter using Zod before fetching resources.
+        const parsed = courseIdQuerySchema.safeParse(req.query);
+        if (!parsed.success) {
+            return res.status(400).json({
+                error: "Invalid or missing courseId query parameter.",
+            });
+        }
+        const resources = await resourceService.getResources(parsed.data.courseId);
+        return res.status(200).json(resources);
+    }
 
-    async getCourses(req: Request, res: Response) {
-        // returns all courses name, code, all other important needs
-        // course resorces should not be returned at this request and a course might have 0 resources
-        // this will be requested when the user is presented with a list of courses.
+    async getCourses(_req: Request, res: Response) {
         const courses = await courseService.getCourses();
-
-        const courseData = courses.map(course => ({
-            id: course.id,
-            name: course.name,
-            code: course.code,
-            acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
-            departmentId: course.departmentId,
-        }));
-
-        res.status(200).json(courseData);
+        return res.status(200).json(courses);
     }
 
     async getResourceById(req: Request, res: Response) {
-        const resourceData = req.body; // we need to change to params
-        const resource = await resourceService.getResourceById(resourceData.id);
-        res.status(200).json(resource);
+        // this will get me the id from req.params.id.
+        const id = paramId(req.params.id);
+        if (!id) {
+            return res.status(400).json({ error: "Missing resource id." });
+        }
+        const resource = await resourceService.getResourceById({ id });
+        if (!resource) {
+            return res.status(404).json({ error: "Resource not found." });
+        }
+        return res.status(200).json(resource);
     }
 
     async getCourseById(req: Request, res: Response) {
-        const courseData = req.body; // we need to change to params
-        const course = await courseService.getCourseById(courseData.id);
-        res.status(200).json(course);
+        // this will get me the id from req.params.id.
+        const id = paramId(req.params.id);
+        if (!id) {
+            return res.status(400).json({ error: "Missing course id." });
+        }
+        const course = await courseService.getCourseById({ id });
+        if (!course) {
+            return res.status(404).json({ error: "Course not found." });
+        }
+        return res.status(200).json(course);
     }
 
     async uploadResource(req: Request, res: Response) {
-        // will be prompted to available courses it teaches to upload onto them only
         const resourceDetails = req.body as uploadResourceBody;
 
-        // instructor id and course id should come from req.body but for now let's hardcode it
         const resourceData = {
             ...resourceDetails,
-            instructorId: "cc33d76b-9344-48ee-8954-ece7114a6f32",
-            courseId: "ca010cdb-9a41-4512-8300-bb5f60fc25c0",
-            version: 1, // we will update this when we implement update resource, for now it is fixed to 1
-        }
+            // this is a placeholder, we can implement versioning logic later.
+            version: 1,
+        };
         const resource = await resourceService.uploadResource(resourceData);
-        res.status(201).json(resource);
-
-        // should update resource be separate function or should this function handle this ??
-        // because updating is essentially same resource with same meta-data, but with only version change.
-        // so i should integrate version number in the db so that when updating we only change version number and the url
-        // if this is the case how do find the older version, so we should add version but also implement new function 
+        if (typeof resource === "string") {
+            return res.status(409).json({ error: resource });
+        }
+        return res.status(201).json(resource);
     }
 
     async createCourse(req: Request, res: Response) {
-        // we need to assign the instructor to course and department (fixed for now - CS) 
         const courseDetails = req.body as createCourseBody;
-
-        // we might create a selection thing to select and assign the instructor and also the department
-        // then will be included in the req.body
-        const courseData = {
-            ...courseDetails,
-            instructorId: "cc33d76b-9344-48ee-8954-ece7114a6f32", // id for instructor
-            departmentId: "ff4d9866-61fa-48a1-bdbf-1883eda940f3", // id for CS, remove this later
+        const course = await courseService.createCourse(courseDetails);
+        if (typeof course === "string") {
+            return res.status(400).json({ error: course });
         }
-        const course = await courseService.createCourse(courseData);
-        res.status(201).json(course);
+        return res.status(201).json(course);
+    }
+
+    async deleteCourse(req: Request, res: Response) {
+        const id = paramId(req.params.id);
+        if (!id) {
+            return res.status(400).json({ error: "Missing course id." });
+        }
+        const result = await courseService.deleteCourse({ id });
+        if (typeof result === "string") {
+            return res.status(404).json({ error: result });
+        }
+        return res.status(200).json(result);
     }
 
     async deleteResource(req: Request, res: Response) {
-        // const { resourceId, instructorId } = req.body; // this should be the correct implementation, but using params
-        const resourceData = req.body as deleteResourceBody;
-        const instructorId = "cc33d76b-9344-48ee-8954-ece7114a6f32";
-        const resource = await resourceService.deleteResource(resourceData, instructorId);
-        res.status(200).json(resource);
+        const resourceId = paramId(req.params.id);
+        if (!resourceId) {
+            return res.status(400).json({ error: "Missing resource id." });
+        }
+        const { instructorId } = req.body as deleteResourceBody;
+        const resource = await resourceService.deleteResource({ id: resourceId }, instructorId);
+        if (typeof resource === "string") {
+            const status = resource === "Permission Denied!" ? 403 : 404;
+            return res.status(status).json({ error: resource });
+        }
+        return res.status(200).json(resource);
     }
 }
