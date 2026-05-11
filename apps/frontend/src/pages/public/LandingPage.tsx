@@ -29,7 +29,7 @@ export default function LandingPage() {
             className="relative z-10 max-w-4xl mx-auto text-center glass-card p-16 rounded-xl"
           >
             <h2 className="text-4xl md:text-5xl font-headline font-bold text-white mb-8 tracking-tighter">Ready to start learning?</h2>
-            <p className="text-lg text-on-surface-variant mb-12 max-w-xl mx-auto">Join a centralized academic workspace for trusted resources, AI summaries, quizzes, and role-based access across the department.</p>
+            <p className="text-lg text-on-surface-variant mb-12 max-w-xl mx-auto">Join a centralized Computer Science workspace for trusted resources, AI summaries, quizzes, and role-based access.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link to="/register">
                 <button className="px-10 py-4 bg-primary text-on-primary font-bold rounded-sm hover:opacity-90 transition-opacity">Create Account</button>

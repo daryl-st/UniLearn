@@ -1,16 +1,18 @@
-import { api, ApiError } from "./client"
-import type { Course, UpdateCourseInput } from "@unilearn/shared-types";
+import { api, ApiError } from "./client";
+import type { Course, CreateCourseInput, Resource } from "@unilearn/shared-types";
+
+// Row from GET /course (includes display name when backend sends it).
+export type CourseCatalogRow = Course & { instructorName?: string };
 
 export const CourseAPI = {
     getAllCourses: async () => {
         try {
-            const response = await api.get<Course[]>('course');
+            const response = await api.get<CourseCatalogRow[]>("course");
 
             if (!response || !Array.isArray(response)) {
                 throw new Error("Invalid response format!");
             }
 
-            // i believe the response is json so let's just return it as is.
             return response;
         } catch (err) {
             if (err instanceof ApiError) {
@@ -20,11 +22,10 @@ export const CourseAPI = {
             throw new Error("Fetching course failed!");
         }
     },
-    getCourse: async () => {
-        try {
-            const response = await api.get<Course>('course/:id');
 
-            return response;
+    getCourse: async (id: string) => {
+        try {
+            return await api.get<Course>(`course/${encodeURIComponent(id)}`);
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.status == 404) throw new Error("Not Found!");
@@ -33,10 +34,36 @@ export const CourseAPI = {
             throw new Error("Fetching course failed!");
         }
     },
-    createCourse: async (courseData: UpdateCourseInput) => {
+
+    getResourcesByCourseId: async (courseId: string) => {
         try {
-            const response = await api.post<Course>('course', courseData);
-            return response;
+            return await api.get<Resource[]>("course/resource", {
+                params: { courseId },
+            });
+        } catch (err) {
+            if (err instanceof ApiError) {
+                if (err.status == 404) throw new Error("Not Found!");
+                throw err;
+            }
+            throw new Error("Fetching resources failed!");
+        }
+    },
+
+    getResourceById: async (id: string) => {
+        try {
+            return await api.get<Resource>(`course/resources/${encodeURIComponent(id)}`);
+        } catch (err) {
+            if (err instanceof ApiError) {
+                if (err.status == 404) throw new Error("Not Found!");
+                throw err;
+            }
+            throw new Error("Fetching resource failed!");
+        }
+    },
+
+    createCourse: async (courseData: CreateCourseInput) => {
+        try {
+            return await api.post<Course>("course", courseData);
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.status == 404) throw new Error("Not Found!");
@@ -45,10 +72,10 @@ export const CourseAPI = {
             throw new Error("Creating course failed!");
         }
     },
+
     deleteCourse: async (courseId: string) => {
         try {
-            const response = await api.delete<Course>(`course/${courseId}`);
-            return response;
+            return await api.delete<Course>(`course/${encodeURIComponent(courseId)}`);
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.status == 404) throw new Error("Not Found!");
@@ -57,4 +84,34 @@ export const CourseAPI = {
             throw new Error("Deleting course failed!");
         }
     },
-}
+
+    uploadResource: async (body: {
+        title: string;
+        type: "PDF" | "PPT" | "DOC";
+        fileUrl: string;
+        courseId: string;
+        instructorId: string;
+    }) => {
+        try {
+            return await api.post<Resource>("course/resource", body);
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw err;
+            }
+            throw new Error("Uploading resource failed!");
+        }
+    },
+
+    deleteResource: async (resourceId: string, instructorId: string) => {
+        try {
+            return await api.delete<Resource>(`course/resource/${encodeURIComponent(resourceId)}`, {
+                body: JSON.stringify({ instructorId }),
+            });
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw err;
+            }
+            throw new Error("Deleting resource failed!");
+        }
+    },
+};

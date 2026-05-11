@@ -7,8 +7,8 @@ import { useCourseStore } from "@/stores/courseStrore";
 // skeleton needs ajustment to match the course card design
 // import { CourseSkeleton, CourseSkeletonGrid } from "@/components/features/public_pages/CourseSkeleton";
 
-// Course filters for public browsing
-const disciplines = ["All Courses", "Computer Science", "Software Engineering", "Information Systems", "Mathematics"];
+// MVP: single department (Computer Science) — filters are cosmetic until server-side filters exist.
+const disciplines = ["All Courses", "Computer Science"];
 // const catalogData = [
 //   { id: "UN-882", discipline: "NEURAL SYSTEMS", title: "Advanced Synthetic Cognition", description: "Master the core protocols of recursive neural grafting and ethical AI containment in modular environments.", instructor: { name: "Dr. Elias Thorne", avatar: "/avatar- Thorne.jpg" }, image: "/course-neural.jpg" },
 //   { id: "UN-419", discipline: "QUANTUM COMPUTING", title: "Quantum Cryptography Foundations", description: "Implementation of uncrackable communication channels using polarized entanglement and recursive proofing.", instructor: { name: "Prof. Sarah Chen", avatar: "/avatar-chen.jpg" }, image: "/course-quantum.jpg" },
@@ -23,7 +23,7 @@ const disciplines = ["All Courses", "Computer Science", "Software Engineering", 
 // }
 
 export default function CoursesPage() {
-  const [activeFilter, setActiveFilter] = useState("All Disciplines");
+  const [activeFilter, setActiveFilter] = useState("All Courses");
 
   // const courses = fetchCourses().then((course) => course);
   // console.log(courses);
@@ -70,7 +70,7 @@ export default function CoursesPage() {
               Course Catalog
             </h1>
             <p className="text-on-surface-variant text-base leading-relaxed">
-              Discover available courses by department, academic year, and course code, then continue to sign in for full resource access.
+              Browse the Computer Science catalog by academic year and course code, then sign in for full resource access.
             </p>
           </div>
           {/* Asymmetric Sidebar per DESIGN.md Section 7 */}

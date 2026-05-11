@@ -1,43 +1,95 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { 
-  ChevronRight, 
-  PlayCircle, 
-  Pause, 
-  Settings, 
-  Maximize, 
-  CheckCircle, 
-  Send, 
-  Mic, 
-  Paperclip, 
+import {
+  ChevronRight,
+  PlayCircle,
+  Pause,
+  Settings,
+  Maximize,
+  CheckCircle,
+  Send,
+  Mic,
+  Paperclip,
   User,
   FileText,
-  Cpu,
-//   ArrowRight,
-//   MessageSquare,
-  Sparkles
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react';
-// import { getChatResponse } from '@/utils/service';
-import { COURSES } from '@/utils/constants';
 import { useNavigate, useParams } from 'react-router-dom';
+import type { Course, Resource } from '@unilearn/shared-types';
+import { CourseAPI } from '@/api/course';
+import { useCourseStore } from '@/stores/courseStrore';
+import { courseThumbUrl } from '@/lib/coursePlaceholders';
 
-// Needs refactrowing - too much hardcoded data and UI logic in one component, but good enough for MVP phase. 
-// Will break down into smaller components in future iterations.
-// state management is also a bit messy here - will likely migrate to zustand or similar in future iterations as the app grows in complexity.
-// export default function Learning({ courseId }: LearningProps) {
 export default function Learning() {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
+  const { courses, fetchCourses } = useCourseStore();
 
-  const course = COURSES.find(c => c.id === courseId) || COURSES[0];
-  const [messages, setMessages] = useState([
-    { role: 'ai', content: `Welcome to the learning workspace for **${course.title}**. I can help you summarize resources, generate quiz questions, and explain concepts.` }
-  ]);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [messages, setMessages] = useState<{ role: 'ai' | 'user'; content: string }[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const activeModuleIdx = 0;
-  const activeLessonIdx = 0;
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    void fetchCourses();
+  }, [fetchCourses]);
+
+  useEffect(() => {
+    if (!courseId && courses.length > 0) {
+      navigate(`/dashboard/learning/${courses[0].id}`, { replace: true });
+    }
+  }, [courseId, courses, navigate]);
+
+  useEffect(() => {
+    if (!courseId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [c, r] = await Promise.all([
+          CourseAPI.getCourse(courseId),
+          CourseAPI.getResourcesByCourseId(courseId),
+        ]);
+        if (cancelled) return;
+        setCourse(c);
+        const list = Array.isArray(r) ? r : [];
+        setResources(list);
+        setSelectedIdx(0);
+        setMessages([
+          {
+            role: 'ai',
+            content: `Welcome to the learning workspace for **${c.name}**. Select a resource on the left; links open in a new tab. AI replies are not connected to a backend yet.`,
+          },
+        ]);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId]);
+
+  const selectedResource = resources[selectedIdx] ?? null;
+
+  const activeLesson = useMemo(() => {
+    if (!selectedResource) return { title: 'Select a resource', duration: '—', type: 'reading' as const };
+    return {
+      title: selectedResource.title,
+      duration: '—',
+      type: 'reading' as const,
+    };
+  }, [selectedResource]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -48,60 +100,118 @@ export default function Learning() {
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    const userMsg = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
+    const userMsg = { role: 'user' as const, content: input };
+    setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
-
-    // try {
-    //   const response = await getChatResponse(input, `User is watching course: ${course.title}. Current module: ${course.modules?.[activeModuleIdx]?.title}.`);
-    //   setMessages(prev => [...prev, { role: 'ai', content: response }]);
-    // } catch (error) {
-    //   setMessages(prev => [...prev, { role: 'ai', content: "Error: Could not connect to the AI engine. Please check your API key." }]);
-    // } finally {
-    //   setIsTyping(false);
-    // }
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ai',
+          content:
+            'Assistant responses are not wired to an AI service yet. Use resource links above to study from uploaded materials.',
+        },
+      ]);
+      setIsTyping(false);
+    }, 600);
   };
 
-  const activeModule = course.modules?.[activeModuleIdx];
-  const activeLesson = activeModule?.lessons[activeLessonIdx];
+  if (!courseId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] text-on-surface-variant text-sm p-8">
+        <p>Loading workspace…</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] text-on-surface-variant text-sm">
+        Loading course…
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 text-on-surface-variant p-8">
+        <p className="text-error text-sm">{error || 'Course not found'}</p>
+        <button type="button" className="text-primary underline text-sm" onClick={() => navigate('/dashboard/courses')}>
+          Back to courses
+        </button>
+      </div>
+    );
+  }
+
+  const thumb = courseThumbUrl(course.id);
+  const instructorSeed = course.instructorId;
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden bg-surface">
-      {/* Main Content */}
+      <aside className="w-full lg:w-72 shrink-0 border-b lg:border-b-0 lg:border-r border-outline-variant/10 bg-surface-low overflow-y-auto max-h-48 lg:max-h-none">
+        <div className="p-4 border-b border-outline-variant/10">
+          <p className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Resources</p>
+          <p className="text-sm font-bold text-white truncate mt-1">{course.name}</p>
+        </div>
+        <ul className="p-2 space-y-1">
+          {resources.length === 0 ? (
+            <li className="px-3 py-2 text-xs text-on-surface-variant">No files uploaded.</li>
+          ) : (
+            resources.map((res, idx) => (
+              <li key={res.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIdx(idx)}
+                  className={`w-full text-left px-3 py-2 rounded-sm text-xs flex items-center gap-2 transition-colors ${
+                    idx === selectedIdx ? 'bg-primary/15 text-primary border border-primary/30' : 'hover:bg-surface-high text-on-surface-variant'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{res.title}</span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      </aside>
+
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-6 md:p-10 subtle-scrollbar">
           <div className="mx-auto w-full max-w-6xl space-y-8">
             <div className="flex items-center gap-2 font-mono text-[10px] text-on-surface-variant tracking-[0.2em] uppercase">
-              <span className="truncate max-w-37.5">{course.title}</span>
+              <span className="truncate max-w-37.5">{course.name}</span>
               <ChevronRight className="w-3 h-3 shrink-0" />
-              <span className="text-primary truncate">{activeModule?.title}</span>
+              <span className="text-primary truncate">{activeLesson.title}</span>
             </div>
 
-            {/* Video Player */}
             <div className="aspect-video w-full bg-black rounded-sm relative overflow-hidden group border border-outline-variant/10 shadow-2xl">
-              <img 
-                src={course.thumbnail} 
-                alt="Video" 
-                className="w-full h-full object-cover opacity-40"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent"></div>
-              
+              <img src={thumb} alt="" className="w-full h-full object-cover opacity-40" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
+
               <div className="absolute inset-0 flex items-center justify-center">
-                <button className="w-20 h-20 rounded-full bg-primary/90 text-on-primary flex items-center justify-center scale-100 hover:scale-110 transition-transform shadow-2xl shadow-primary/40">
-                  <PlayCircle className="w-12 h-12 fill-current" />
-                </button>
+                {selectedResource ? (
+                  <a
+                    href={String(selectedResource.fileUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-20 h-20 rounded-full bg-primary/90 text-on-primary flex items-center justify-center scale-100 hover:scale-110 transition-transform shadow-2xl shadow-primary/40"
+                  >
+                    <PlayCircle className="w-12 h-12 fill-current" />
+                  </a>
+                ) : (
+                  <div className="text-on-surface-variant text-sm font-mono">No resource selected</div>
+                )}
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-6 flex items-center gap-6 bg-linear-to-t from-black/80 to-transparent backdrop-blur-[2px]">
                 <Pause className="text-white w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
                 <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer group/progress">
                   <div className="h-full w-1/3 bg-primary relative">
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover/progress:scale-100 transition-transform"></div>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover/progress:scale-100 transition-transform" />
                   </div>
                 </div>
-                <span className="font-mono text-[11px] text-white">12:44 / {activeLesson?.duration || '38:20'}</span>
+                <span className="font-mono text-[11px] text-white">— / {activeLesson.duration}</span>
                 <div className="flex items-center gap-4">
                   <Settings className="text-white w-4 h-4 cursor-pointer hover:text-primary transition-colors" />
                   <Maximize className="text-white w-4 h-4 cursor-pointer hover:text-primary transition-colors" />
@@ -112,17 +222,42 @@ export default function Learning() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
-                  <h2 className="font-headline text-3xl font-bold text-white tracking-tight">{activeLesson?.title}</h2>
+                  <h2 className="font-headline text-3xl font-bold text-white tracking-tight">{activeLesson.title}</h2>
                   <p className="text-on-surface-variant leading-relaxed text-lg max-w-3xl">
-                    In this session, review the selected learning resource, extract key points with AI summary support, and test understanding with a generated quiz.
+                    {selectedResource ? (
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span>
+                          Type <span className="font-mono text-primary">{selectedResource.type}</span> · open the file
+                          externally.
+                        </span>
+                        <a
+                          href={String(selectedResource.fileUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary text-sm font-mono underline"
+                        >
+                          Open <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </span>
+                    ) : (
+                      'Pick a resource from the list to open its link.'
+                    )}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 shrink-0">
-                  <button className="flex items-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary px-6 py-3 rounded-sm font-headline font-bold text-sm whitespace-nowrap hover:bg-secondary/20 transition-all">
+                  <button
+                    type="button"
+                    disabled
+                    className="flex items-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary px-6 py-3 rounded-sm font-headline font-bold text-sm whitespace-nowrap opacity-50 cursor-not-allowed"
+                  >
                     <CheckCircle className="w-4 h-4" />
                     Generate Summary
                   </button>
-                  <button className="flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-6 py-3 rounded-sm font-headline font-bold text-sm whitespace-nowrap hover:bg-primary/20 transition-all">
+                  <button
+                    type="button"
+                    disabled
+                    className="flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-6 py-3 rounded-sm font-headline font-bold text-sm whitespace-nowrap opacity-50 cursor-not-allowed"
+                  >
                     <PlayCircle className="w-4 h-4" />
                     Generate Quiz
                   </button>
@@ -133,40 +268,12 @@ export default function Learning() {
                 <div className="md:col-span-2 space-y-8">
                   <div className="space-y-4">
                     <h3 className="font-headline text-white font-bold uppercase tracking-widest text-xs flex items-center gap-3">
-                      <span className="w-1 h-4 bg-primary rounded-full"></span>
-                      Lesson Resources
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="p-4 bg-surface-low rounded-sm border border-outline-variant/5 flex items-center gap-4 group cursor-pointer hover:bg-surface-high transition-all">
-                        <div className="w-10 h-10 rounded-sm bg-primary/10 flex items-center justify-center text-primary">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-white">Open Resource</p>
-                          <p className="text-[10px] font-mono text-on-surface-variant mt-1 uppercase">Lecture PDF • 1.2 MB</p>
-                        </div>
-                      </div>
-                      <div className="p-4 bg-surface-low rounded-sm border border-outline-variant/5 flex items-center gap-4 group cursor-pointer hover:bg-surface-high transition-all">
-                        <div className="w-10 h-10 rounded-sm bg-secondary/10 flex items-center justify-center text-secondary">
-                          <Cpu className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-white">Quiz & Summary History</p>
-                          <p className="text-[10px] font-mono text-on-surface-variant mt-1 uppercase">View Attempts • Latest First</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-headline text-white font-bold uppercase tracking-widest text-xs flex items-center gap-3">
-                      <span className="w-1 h-4 bg-primary rounded-full"></span>
-                      About this Lesson
+                      <span className="w-1 h-4 bg-primary rounded-full" />
+                      This resource
                     </h3>
                     <p className="text-on-surface-variant text-sm leading-relaxed">
-                      This lesson is part of your course learning flow in UniLearn. Start by reading the core resource, then generate a summary to review key ideas quickly.
-                      <br /><br />
-                      After that, generate a practice quiz and review feedback to identify topics that need more study.
+                      Materials come from the course repository. There is no embedded PDF viewer in this MVP; use the open link
+                      action above.
                     </p>
                   </div>
                 </div>
@@ -175,22 +282,22 @@ export default function Learning() {
                   <div className="bg-surface-low p-6 rounded-sm border border-outline-variant/5">
                     <h4 className="font-mono text-[10px] text-primary uppercase tracking-widest mb-4">Instructor</h4>
                     <div className="flex items-center gap-3">
-                      <img 
-                        src={course.instructorImage} 
-                        alt={course.instructor} 
+                      <img
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(instructorSeed)}`}
+                        alt=""
                         className="w-12 h-12 rounded-sm grayscale"
-                        referrerPolicy="no-referrer"
                       />
                       <div>
-                        <p className="text-sm font-bold text-white">{course.instructor}</p>
-                        <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter mt-1">Course Instructor</p>
+                        <p className="text-sm font-bold text-white font-mono truncate max-w-[140px]">{instructorSeed}</p>
+                        <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter mt-1">Course</p>
                       </div>
                     </div>
                     <button
+                      type="button"
                       className="w-full mt-6 py-2 border border-outline-variant/10 rounded-sm text-[10px] font-mono uppercase tracking-widest text-on-surface-variant hover:text-white hover:bg-surface-high transition-all"
                       onClick={() => navigate(`/dashboard/courses/${course.id}`)}
                     >
-                      View Course Details
+                      View course details
                     </button>
                   </div>
                 </div>
@@ -200,28 +307,28 @@ export default function Learning() {
         </div>
       </section>
 
-      {/* AI Copilot Panel */}
       <aside className="hidden lg:flex h-full w-100 flex-col border-l border-outline-variant/10 glass-ai xl:w-110">
         <div className="p-4 border-b border-outline-variant/10 bg-surface/40 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="font-headline font-bold text-sm text-white uppercase tracking-tighter">AI Learning Assistant</span>
           </div>
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-on-surface-variant" />
-            <div className="h-4 w-px bg-outline-variant/20"></div>
+            <div className="h-4 w-px bg-outline-variant/20" />
             <Settings className="w-4 h-4 text-on-surface-variant cursor-pointer hover:text-white transition-colors" />
           </div>
         </div>
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 subtle-scrollbar">
           <div className="bg-primary/5 border border-primary/10 p-4 rounded-sm text-[11px] text-on-surface-variant leading-relaxed">
-            <span className="text-primary font-bold block mb-1 uppercase tracking-widest">Course Context Active</span>
-            I am currently synchronized with **{activeLesson?.title}**. Ask me to summarize this resource, generate practice questions, or explain difficult concepts.
+            <span className="text-primary font-bold block mb-1 uppercase tracking-widest">Course context</span>
+            Workspace is bound to <span className="font-mono text-white">{course.code}</span>. Selected:{' '}
+            <span className="text-white">{activeLesson.title}</span>.
           </div>
 
           {messages.map((msg, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -233,11 +340,13 @@ export default function Learning() {
                 </div>
               )}
               <div className={`max-w-[85%] space-y-2 ${msg.role === 'user' ? 'text-right' : ''}`}>
-                <div className={`text-[13px] p-3 rounded-sm border leading-relaxed ${
-                  msg.role === 'ai' 
-                    ? 'bg-surface-high border-outline-variant/5 rounded-tl-none text-on-surface' 
-                    : 'bg-primary/10 text-primary border-primary/20 rounded-tr-none'
-                }`}>
+                <div
+                  className={`text-[13px] p-3 rounded-sm border leading-relaxed ${
+                    msg.role === 'ai'
+                      ? 'bg-surface-high border-outline-variant/5 rounded-tl-none text-on-surface'
+                      : 'bg-primary/10 text-primary border-primary/20 rounded-tr-none'
+                  }`}
+                >
                   {msg.content}
                 </div>
               </div>
@@ -256,9 +365,21 @@ export default function Learning() {
               </div>
               <div className="bg-surface-high p-4 rounded-sm rounded-tl-none border border-outline-variant/10 w-full">
                 <div className="flex gap-1">
-                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <motion.div
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1 }}
+                    className="w-1.5 h-1.5 rounded-full bg-primary"
+                  />
+                  <motion.div
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
+                    className="w-1.5 h-1.5 rounded-full bg-primary"
+                  />
+                  <motion.div
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
+                    className="w-1.5 h-1.5 rounded-full bg-primary"
+                  />
                 </div>
               </div>
             </div>
@@ -267,16 +388,17 @@ export default function Learning() {
 
         <div className="p-4 border-t border-outline-variant/10 bg-surface/20 shrink-0">
           <div className="relative flex items-end gap-2 bg-surface-high border border-outline-variant/30 focus-within:border-primary p-3 rounded-sm transition-all shadow-inner">
-            <textarea 
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-              className="bg-transparent border-none focus:ring-0 text-[13px] w-full min-h-10 max-h-32 text-on-surface resize-none subtle-scrollbar placeholder:text-on-surface-variant/40" 
-              placeholder="Ask about this lesson..." 
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void handleSend())}
+              className="bg-transparent border-none focus:ring-0 text-[13px] w-full min-h-10 max-h-32 text-on-surface resize-none subtle-scrollbar placeholder:text-on-surface-variant/40"
+              placeholder="Ask about this lesson..."
               rows={1}
             />
-            <button 
-              onClick={handleSend}
+            <button
+              type="button"
+              onClick={() => void handleSend()}
               className="bg-primary text-on-primary p-2 rounded-sm flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20"
             >
               <Send className="w-4 h-4" />

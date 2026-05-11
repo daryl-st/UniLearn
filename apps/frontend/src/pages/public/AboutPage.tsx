@@ -40,7 +40,7 @@ export default function AboutPage() {
         {/* Feature List - Tonal Separation without Borders */}
         <div className="md:col-span-8 space-y-12">
             {[
-            { id: "01", label: "Centralized Repository", title: "Single Source of Truth", desc: "Course materials are organized by department, academic year, and course so students can find the latest trusted version quickly." },
+            { id: "01", label: "Centralized Repository", title: "Single Source of Truth", desc: "Course materials are organized by academic year and course within Computer Science so students can find the latest trusted version quickly." },
             { id: "02", label: "AI Learning Support", title: "Summaries and Quizzes", desc: "Students can request concise summaries and generate quizzes directly from selected resources to support active revision." },
             { id: "03", label: "Role-Based Operations", title: "Controlled Access", desc: "Students, instructors, and administrators see only the tools and responsibilities relevant to their role in the platform." }
             ].map((item) => (

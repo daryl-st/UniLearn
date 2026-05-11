@@ -60,7 +60,7 @@ export function ActiveRegistries() {
             <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
               <div className="space-y-4">
                   <h2 className="text-4xl font-headline font-bold text-white tracking-tighter">Featured Courses</h2>
-                  <p className="text-on-surface-variant max-w-md">A few representative courses from the department catalog to help students begin exploring available resources.</p>
+                  <p className="text-on-surface-variant max-w-md">A few representative Computer Science courses from the catalog to help students begin exploring available resources.</p>
               </div>
               <Link to="/courses">
                 <button className="font-mono text-xs uppercase tracking-widest text-primary border-b border-primary/30 pb-1 hover:border-primary transition-all">

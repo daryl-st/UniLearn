@@ -14,7 +14,7 @@ export function BentoGrid() {
                     <div>
                         <Brain className="text-primary w-10 h-10 mb-6" />
                         <h3 className="text-3xl font-headline font-bold text-white mb-4">Centralized Repository</h3>
-                        <p className="text-on-surface-variant max-w-md">A single trusted space for course materials organized by department, academic year, and course so students and instructors can avoid scattered file sharing.</p>
+                        <p className="text-on-surface-variant max-w-md">A single trusted space for Computer Science course materials organized by academic year and course so students and instructors can avoid scattered file sharing.</p>
                     </div>
                     <div className="mt-8 pt-8 border-t border-outline-variant/10">
                         <div className="flex items-center gap-4">
@@ -58,7 +58,7 @@ export function BentoGrid() {
                         <div>
                             <Layers className="text-primary w-10 h-10 mb-6" />
                             <h3 className="text-2xl font-headline font-bold text-white mb-4">Resource Discovery</h3>
-                            <p className="text-on-surface-variant text-sm">Students can browse, search, and filter courses using practical criteria such as department, course code, and academic year.</p>
+                            <p className="text-on-surface-variant text-sm">Students can browse, search, and filter courses by course code and academic year within the Computer Science catalog.</p>
                         </div>
                     
                         <div className="mt-8 flex justify-end">

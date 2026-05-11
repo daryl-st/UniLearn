@@ -2,7 +2,7 @@ export class ApiError extends Error {
     constructor(
         public status: number,
         public message: string,
-        public data?: any,
+        public data?: unknown,
     ) {
         super(message);
         this.name = 'APIError';
@@ -57,7 +57,7 @@ class APIClient {
             });
 
             // Parse response
-            let data: any;
+            let data: unknown;
             const contentType = response.headers.get('content-type');
             if (contentType?.includes('application/json')) {
                 data = await response.json();
@@ -96,7 +96,9 @@ class APIClient {
                 'Authorization': `Bearer ${token}`,
             };
         } else {
-            const { Authorization, ...rest} = this.defaultHeaders;
+            // intentionally ignore the extracted Authorization property
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { ['Authorization']: _, ...rest} = this.defaultHeaders;
             this.defaultHeaders = rest;
         }
     }
@@ -106,7 +108,7 @@ class APIClient {
         return this.request<T>(endpoint, { ...config, method: 'GET'});
     }
 
-    post<T>(endpoint: string, body?: any, config?: RequestConfig): Promise<T> {
+    post<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
         return this.request<T>(endpoint, {
             ...config,
             method: 'POST',
@@ -114,7 +116,7 @@ class APIClient {
         });
     }
 
-    put<T>(endpoint: string, body?: any, config?: RequestConfig): Promise<T> {
+    put<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
         return this.request<T>(endpoint, {
             ...config,
             method: 'PUT',
@@ -122,7 +124,7 @@ class APIClient {
         });
     }
 
-    patch<T>(endpoint: string, body?: any, config?: RequestConfig): Promise<T> {
+    patch<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
         return this.request<T>(endpoint, {
             ...config,
             method: 'PATCH',
@@ -131,7 +133,11 @@ class APIClient {
     }
 
     delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
-        return this.request<T>(endpoint, { ...config, method: 'DELETE'});
+        return this.request<T>(endpoint, {
+            ...config,
+            method: 'DELETE',
+            body: config?.body,
+        });
     }
 }
 
