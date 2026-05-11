@@ -122,16 +122,13 @@ pnpm install
 
 ## Environment Configuration
 
-Copy the example environment file:
-
-```
-cp .env.example .env
-```
+Copy example env files as needed (root `.env` for Docker Compose is common; see [`apps/backend/.env.example`](apps/backend/.env.example) and [`apps/frontend/.env.example`](apps/frontend/.env.example)).
 
 Configure (in your root `.env` used by Docker Compose, or per-app for local dev):
 
 - `DATABASE_URL`
-- `JWT_SECRET` (and other auth secrets your backend expects)
+- **`ACCESS_TOKEN_SECRET`** and **`REFRESH_TOKEN_SECRET`** — access JWT is signed and verified with `ACCESS_TOKEN_SECRET` (`sub` + `role`); refresh tokens use `REFRESH_TOKEN_SECRET`.
+- **`CLIENT_ORIGIN`** — browser origin allowed for CORS with credentials (e.g. `http://localhost:5173` for Vite). Must match the URL you use to open the frontend so login/register can set the httpOnly refresh cookie.
 - **`AI_SERVICE_URL`** — Base URL of the FastAPI service as seen by the Node backend (local: `http://127.0.0.1:8000`; Docker Compose: `http://ai:8000`).
 - **`AI_INTERNAL_API_KEY`** — Shared secret: backend sends it as `X-Internal-API-Key` when proxying; the AI service must use the **same** value. Required for `/extract/*` routes.
 

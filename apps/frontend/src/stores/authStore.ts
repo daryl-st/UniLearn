@@ -1,22 +1,38 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { authAPI } from "@/api/auth";
+import { authAPI, type AuthUserRole } from "@/api/auth";
 import { api } from "@/api/client";
 
-interface User {
+export interface AuthStoreUser {
     id: string;
     email: string;
     name: string;
-} 
+    role: AuthUserRole;
+}
+
+function normalizeRole(r: string | undefined): AuthUserRole {
+    const x = (r ?? "STUDENT").toUpperCase();
+    if (x === "ADMIN" || x === "INSTRUCTOR" || x === "STUDENT") return x;
+    return "STUDENT";
+}
+
+function userFromAuthResponse(u: { id: string; email: string; name: string; role: string }): AuthStoreUser {
+    return {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: normalizeRole(u.role),
+    };
+}
 
 interface AuthState {
-    user: User | null;
+    user: AuthStoreUser | null;
     isLoading: boolean;
     error: string | null;
 
     login: (email: string, password: string) => Promise<void>;
     register: (userData: any) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     clearError: () => void;
 }
@@ -33,7 +49,7 @@ export const useAuthStore = create<AuthState>() (
                 set({ isLoading: true, error: null });
                 try {
                     const response = await authAPI.login({ email, password });
-                    set({ user: response.user, isLoading: false });
+                    set({ user: userFromAuthResponse(response.user), isLoading: false });
                 } catch (err: any) {
                     set({
                         error: err.message || 'Login Failed!',
@@ -48,7 +64,7 @@ export const useAuthStore = create<AuthState>() (
                 set({ isLoading: true, error: null });
                 try {
                     const response = await authAPI.register(userData);
-                    set({ user: response.user, isLoading: false });
+                    set({ user: userFromAuthResponse(response.user), isLoading: false });
                 } catch (err: any) {
                     set({
                         error: err.message || 'Registration Failed!',
@@ -58,9 +74,9 @@ export const useAuthStore = create<AuthState>() (
                 }
             },
 
-            logout: () => {
-                authAPI.logout();
-                set({ user: null, error: null});
+            logout: async () => {
+                await authAPI.logout();
+                set({ user: null, error: null });
             },
 
             checkAuth: async () => {
@@ -72,7 +88,8 @@ export const useAuthStore = create<AuthState>() (
 
                 try {
                     const response = await authAPI.getCurrentUser();
-                    set({ user: response.user, isLoading: false });
+                    const u = response.user;
+                    set({ user: userFromAuthResponse(u), isLoading: false });
                 } catch (err) {
                     localStorage.removeItem('auth-token');
                     api.setAuthToken(null);

@@ -5,73 +5,144 @@ export class ApiError extends Error {
         public data?: unknown,
     ) {
         super(message);
-        this.name = 'APIError';
+        this.name = 'ApiError';
     }
 }
 
 interface RequestConfig extends RequestInit {
     params?: Record<string, string>;
     timeout?: number;
+    // When true, a 401 will not trigger auth/refresh + retry (avoids loops).
+    skipAuthRefresh?: boolean;
+}
+
+function normalizeBaseUrl(raw: string): string {
+    const trimmed = raw.replace(/\/+$/, '');
+    return `${trimmed}/`;
 }
 
 class APIClient {
     private baseUrl: string;
-    // private defaultHeaders: HeadersInit;
     defaultHeaders: Record<string, string> = {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json',
     };
 
-    constructor(baseUrl: string = 'http://localhost:4000/') { // TODO: make a constant
-        this.baseUrl = baseUrl;
-        this.defaultHeaders = {
-            'Content-Type': 'application/json',
-        };
+    private refreshInFlight: Promise<string | null> | null = null;
+
+    constructor(baseUrl?: string) {
+        const fromEnv = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL;
+        this.baseUrl = normalizeBaseUrl(baseUrl ?? (typeof fromEnv === 'string' && fromEnv ? fromEnv : 'http://localhost:4000'));
+    }
+
+    private canRefreshForEndpoint(endpoint: string): boolean {
+        if (endpoint.startsWith('auth/login')) return false;
+        if (endpoint.startsWith('auth/register')) return false;
+        if (endpoint.startsWith('auth/refresh')) return false;
+        if (endpoint.startsWith('auth/logout')) return false;
+        return true;
+    }
+
+    private async performTokenRefresh(): Promise<string | null> {
+        try {
+            const url = new URL(`${this.baseUrl}auth/refresh`);
+            const { Authorization: _drop, ...headers } = this.defaultHeaders;
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                credentials: 'include',
+                headers,
+            });
+            if (!response.ok) return null;
+            const data = (await response.json()) as { accessToken?: string };
+            const at = data.accessToken;
+            if (typeof at !== 'string' || !at) return null;
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('auth-token', at);
+            }
+            return at;
+        } catch {
+            return null;
+        }
+    }
+
+    private async refreshAccessToken(): Promise<string | null> {
+        if (this.refreshInFlight) return this.refreshInFlight;
+
+        const p = this.performTokenRefresh();
+        this.refreshInFlight = p;
+
+        try {
+            return await p;
+        } finally {
+            if (this.refreshInFlight === p) {
+                this.refreshInFlight = null;
+            }
+        }
     }
 
     private async request<T>(endpoint: string, config: RequestConfig = {}): Promise<T> {
+        const { params, timeout, skipAuthRefresh, ...restInit } = config;
         const url = new URL(`${this.baseUrl}${endpoint}`);
 
-        // query parameters
-        if (config.params) {
-            Object.entries(config.params).forEach(([key, value]) => {
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
                 url.searchParams.append(key, value);
             });
         }
 
-        // Merge headers
-        const headers = {
+        const headers: Record<string, string> = {
             ...this.defaultHeaders,
-            ...config.headers,
+            ...(restInit.headers as Record<string, string> | undefined),
         };
 
-        // Timeout handling
         const controller = new AbortController();
-        const timeoutId = config.timeout ? setTimeout(() => controller.abort(), config.timeout) : null;
+        const timeoutId = timeout ? setTimeout(() => controller.abort(), timeout) : null;
 
-        try {
-            // TODO: need to switch to axios 
-            const response = await fetch(url.toString(), {
-                ...config,
+        const doFetch = async () =>
+            fetch(url.toString(), {
+                ...restInit,
+                credentials: 'include',
                 headers,
                 signal: controller.signal,
             });
 
-            // Parse response
-            let data: unknown;
-            const contentType = response.headers.get('content-type');
-            if (contentType?.includes('application/json')) {
-                data = await response.json();
-            } else {
-                data = await response.text();
+        try {
+            let response = await doFetch();
+
+            if (
+                response.status === 401 &&
+                !skipAuthRefresh &&
+                this.canRefreshForEndpoint(endpoint)
+            ) {
+                const newToken = await this.refreshAccessToken();
+                if (newToken) {
+                    this.setAuthToken(newToken);
+                    const retryHeaders: Record<string, string> = {
+                        ...this.defaultHeaders,
+                        ...(restInit.headers as Record<string, string> | undefined),
+                    };
+                    response = await fetch(url.toString(), {
+                        ...restInit,
+                        credentials: 'include',
+                        headers: retryHeaders,
+                        signal: controller.signal,
+                    });
+                }
             }
 
-            // error responses
+            let data: unknown;
+            if (response.status === 204) {
+                data = undefined;
+            } else {
+                const contentType = response.headers.get('content-type');
+                if (contentType?.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+            }
+
             if (!response.ok) {
-                throw new ApiError(
-                    response.status,
-                    response.statusText,
-                    data
-                );
+                throw new ApiError(response.status, response.statusText, data);
             }
 
             return data as T;
@@ -79,7 +150,7 @@ class APIClient {
             if (err instanceof ApiError) {
                 throw err;
             }
-            if (err instanceof Error && err.name == 'AbortError') {
+            if (err instanceof Error && err.name === 'AbortError') {
                 throw new ApiError(408, 'Request timeout');
             }
             throw new ApiError(500, 'Network error or server unreachable');
@@ -88,24 +159,28 @@ class APIClient {
         }
     }
 
-    // set auth token for subsequent requests
     setAuthToken(token: string | null) {
         if (token) {
             this.defaultHeaders = {
                 ...this.defaultHeaders,
-                'Authorization': `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
             };
         } else {
-            // intentionally ignore the extracted Authorization property
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { ['Authorization']: _, ...rest} = this.defaultHeaders;
+            const { Authorization: _, ...rest } = this.defaultHeaders;
             this.defaultHeaders = rest;
         }
     }
 
-    // Generic HTTP methods
+    /** POST /auth/refresh (cookie session). Updates Bearer header + localStorage on success. */
+    async refreshSession(): Promise<string | null> {
+        const token = await this.refreshAccessToken();
+        if (token) this.setAuthToken(token);
+        return token;
+    }
+
     get<T>(endpoint: string, config?: RequestConfig): Promise<T> {
-        return this.request<T>(endpoint, { ...config, method: 'GET'});
+        return this.request<T>(endpoint, { ...config, method: 'GET' });
     }
 
     post<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
@@ -141,5 +216,4 @@ class APIClient {
     }
 }
 
-// export singleton instance
 export const api = new APIClient();
