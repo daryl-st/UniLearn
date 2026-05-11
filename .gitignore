@@ -41,3 +41,7 @@ prisma/dev.db
 .vscode/
 .idea/
 *.swp
+
+# temp files
+remaining.md
+requirements.md
