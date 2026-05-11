@@ -1,4 +1,4 @@
-import type { Role } from "@unilearn/shared-types";
+// import type { Role } from "@unilearn/shared-types";
 import type { UserRepository } from "../user/user.repository.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -19,10 +19,9 @@ export class AuthService {
 
         const user = await this.userRepository.create({
             email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
+            name: data.firstName + " " + data.lastName,
             role: "STUDENT", // needs to be changed
-            passwordHash: hashedPass
+            password: hashedPass
         });
 
         const token = jwt.sign(
@@ -78,6 +77,9 @@ export class AuthService {
 
         if (!matchedToken) throw new Error("Invalid refresh token!");
 
+        const user = await this.userRepository.findUserById(payload.sub);
+        if (!user) throw new Error("Invalid refresh token!");
+
         await prisma.refreshToken.update( {
             where: { id: matchedToken.id },
             data: { revoked: true }
@@ -94,7 +96,7 @@ export class AuthService {
             }
         });
 
-        const newAccessToken = generateAccessToken(payload.sub, "student");
+        const newAccessToken = generateAccessToken(payload.sub, user.role);
 
         return { newRefreshToken, newAccessToken };
     }

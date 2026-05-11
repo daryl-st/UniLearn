@@ -1,25 +1,47 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Filter, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/features/admin/StatCard';
 import { DataTable } from '@/components/features/admin/DataTable';
 import type { Course } from '@/types/admin';
+import { useCourseStore } from '@/stores/courseStrore';
+import { courseThumbUrl } from '@/lib/coursePlaceholders';
+import type { CourseCatalogRow } from '@/api/course';
 
-const mockCourses: Course[] = [
-  { id: '1', title: 'CoSc2210 - Computer Networks', category: 'Year 3 • Computer Science', owner: 'Helen Kassa', ownerInitials: 'HK', enrolled: 124, status: 'Published', lastSync: '2026.04.15', image: 'https://picsum.photos/seed/neural/100/100' },
-  { id: '2', title: 'CoSc4411 - Artificial Intelligence', category: 'Year 4 • Computer Science', owner: 'Elias Thorne', ownerInitials: 'ET', enrolled: 98, status: 'Draft', lastSync: '2026.04.14', image: 'https://picsum.photos/seed/quantum/100/100' },
-  { id: '3', title: 'CoSc1205 - Programming Fundamentals', category: 'Year 1 • Computer Science', owner: 'Marcus Kane', ownerInitials: 'MK', enrolled: 136, status: 'Archived', lastSync: '2026.03.28', image: 'https://picsum.photos/seed/legacy/100/100' },
-  { id: '4', title: 'CoSc3312 - Database Systems', category: 'Year 3 • Computer Science', owner: 'Sarah Connor', ownerInitials: 'SC', enrolled: 112, status: 'Published', lastSync: '2026.04.10', image: 'https://picsum.photos/seed/ethics/100/100' },
-  { id: '5', title: 'CoSc2221 - Software Engineering', category: 'Year 2 • Computer Science', owner: 'Neil Miller', ownerInitials: 'NM', enrolled: 120, status: 'Published', lastSync: '2026.04.08', image: 'https://picsum.photos/seed/spatial/100/100' },
-];
+function toAdminTableCourse(c: CourseCatalogRow): Course {
+  const owner = c.instructorName || `${c.instructorId.slice(0, 8)}…`;
+  const parts = owner.split(/\s+/).filter(Boolean);
+  const initials =
+    parts.length >= 2
+      ? `${parts[0]![0]!}${parts[1]![0]!}`.toUpperCase()
+      : (owner.slice(0, 2).toUpperCase() || '??');
+  return {
+    id: c.id,
+    title: `${c.code} — ${c.name}`,
+    category: `Year ${c.acadamicYear} • Computer Science`,
+    owner,
+    ownerInitials: initials,
+    enrolled: 0,
+    status: 'Published',
+    lastSync: new Date().toISOString().slice(0, 10),
+    image: courseThumbUrl(c.id),
+  };
+}
 
 export const CourseManagement: React.FC = () => {
   const navigate = useNavigate();
+  const { courses, fetchCourses } = useCourseStore();
+
+  useEffect(() => {
+    void fetchCourses();
+  }, [fetchCourses]);
+
+  const tableCourses = useMemo(() => courses.map(toAdminTableCourse), [courses]);
 
   const handleExportAudit = () => {
-    const blob = new Blob([
-      'course,status,lastSync\nCoSc2210 - Computer Networks,Published,2026.04.15\nCoSc4411 - Artificial Intelligence,Draft,2026.04.14\n'
-    ], { type: 'text/csv;charset=utf-8;' });
+    const header = 'course,status,lastSync\n';
+    const lines = tableCourses.map((row) => `${row.title.replace(/,/g, ';')},${row.status},${row.lastSync}\n`).join('');
+    const blob = new Blob([header + lines], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -33,7 +55,7 @@ export const CourseManagement: React.FC = () => {
       <div className="flex justify-between items-end mb-10">
         <div>
           <h1 className="text-4xl font-headline font-bold text-on-surface tracking-tight uppercase">Course Management</h1>
-          <p className="text-on-surface-variant mt-1 text-sm font-medium">Manage course records and instructor assignments across the department.</p>
+          <p className="text-on-surface-variant mt-1 text-sm font-medium">Manage Computer Science course records and instructor assignments (MVP: single department).</p>
         </div>
         <div className="flex gap-3">
           <button
@@ -54,13 +76,13 @@ export const CourseManagement: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-6 mb-10">
-        <StatCard label="Total Courses" value="73" color="neutral" />
-        <StatCard label="Assigned Instructors" value="68" color="secondary" />
-        <StatCard label="Draft Courses" value="7" color="primary" />
-        <StatCard label="Archived Courses" value="5" color="destructive" />
+        <StatCard label="Total Courses" value={String(tableCourses.length)} color="neutral" />
+        <StatCard label="Catalog (live)" value={String(tableCourses.length)} color="secondary" />
+        <StatCard label="Draft (n/a)" value="0" color="primary" />
+        <StatCard label="Archived (n/a)" value="0" color="destructive" />
       </div>
 
-      <DataTable type="courses" data={mockCourses} />
+      <DataTable type="courses" data={tableCourses} />
 
       <div className="mt-10 grid grid-cols-3 gap-8">
         <div className="col-span-2 glass-card p-8 rounded-2xl">
