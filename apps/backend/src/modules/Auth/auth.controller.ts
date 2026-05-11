@@ -3,6 +3,7 @@ import { AuthService } from "./auth.service.js";
 import { UserRepository } from "../user/user.repository.js";
 import type { LoginBody, RegisterBody } from "../../schemas/index.js";
 import type { AuthRequest } from "../../middlewares/auth.js";
+import { REFRESH_TOKEN_COOKIE_NAME, refreshTokenCookieOptions } from "./auth.cookie.js";
 
 const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
@@ -22,66 +23,62 @@ let userProfile;
 export class AuthController {
     async registerUser(req: Request, res: Response) {
         const userData = req.body as RegisterBody;
-        const { user, token } = await authService.registerUser(userData);
-        
-        // Need better implementation
-        // Prolly need onboarding thing for student but instructor profile can be created by admin.
-        if (user.role == 'STUDENT') {
+        const { user, accessToken, refreshToken } = await authService.registerUser(userData);
+
+        if (user.role === "STUDENT") {
             userProfile = await authService.createStudentProfile(profileData, user.email);
-        } else if (user.role == 'INSTRUCTOR') { // we might not needs this coz only admins are allowed to create instructor acc
+        } else if (user.role === "INSTRUCTOR") {
             userProfile = await authService.createInstructorProfile(instructorData, user.email);
         } else {
             throw new Error("Failed to create profile");
         }
 
-        res.status(201).json({ user, userProfile }) // add token and session thing...
-    };
+        const cookieOpts = refreshTokenCookieOptions();
+        res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, cookieOpts);
+
+        res.status(201).json({ user, userProfile, accessToken });
+    }
 
     async loginUser(req: Request, res: Response) {
         const user = req.body as LoginBody;
 
         // user type has to correct to be in sync with returned data
-        const userData = (await authService.loginUser(user));
+        const userData = await authService.loginUser(user);
 
-        res.cookie("refreshToken", userData.refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "strict"
-        })
+        res.cookie(REFRESH_TOKEN_COOKIE_NAME, userData.refreshToken, refreshTokenCookieOptions());
 
         res.status(200).json({ user: userData.existingUser, accessToken: userData.accessToken });
-    };
+    }
 
     async refresh(req: Request, res: Response) {
-        const refreshToken = req.cookies.refreshToken;
+        const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
         if (!refreshToken) return res.status(401).json({ message: "No refresh token!"});
 
         try {
             const refresh = await authService.refresh(refreshToken);
 
-            res.cookie("refreshToken", refresh.newRefreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "strict",
-            })
+            res.cookie(REFRESH_TOKEN_COOKIE_NAME, refresh.newRefreshToken, refreshTokenCookieOptions());
 
             return res.json({ accessToken: refresh.newAccessToken });
-        } catch (err) {
+        } catch {
             return res.status(403).json({ message: "Invalid refresh token "});
         }
-    };
+    }
 
     async logout(req: Request, res: Response) {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) res.sendStatus(204);
+        const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
+        const cookieOpts = refreshTokenCookieOptions();
 
-        // revoked: true
-        authService.logout(refreshToken);
+        if (!refreshToken) {
+            res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, cookieOpts);
+            return res.sendStatus(204);
+        }
 
-        res.clearCookie("refreshToken");
+        await authService.logout(refreshToken);
 
-        res.sendStatus(204);
-    };
+        res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, cookieOpts);
+        return res.sendStatus(204);
+    }
 
     // refactor
     async me(req: AuthRequest, res: Response) {
@@ -89,10 +86,7 @@ export class AuthController {
             return res.status(401).json({ error: "Unauthorized" });
         }
         const userId = req.user.userId;
-        console.log(req.user);
-        // refactor
         const user = await userRepository.findUserById(userId);
-        console.log(user);
         if (!user) throw new Error("User not found!");
 
         return res.json({
@@ -103,5 +97,5 @@ export class AuthController {
                 role: user.role
             }
         });
-    };
+    }
 }
