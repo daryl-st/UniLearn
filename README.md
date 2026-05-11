@@ -250,6 +250,7 @@ AI service tests:
 
 ```
 cd apps/ai
+pip install -r requirements-dev.txt
 pytest
 ```
 
