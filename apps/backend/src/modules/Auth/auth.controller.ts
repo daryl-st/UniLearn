@@ -25,6 +25,7 @@ export class AuthController {
         const { user, token } = await authService.registerUser(userData);
         
         // Need better implementation
+        // Prolly need onboarding thing for student but instructor profile can be created by admin.
         if (user.role == 'STUDENT') {
             userProfile = await authService.createStudentProfile(profileData, user.email);
         } else if (user.role == 'INSTRUCTOR') { // we might not needs this coz only admins are allowed to create instructor acc
@@ -84,18 +85,21 @@ export class AuthController {
 
     // refactor
     async me(req: AuthRequest, res: Response) {
-        const userId = req.user.id;
+        if (!req.user) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+        const userId = req.user.userId;
         console.log(req.user);
         // refactor
         const user = await userRepository.findUserById(userId);
         console.log(user);
         if (!user) throw new Error("User not found!");
 
-        res.json({
+        return res.json({
             user: {
                 id: user.id,
                 email: user.email,
-                name: user.firstName,
+                name: user.name,
                 role: user.role
             }
         });
