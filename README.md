@@ -128,13 +128,18 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Configure:
+Configure (in your root `.env` used by Docker Compose, or per-app for local dev):
 
-- DATABASE_URL
-- JWT_SECRET
-- AI_SERVICE_URL
+- `DATABASE_URL`
+- `JWT_SECRET` (and other auth secrets your backend expects)
+- **`AI_SERVICE_URL`** — Base URL of the FastAPI service as seen by the Node backend (local: `http://127.0.0.1:8000`; Docker Compose: `http://ai:8000`).
+- **`AI_INTERNAL_API_KEY`** — Shared secret: backend sends it as `X-Internal-API-Key` when proxying; the AI service must use the **same** value. Required for `/extract/*` routes.
 
-Do not commit .env files.
+AI-only variables (same `.env` when using Compose, or see [`apps/ai/README.md`](apps/ai/README.md)):
+
+- **`EXTRACT_URL_ALLOWED_HOSTS`** — Comma-separated hostnames allowed for `POST /ai/extract/url` (e.g. your CDN). If unset, URL extraction stays disabled on the AI service.
+
+Do not commit `.env` files.
 
 ---
 
@@ -250,6 +255,7 @@ AI service tests:
 
 ```
 cd apps/ai
+pip install -r requirements-dev.txt
 pytest
 ```
 
