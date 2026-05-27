@@ -1,5 +1,6 @@
 import os
 import re
+from dataclasses import dataclass
 from urllib.parse import urlparse
 
 import fitz
@@ -10,6 +11,12 @@ from app.models.extract import ExtractMetadata, ExtractResponse
 PDF_MAGIC = b"%PDF-"
 MAX_PDF_BYTES_DEFAULT = 15 * 1024 * 1024
 URL_FETCH_TIMEOUT_SEC = 30.0
+
+
+@dataclass(frozen=True)
+class PageText:
+    page_number: int  # 1-based
+    text: str
 
 
 def _max_pdf_bytes() -> int:
@@ -65,46 +72,61 @@ def clean_text(raw: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", text)
 
 
-def extract_from_pdf_bytes(data: bytes) -> ExtractResponse:
+def _metadata_from_doc(doc: fitz.Document) -> ExtractMetadata:
+    meta = doc.metadata or {}
+    title = meta.get("title") or None
+    author = meta.get("author") or None
+    if title == "":
+        title = None
+    if author == "":
+        author = None
+    return ExtractMetadata(
+        title=title,
+        author=author,
+        page_count=doc.page_count,
+    )
+
+
+def extract_pages_from_pdf_bytes(
+    data: bytes,
+) -> tuple[list[PageText], ExtractMetadata, list[str]]:
     if len(data) > _max_pdf_bytes():
         raise ValueError("PDF exceeds maximum allowed size")
     if not data.startswith(PDF_MAGIC):
         raise ValueError("File does not look like a PDF (missing %PDF- header)")
 
     warnings: list[str] = []
+    pages: list[PageText] = []
     doc = fitz.open(stream=data, filetype="pdf")
     try:
-        meta = doc.metadata or {}
-        title = meta.get("title") or None
-        author = meta.get("author") or None
-        if title == "":
-            title = None
-        if author == "":
-            author = None
-        page_count = doc.page_count
-        parts: list[str] = []
-        for page_index in range(page_count):
+        metadata = _metadata_from_doc(doc)
+        for page_index in range(doc.page_count):
             page = doc.load_page(page_index)
             try:
                 block = page.get_text("text", sort=True)
             except TypeError:
                 block = page.get_text("text")
-                warnings.append("PDF text extracted without sort=True (older PyMuPDF API)")
-            block = block or ""
-            parts.append(block.strip())
-        raw_text = "\n\n".join(p for p in parts if p)
-        text = clean_text(raw_text)
-        return ExtractResponse(
-            text=text,
-            metadata=ExtractMetadata(
-                title=title,
-                author=author,
-                page_count=page_count,
-            ),
-            warnings=warnings,
-        )
+                if "PDF text extracted without sort=True" not in " ".join(warnings):
+                    warnings.append(
+                        "PDF text extracted without sort=True (older PyMuPDF API)"
+                    )
+            block = clean_text((block or "").strip())
+            if block:
+                pages.append(PageText(page_number=page_index + 1, text=block))
+        return pages, metadata, warnings
     finally:
         doc.close()
+
+
+def extract_from_pdf_bytes(data: bytes) -> ExtractResponse:
+    pages, metadata, warnings = extract_pages_from_pdf_bytes(data)
+    raw_text = "\n\n".join(p.text for p in pages)
+    text = clean_text(raw_text)
+    return ExtractResponse(
+        text=text,
+        metadata=metadata,
+        warnings=warnings,
+    )
 
 
 async def download_pdf_bytes(url: str) -> bytes:

@@ -363,6 +363,29 @@ async function main() {
 
     const firstResource = resources[0]!;
 
+    await prisma.resourceChunk.upsert({
+        where: {
+            resourceId_chunkIndex: {
+                resourceId: firstResource.id,
+                chunkIndex: 0,
+            },
+        },
+        update: {
+            pageNumber: 1,
+            content: "Artificial Intelligence introduces systems that reason and learn from data.",
+            tokenCount: 13,
+            embedding: [0.01, 0.02, 0.03],
+        },
+        create: {
+            resourceId: firstResource.id,
+            chunkIndex: 0,
+            pageNumber: 1,
+            content: "Artificial Intelligence introduces systems that reason and learn from data.",
+            tokenCount: 13,
+            embedding: [0.01, 0.02, 0.03],
+        },
+    });
+
     await prisma.summary.upsert({
         where: { id: "00000000-0000-4000-8000-000000000001" },
         update: { content: "Updated: overview of course policies and grading." },
@@ -486,7 +509,9 @@ async function main() {
         await prisma.department.delete({ where: { id: d.id } });
     }
 
-    console.log(`\nCounts: ${await prisma.department.count()} department (CS only), ${await prisma.user.count()} users, ${await prisma.course.count()} courses, ${await prisma.resource.count()} resources.`);
+    console.log(
+        `\nCounts: ${await prisma.department.count()} department (CS only), ${await prisma.user.count()} users, ${await prisma.course.count()} courses, ${await prisma.resource.count()} resources, ${await prisma.resourceChunk.count()} chunks.`
+    );
     console.log("========================================\n");
 }
 
