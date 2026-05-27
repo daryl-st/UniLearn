@@ -1,0 +1,21 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+pubspec.lock
+
+# Build outputs
+build/
+
+# Android/Gradle local and cache files
+android/.gradle/
+android/local.properties
+
+# IDE files
+*.iml
+.idea/
+
+# Generated plugin registrant
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java

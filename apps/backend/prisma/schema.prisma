@@ -24,6 +24,13 @@ enum Difficulty {
   HARD
 }
 
+enum ResourceStatus {
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
 model User {
   id           String   @id @default(uuid())
   username     String?  @unique
@@ -110,6 +117,7 @@ model Resource {
   title        String
   type         FileType
   fileUrl      String   @unique
+  status       ResourceStatus @default(QUEUED)
   courseId     String
   instructorId String
   version      Float
@@ -123,11 +131,29 @@ model Resource {
 
   summaries           Summary[]
   quiz                Quiz[]
+  chunks              ResourceChunk[]
   instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
   instructorProfileId String?
 
   @@index([courseId])
   @@index([instructorId])
+}
+
+model ResourceChunk {
+  id         String   @id @default(uuid())
+  resourceId String
+  chunkIndex Int
+  pageNumber Int
+  content    String   @db.Text
+  tokenCount Int
+  embedding  Float[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId])
+  @@unique([resourceId, chunkIndex])
 }
 
 model Summary {
