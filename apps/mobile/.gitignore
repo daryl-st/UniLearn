@@ -1,21 +1,52 @@
-# Flutter/Dart
-.dart_tool/
-.packages
-.flutter-plugins
-.flutter-plugins-dependencies
-.metadata
-pubspec.lock
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
 
-# Build outputs
-build/
-
-# Android/Gradle local and cache files
-android/.gradle/
-android/local.properties
-
-# IDE files
+# IntelliJ related
 *.iml
+*.ipr
+*.iws
 .idea/
 
-# Generated plugin registrant
-android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Android local machine files and caches
+/android/.gradle/
+/android/local.properties
+
+# Flutter generated Java plugin registrant
+/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
