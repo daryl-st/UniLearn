@@ -31,19 +31,32 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Health check: `GET http://localhost:8000/health`
 
-Internal extract (require header `X-Internal-API-Key` matching `AI_INTERNAL_API_KEY`):
+Internal endpoints (require header `X-Internal-API-Key` matching `AI_INTERNAL_API_KEY`):
 
-- `POST /extract/file` — multipart form field `file` (PDF).
+- `POST /extract/file` — multipart form field `file` (PDF). Returns monolithic text (legacy/debug).
 - `POST /extract/url` — JSON `{"url":"https://..."}`; host must appear in `EXTRACT_URL_ALLOWED_HOSTS`.
+- `POST /ingest/resource` — JSON ingestion pipeline for Node to persist chunks:
+
+```json
+{
+  "resource_id": "550e8400-e29b-41d4-a716-446655440000",
+  "pdf_url": "https://res.cloudinary.com/.../file.pdf"
+}
+```
+
+Response includes `chunks[]` with `chunk_index`, `page_number`, `content`, `token_count`, and `embedding` (`null` until embeddings are enabled).
 
 ## Environment variables
 
 | Variable | Description |
 |----------|-------------|
 | `CORS_ORIGINS` | Comma-separated list of origins allowed by CORS (e.g. the Node API gateway). Default: `http://localhost:4000`. Set empty to disable CORS middleware. |
-| `AI_INTERNAL_API_KEY` | Required for `/extract/*`. Must match the Node backend `AI_INTERNAL_API_KEY`. |
-| `EXTRACT_URL_ALLOWED_HOSTS` | Comma-separated hostnames allowed for `/extract/url`. If empty, URL extraction returns 400. |
+| `AI_INTERNAL_API_KEY` | Required for `/extract/*` and `/ingest/*`. Must match the Node backend `AI_INTERNAL_API_KEY`. |
+| `EXTRACT_URL_ALLOWED_HOSTS` | Comma-separated hostnames allowed for URL download (`/extract/url`, `/ingest/resource`). If empty, URL modes return 400. |
 | `EXTRACT_MAX_PDF_BYTES` | Optional max PDF size in bytes (default ~15 MiB). |
+| `CHUNK_MAX_TOKENS` | Max tokens per chunk for `/ingest/resource` (default `512`). |
+| `CHUNK_MIN_TOKENS` | Merge tiny adjacent chunks on the same page when under this size (default `50`). |
+| `CHUNK_TOKEN_ENCODING` | tiktoken encoding name (default `cl100k_base`). If tiktoken cannot load, a char/4 estimate is used instead. |
 
 ## Layout
 

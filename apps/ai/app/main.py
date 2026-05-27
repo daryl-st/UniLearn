@@ -9,7 +9,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import extract, health
+from app.api.routes import extract, health, ingest
 
 
 def _parse_cors_origins() -> list[str]:
@@ -37,3 +37,4 @@ if _origins:
 
 app.include_router(health.router, tags=["health"])
 app.include_router(extract.router)
+app.include_router(ingest.router)
