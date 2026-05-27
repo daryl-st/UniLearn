@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -13,59 +13,78 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const courses = [
-  { 
-    id: 'CoSc4411', 
-    title: 'Artificial Intelligence - Search Algorithms Lecture', 
-    lastSync: '2h ago', 
-    date: 'Apr 14, 2026',
-    students: '124',
-    growth: 'v3',
-    status: 'Published',
-    image: 'https://picsum.photos/seed/nn/100/100'
-  },
-  { 
-    id: 'CoSc3312', 
-    title: 'Database Systems - Normalization Notes', 
-    lastSync: '1d ago', 
-    date: 'Apr 13, 2026',
-    students: '98',
-    growth: 'v2',
-    status: 'Draft',
-    image: 'https://picsum.photos/seed/quantum/100/100'
-  },
-  { 
-    id: 'CoSc2221', 
-    title: 'Software Engineering - Sprint Planning Slides', 
-    lastSync: '5d ago', 
-    date: 'Apr 10, 2026',
-    students: '112',
-    growth: 'v1',
-    status: 'Published',
-    image: 'https://picsum.photos/seed/ethics/100/100'
-  },
-  { 
-    id: 'CoSc1205', 
-    title: 'Programming Fundamentals - Intro Handout', 
-    lastSync: '2w ago', 
-    date: 'Mar 28, 2026',
-    students: '136',
-    growth: 'v1',
-    status: 'Archived',
-    image: 'https://picsum.photos/seed/legacy/100/100'
-  },
-];
-
-const modules = [
-  { id: 1, title: 'Foundations of Backpropagation', meta: '3 Lessons · Quiz Included', active: true },
-  { id: 2, title: 'Convolutional Neural Layers', meta: '5 Lessons · Project', active: false },
-  { id: 3, title: 'Recurrent Networks & LSTMs', meta: '4 Lessons · Lab', active: false },
-  { id: 4, title: 'Transformer Architecture Foundations', meta: 'Locked · Level 4 Access', active: false, locked: true },
-];
+import { useCourseStore } from '@/stores/courseStrore';
+import { CourseAPI } from '@/api/course';
+import { courseThumbUrl } from '@/lib/coursePlaceholders';
+import type { Resource } from '@unilearn/shared-types';
 
 export const CourseManagement: React.FC = () => {
   const navigate = useNavigate();
+  const { courses, fetchCourses } = useCourseStore();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sidebarResources, setSidebarResources] = useState<Resource[]>([]);
+  const [totalMaterials, setTotalMaterials] = useState(0);
+
+  useEffect(() => {
+    void fetchCourses();
+  }, [fetchCourses]);
+
+  useEffect(() => {
+    if (courses.length && !selectedId) setSelectedId(courses[0].id);
+  }, [courses, selectedId]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    let cancelled = false;
+    (async () => {
+      const r = await CourseAPI.getResourcesByCourseId(selectedId);
+      if (!cancelled) setSidebarResources(Array.isArray(r) ? r : []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (courses.length === 0) {
+      setTotalMaterials(0);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const counts = await Promise.all(
+          courses.map((c) =>
+            CourseAPI.getResourcesByCourseId(c.id).then((r) => (Array.isArray(r) ? r.length : 0)),
+          ),
+        );
+        if (!cancelled) setTotalMaterials(counts.reduce((a, b) => a + b, 0));
+      } catch {
+        if (!cancelled) setTotalMaterials(0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [courses]);
+
+  const rows = useMemo(
+    () =>
+      courses.map((c) => ({
+        id: c.id,
+        code: c.code,
+        title: c.name,
+        lastSync: 'Live API',
+        date: 'Catalog',
+        students: '—',
+        growth: `Y${c.acadamicYear}`,
+        status: 'Published' as const,
+        image: courseThumbUrl(c.id),
+      })),
+    [courses],
+  );
+
+  const selected = courses.find((c) => c.id === selectedId);
 
   return (
     <motion.div 
@@ -91,10 +110,10 @@ export const CourseManagement: React.FC = () => {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Managed Courses', value: '03', color: 'border-primary' },
-          { label: 'Total Resources', value: '24', color: 'border-secondary' },
-          { label: 'Pending Updates', value: '08', color: 'border-outline' },
-          { label: 'Recent Uploads', value: '06', color: 'border-primary' },
+          { label: 'Managed Courses', value: String(courses.length).padStart(2, '0'), color: 'border-primary' },
+          { label: 'Total Resources', value: String(totalMaterials).padStart(2, '0'), color: 'border-secondary' },
+          { label: 'Catalog source', value: 'API', color: 'border-outline' },
+          { label: 'Courses listed', value: String(rows.length).padStart(2, '0'), color: 'border-primary' },
         ].map((stat, i) => (
           <div key={i} className={cn("bg-surface-low p-5 rounded-lg border-l-2", stat.color)}>
             <p className="text-xs font-mono text-outline uppercase tracking-widest mb-1">{stat.label}</p>
@@ -138,7 +157,7 @@ export const CourseManagement: React.FC = () => {
         <div className="flex-1 w-full bg-surface-low rounded-lg overflow-hidden border border-outline-variant/10 shadow-[0_10px_30px_rgba(0,0,0,0.16)]">
           <div className="flex items-center justify-between px-6 py-3 border-b border-outline-variant/10 bg-surface-high/30">
             <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">Resource Inventory</p>
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">4 Items</p>
+            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">{rows.length} Items</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -159,11 +178,15 @@ export const CourseManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/5">
-                {courses.map((course) => (
-                  <tr key={course.id} className={cn(
-                    "group transition-all duration-200",
-                    course.id === 'CoSc4411' ? "bg-primary/5" : "hover:bg-surface-high/55"
-                  )}>
+                {rows.map((course) => (
+                  <tr
+                    key={course.id}
+                    onClick={() => setSelectedId(course.id)}
+                    className={cn(
+                      "group transition-all duration-200 cursor-pointer",
+                      course.id === selectedId ? "bg-primary/5" : "hover:bg-surface-high/55",
+                    )}
+                  >
                     <td className="px-6 py-4.5">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-md bg-surface-highest overflow-hidden shrink-0 border border-outline-variant/10">
@@ -171,7 +194,7 @@ export const CourseManagement: React.FC = () => {
                         </div>
                         <div className="min-w-0">
                           <div className="font-semibold leading-tight mb-1 group-hover:text-primary transition-colors truncate">{course.title}</div>
-                          <div className="text-[10px] font-mono text-outline uppercase tracking-wider">Course: {course.id}</div>
+                          <div className="text-[10px] font-mono text-outline uppercase tracking-wider">Course: {course.code}</div>
                         </div>
                       </div>
                     </td>
@@ -226,7 +249,7 @@ export const CourseManagement: React.FC = () => {
             </table>
           </div>
           <div className="px-6 py-3 border-t border-outline-variant/10 bg-surface-high/20 flex items-center justify-between">
-            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">Showing 4 Resources</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-outline">Showing {rows.length} courses</span>
             <button className="text-[10px] font-mono uppercase tracking-[0.18em] text-primary hover:underline" onClick={() => navigate('/instructor/content')}>
               View Full Library
             </button>
@@ -243,28 +266,50 @@ export const CourseManagement: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center gap-4 mb-8">
               <div className="w-16 h-16 rounded-sm bg-surface-high overflow-hidden">
-                <img src="https://picsum.photos/seed/curriculum/100/100" alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                {selected ? (
+                  <img
+                    src={courseThumbUrl(selected.id)}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : null}
               </div>
               <div>
-                <h3 className="font-semibold text-sm">Artificial Intelligence (CoSc4411)</h3>
-                <p className="text-[10px] font-mono text-secondary mt-1 uppercase">RESOURCES: 8 | LATEST: V3</p>
+                <h3 className="font-semibold text-sm">{selected ? `${selected.name} (${selected.code})` : 'Select a course'}</h3>
+                <p className="text-[10px] font-mono text-secondary mt-1 uppercase">
+                  RESOURCES: {sidebarResources.length}
+                </p>
               </div>
             </div>
 
-            <div className="space-y-4 relative">
-              <div className="absolute left-2.5 top-2 bottom-2 w-px bg-surface-high"></div>
-              {modules.map((mod) => (
-                <div key={mod.id} className={cn("relative pl-8", mod.locked && "opacity-40")}>
-                  <div className={cn(
-                    "absolute left-0 top-1 w-5 h-5 rounded-full flex items-center justify-center border-4 border-background",
-                    mod.active ? "bg-primary" : "bg-surface-high"
-                  )}>
-                    <span className={cn("text-[8px] font-bold", mod.active ? "text-on-primary" : "text-outline")}>{mod.id}</span>
+            <div className="space-y-4 relative max-h-64 overflow-y-auto subtle-scrollbar">
+              <div className="absolute left-2.5 top-2 bottom-2 w-px bg-surface-high" />
+              {sidebarResources.length === 0 ? (
+                <p className="text-[11px] text-outline pl-8">No resources for this course.</p>
+              ) : (
+                sidebarResources.map((res, i) => (
+                  <div key={res.id} className="relative pl-8">
+                    <div
+                      className={cn(
+                        'absolute left-0 top-1 w-5 h-5 rounded-full flex items-center justify-center border-4 border-background',
+                        i === 0 ? 'bg-primary' : 'bg-surface-high',
+                      )}
+                    >
+                      <span className={cn('text-[8px] font-bold', i === 0 ? 'text-on-primary' : 'text-outline')}>
+                        {i + 1}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-bold truncate">{res.title}</h4>
+                    <p className="text-[10px] text-outline mt-0.5 font-mono">
+                      {res.type} ·{' '}
+                      <a className="text-primary underline" href={String(res.fileUrl)} target="_blank" rel="noreferrer">
+                        Open
+                      </a>
+                    </p>
                   </div>
-                  <h4 className="text-xs font-bold">{mod.title}</h4>
-                  <p className="text-[10px] text-outline mt-0.5">{mod.meta}</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             <div className="pt-6 border-t border-outline-variant/10 space-y-2">

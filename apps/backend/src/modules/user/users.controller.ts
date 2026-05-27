@@ -7,7 +7,7 @@ const userRepository = new UserRepository();
 const userService = new UserService(userRepository);
 
 export class UserController {
-    async getUsers(req: Request, res: Response) {
+    async getUsers(_req: Request, res: Response) {
         const users = await userService.getUsers();
         // needs proper formatting, pagination and validation before sending the response.
         res.status(200).json(users);

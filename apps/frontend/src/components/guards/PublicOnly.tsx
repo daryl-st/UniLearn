@@ -1,13 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "@/contextes/useAuth";
-import { roleHomePath } from "@/utils/auth";
+import { useAuthStore } from "@/stores/authStore";
+import { asBackendRole, dashboardPathForBackendRole } from "@/utils/auth";
 
 export function PublicOnly() {
-  const { user } = useAuth();
+    const user = useAuthStore((s) => s.user);
 
-  if (user) {
-    return <Navigate to={roleHomePath(user.role)} replace />;
-  }
+    if (user) {
+        return <Navigate to={dashboardPathForBackendRole(asBackendRole(user.role))} replace />;
+    }
 
-  return <Outlet />;
+    return <Outlet />;
 }

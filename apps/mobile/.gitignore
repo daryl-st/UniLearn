@@ -43,10 +43,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
-# Android local machine files and caches
-/android/.gradle/
-/android/local.properties
-
-# Flutter generated Java plugin registrant
-/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java

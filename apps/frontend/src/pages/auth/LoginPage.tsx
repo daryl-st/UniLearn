@@ -3,9 +3,8 @@ import { GraduationCap, Mail, Lock, LogIn } from 'lucide-react';
 import { SiGooglechrome, SiApple } from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
-// import { useAuth } from '@/contextes/useAuth'; // we are using zustand
-// import { roleHomePath } from '@/utils/auth';
 import { useAuthStore } from '@/stores/authStore';
+import { asBackendRole, dashboardPathForBackendRole } from '@/utils/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -37,40 +36,13 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
-      navigate('/dashboard'); // role based
+      const u = useAuthStore.getState().user;
+      navigate(dashboardPathForBackendRole(asBackendRole(u?.role)), { replace: true });
     } catch (err) {
       // Error already in store, no need to handle here
       console.log('Login failed');
     }
   }
-
-  // const [email, setEmail] = useState('');
-  // const [password, setPassword] = useState('');
-  // const [isSubmitting, setIsSubmitting] = useState(false);
-  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // // const navigate = useNavigate();
-  // const location = useLocation();
-  // const { signIn } = useAuth();
-
-  // const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-
-  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-
-  //   setIsSubmitting(true);
-  //   setErrorMessage(null);
-
-  //   try {
-  //     const user = await signIn({ email, password });
-  //     navigate(fromPath ?? roleHomePath(user.role), { replace: true });
-  //   } catch (error) {
-  //     const message = error instanceof Error ? error.message : "Unable to sign in right now.";
-  //     setErrorMessage(message);
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
 
   return (
     <div className="flex w-full min-h-dvh lg:min-h-screen bg-background text-foreground font-lexend">

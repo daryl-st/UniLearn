@@ -1,18 +1,32 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { ROUTES } from "@/lib/route-paths";
-import type { Role } from "@/types/auth";
-import { useAuth } from "@/contextes/useAuth";
+import { useAuthStore } from "@/stores/authStore";
+import { asBackendRole, dashboardPathForBackendRole, type BackendRole } from "@/utils/auth";
 
 type RequireRoleProps = {
-  allowed: Role[];
+    allowed: readonly BackendRole[];
 };
 
+/** Layout route: requires auth + role in `allowed`, else redirect to login or role home. */
 export function RequireRole({ allowed }: RequireRoleProps) {
-  const { user } = useAuth();
+    const user = useAuthStore((s) => s.user);
+    const isLoading = useAuthStore((s) => s.isLoading);
 
-  if (!user || !allowed.includes(user.role)) {
-    return <Navigate to={ROUTES.UNAUTHORIZED} replace />;
-  }
+    if (isLoading) {
+        return (
+            <div className="flex min-h-[40vh] items-center justify-center text-on-surface-variant">
+                Loading…
+            </div>
+        );
+    }
 
-  return <Outlet />;
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    const role = asBackendRole(user.role);
+    if (!allowed.includes(role)) {
+        return <Navigate to={dashboardPathForBackendRole(role)} replace />;
+    }
+
+    return <Outlet />;
 }

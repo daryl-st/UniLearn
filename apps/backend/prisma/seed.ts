@@ -1,42 +1,84 @@
-// import process from "node:process";
-
+import bcrypt from "bcrypt";
 import prisma from "../src/config/db";
 
+const DEMO_PASSWORD = "12345678";
+const BCRYPT_ROUNDS = 10;
+
+async function hashPassword(plain: string): Promise<string> {
+    return bcrypt.hash(plain, BCRYPT_ROUNDS);
+}
+
 async function main() {
-    const student = await prisma.user.upsert({
+    const passwordHash = await hashPassword(DEMO_PASSWORD);
+
+    const student1 = await prisma.user.upsert({
         where: { email: "John@uni.test" },
-        update: {},
+        update: { password: passwordHash },
         create: {
             name: "John Doe",
             email: "John@uni.test",
-            password: "12345678",
+            password: passwordHash,
             role: "STUDENT",
         },
     });
 
-    const instructor = await prisma.user.upsert({
-        where: { email: "Ins@uni.test" },
-        update: {},
+    const student2 = await prisma.user.upsert({
+        where: { email: "Mary@uni.test" },
+        update: { password: passwordHash },
         create: {
-            name: "Jane Smith",
+            name: "Mary Johnson",
+            email: "Mary@uni.test",
+            password: passwordHash,
+            role: "STUDENT",
+        },
+    });
+
+    const student3 = await prisma.user.upsert({
+        where: { email: "Alex@uni.test" },
+        update: { password: passwordHash },
+        create: {
+            name: "Alex Chen",
+            email: "Alex@uni.test",
+            password: passwordHash,
+            role: "STUDENT",
+        },
+    });
+
+    const instructor1 = await prisma.user.upsert({
+        where: { email: "Ins@uni.test" },
+        update: { password: passwordHash },
+        create: {
+            name: "Dr. Jane Smith",
             email: "Ins@uni.test",
-            password: "12345678",
+            password: passwordHash,
             role: "INSTRUCTOR",
         },
     });
 
-    await prisma.user.upsert({
+    const instructor2 = await prisma.user.upsert({
+        where: { email: "Samuel@uni.test" },
+        update: { password: passwordHash },
+        create: {
+            name: "Prof. Samuel Alemayehu",
+            email: "Samuel@uni.test",
+            password: passwordHash,
+            role: "INSTRUCTOR",
+        },
+    });
+
+    const admin = await prisma.user.upsert({
         where: { email: "Admin@uni.test" },
-        update: {},
+        update: { password: passwordHash },
         create: {
             name: "Joe Herald",
             email: "Admin@uni.test",
-            password: "12345678",
+            password: passwordHash,
             role: "ADMIN",
         },
     });
 
-    const department = await prisma.department.upsert({
+    /** MVP: single department — Computer Science only. */
+    const deptCS = await prisma.department.upsert({
         where: { code: "CS101" },
         update: {},
         create: {
@@ -45,59 +87,286 @@ async function main() {
         },
     });
 
-    const studentProfile = await prisma.studentProfile.upsert({
-        where: { id: student.id },
-        update: {},
+    await prisma.studentProfile.upsert({
+        where: { id: student1.id },
+        update: { departmentId: deptCS.id },
         create: {
-            id: student.id,
+            id: student1.id,
             studnetId: "UGR/1100/15",
-            departmentId: department.id,
-            acadamicYear: 2024,
+            departmentId: deptCS.id,
+            acadamicYear: 3,
         },
     });
 
-    const instructorProfile = await prisma.instructorProfile.upsert({
-        where: { id: instructor.id },
-        update: {},
+    await prisma.studentProfile.upsert({
+        where: { id: student2.id },
+        update: { departmentId: deptCS.id },
         create: {
-            id: instructor.id,
+            id: student2.id,
+            studnetId: "UGR/1101/16",
+            departmentId: deptCS.id,
+            acadamicYear: 2,
+        },
+    });
+
+    await prisma.studentProfile.upsert({
+        where: { id: student3.id },
+        update: { departmentId: deptCS.id },
+        create: {
+            id: student3.id,
+            studnetId: "UGR/1102/17",
+            departmentId: deptCS.id,
+            acadamicYear: 1,
+        },
+    });
+
+    const profileIns1 = await prisma.instructorProfile.upsert({
+        where: { id: instructor1.id },
+        update: { departmentId: deptCS.id },
+        create: {
+            id: instructor1.id,
             instructorId: "INS/0001/15",
-            departmentId: department.id,
+            departmentId: deptCS.id,
         },
     });
 
-    const course = await prisma.course.upsert({
-        where: { code: "AI101" },
-        update: {},
+    const profileIns2 = await prisma.instructorProfile.upsert({
+        where: { id: instructor2.id },
+        update: { departmentId: deptCS.id },
         create: {
+            id: instructor2.id,
+            instructorId: "INS/0002/15",
+            departmentId: deptCS.id,
+        },
+    });
+
+    type CourseSeed = {
+        code: string;
+        name: string;
+        year: number;
+        deptId: string;
+        instructorProfileId: string;
+    };
+
+    const courseDefs: CourseSeed[] = [
+        {
+            code: "COSC4411",
             name: "Artificial Intelligence",
-            code: "AI101",
-            acadamicYear: 2024,
-            departmentId: department.id,
-            instructorId: instructorProfile.id,
+            year: 4,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns1.id,
         },
-    });
+        {
+            code: "COSC3312",
+            name: "Database Systems",
+            year: 3,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns1.id,
+        },
+        {
+            code: "COSC2210",
+            name: "Data Structures and Algorithms",
+            year: 2,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns1.id,
+        },
+        {
+            code: "COSC1205",
+            name: "Programming Fundamentals",
+            year: 1,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns1.id,
+        },
+        {
+            code: "SENG2101",
+            name: "Software Engineering",
+            year: 2,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns2.id,
+        },
+        {
+            code: "SENG3102",
+            name: "Web Application Development",
+            year: 3,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns2.id,
+        },
+        {
+            code: "MATH1101",
+            name: "Discrete Mathematics",
+            year: 1,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns2.id,
+        },
+        {
+            code: "COSC3320",
+            name: "Computer Networks",
+            year: 3,
+            deptId: deptCS.id,
+            instructorProfileId: profileIns1.id,
+        },
+    ];
 
-    const resource = await prisma.resource.upsert({
-        where: { fileUrl: "https://res.cloudinary.com/demo/raw/upload/unilearn/intro-ai.pdf" },
-        update: {
-            status: "READY",
-        },
-        create: {
-            title: "Intro to AI",
+    const courses: Awaited<ReturnType<typeof prisma.course.upsert>>[] = [];
+    for (const c of courseDefs) {
+        const row = await prisma.course.upsert({
+            where: { code: c.code },
+            update: {
+                name: c.name,
+                acadamicYear: c.year,
+                departmentId: c.deptId,
+                instructorId: c.instructorProfileId,
+            },
+            create: {
+                name: c.name,
+                code: c.code,
+                acadamicYear: c.year,
+                departmentId: c.deptId,
+                instructorId: c.instructorProfileId,
+            },
+        });
+        courses.push(row);
+    }
+
+    const aiCourse = courses.find((x) => x.code === "COSC4411")!;
+    const dbCourse = courses.find((x) => x.code === "COSC3312")!;
+    const dsaCourse = courses.find((x) => x.code === "COSC2210")!;
+    const webCourse = courses.find((x) => x.code === "SENG3102")!;
+
+    type ResSeed = {
+        fileUrl: string;
+        title: string;
+        type: "PDF" | "PPT" | "DOC";
+        courseId: string;
+        instructorUserId: string;
+        instructorProfileId: string;
+        version: number;
+    };
+
+    const resourceSeeds: ResSeed[] = [
+        {
+            fileUrl: "https://www.w3.org/WAI/WCAG21/working-examples/pdf-img/dummy.pdf",
+            title: "AI Syllabus and grading rubric",
             type: "PDF",
-            fileUrl: "https://res.cloudinary.com/demo/raw/upload/unilearn/intro-ai.pdf",
-            status: "READY",
-            courseId: course.id,
-            instructorId: instructorProfile.id,
-            version: 1.0,
+            courseId: aiCourse.id,
+            instructorUserId: instructor1.id,
+            instructorProfileId: profileIns1.id,
+            version: 1,
         },
-    });
+        {
+            fileUrl: "https://arxiv.org/pdf/1706.03762.pdf",
+            title: "Attention Is All You Need (reference reading)",
+            type: "PDF",
+            courseId: aiCourse.id,
+            instructorUserId: instructor1.id,
+            instructorProfileId: profileIns1.id,
+            version: 1,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/cosc4411/lecture02-search.pdf",
+            title: "Lecture 02 — Search and uninformed strategies",
+            type: "PDF",
+            courseId: aiCourse.id,
+            instructorUserId: instructor1.id,
+            instructorProfileId: profileIns1.id,
+            version: 2,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/cosc3312/normalization-slides.pptx",
+            title: "Week 4 — Normalization (1NF–BCNF)",
+            type: "PPT",
+            courseId: dbCourse.id,
+            instructorUserId: instructor1.id,
+            instructorProfileId: profileIns1.id,
+            version: 1,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/cosc3312/sql-lab.docx",
+            title: "SQL practice lab worksheet",
+            type: "DOC",
+            courseId: dbCourse.id,
+            instructorUserId: instructor1.id,
+            instructorProfileId: profileIns1.id,
+            version: 1,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/cosc2210/big-o-handout.pdf",
+            title: "Big-O notation cheat sheet",
+            type: "PDF",
+            courseId: dsaCourse.id,
+            instructorUserId: instructor1.id,
+            instructorProfileId: profileIns1.id,
+            version: 1,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/cosc2210/trees-avl.pptx",
+            title: "Trees and AVL rotations",
+            type: "PPT",
+            courseId: dsaCourse.id,
+            instructorUserId: instructor1.id,
+            instructorProfileId: profileIns1.id,
+            version: 1,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/seng3102/rest-api-notes.pdf",
+            title: "REST API design checklist",
+            type: "PDF",
+            courseId: webCourse.id,
+            instructorUserId: instructor2.id,
+            instructorProfileId: profileIns2.id,
+            version: 1,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/seng3102/react-intro.pptx",
+            title: "React components and hooks intro",
+            type: "PPT",
+            courseId: webCourse.id,
+            instructorUserId: instructor2.id,
+            instructorProfileId: profileIns2.id,
+            version: 1,
+        },
+        {
+            fileUrl: "https://unilearn-seed.local/resources/seng3102/deployment.docx",
+            title: "Deployment checklist (staging vs production)",
+            type: "DOC",
+            courseId: webCourse.id,
+            instructorUserId: instructor2.id,
+            instructorProfileId: profileIns2.id,
+            version: 1,
+        },
+    ];
+
+    const resources: Awaited<ReturnType<typeof prisma.resource.upsert>>[] = [];
+    for (const r of resourceSeeds) {
+        const res = await prisma.resource.upsert({
+            where: { fileUrl: r.fileUrl },
+            update: {
+                title: r.title,
+                type: r.type,
+                courseId: r.courseId,
+                instructorId: r.instructorUserId,
+                instructorProfileId: r.instructorProfileId,
+                version: r.version,
+            },
+            create: {
+                title: r.title,
+                type: r.type,
+                fileUrl: r.fileUrl,
+                courseId: r.courseId,
+                instructorId: r.instructorUserId,
+                instructorProfileId: r.instructorProfileId,
+                version: r.version,
+            },
+        });
+        resources.push(res);
+    }
+
+    const firstResource = resources[0]!;
 
     await prisma.resourceChunk.upsert({
         where: {
             resourceId_chunkIndex: {
-                resourceId: resource.id,
+                resourceId: firstResource.id,
                 chunkIndex: 0,
             },
         },
@@ -108,7 +377,7 @@ async function main() {
             embedding: [0.01, 0.02, 0.03],
         },
         create: {
-            resourceId: resource.id,
+            resourceId: firstResource.id,
             chunkIndex: 0,
             pageNumber: 1,
             content: "Artificial Intelligence introduces systems that reason and learn from data.",
@@ -117,89 +386,139 @@ async function main() {
         },
     });
 
-    const summaryId = "11111111-1111-1111-1111-111111111111";
-    const quizId = "22222222-2222-2222-2222-222222222222";
-    const questionId = "33333333-3333-3333-3333-333333333333";
-    const attemptId = "44444444-4444-4444-4444-444444444444";
-    const progressId = "55555555-5555-5555-5555-555555555555";
-
     await prisma.summary.upsert({
-        where: { id: summaryId },
-        update: {},
+        where: { id: "00000000-0000-4000-8000-000000000001" },
+        update: { content: "Updated: overview of course policies and grading." },
         create: {
-            id: summaryId,
-            content: "Summary",
-            resourceId: resource.id,
-            studnetId: studentProfile.id,
+            id: "00000000-0000-4000-8000-000000000001",
+            content: "Summary: this course covers search, knowledge representation, and ML basics with weekly labs.",
+            resourceId: firstResource.id,
+            studnetId: student1.id,
         },
     });
 
-    const quiz = await prisma.quiz.upsert({
-        where: { id: quizId },
+    const quiz1 = await prisma.quiz.upsert({
+        where: { id: "00000000-0000-4000-8000-000000000002" },
         update: {},
         create: {
-            id: quizId,
-            title: "A Quiz on AI",
+            id: "00000000-0000-4000-8000-000000000002",
+            title: "Quiz — Intro to AI",
             difficulty: "MEDIUM",
-            resourceId: resource.id,
-            studnetId: student.id,
+            resourceId: firstResource.id,
+            studnetId: student1.id,
         },
     });
 
     await prisma.question.upsert({
-        where: { id: questionId },
+        where: { id: "00000000-0000-4000-8000-000000000003" },
         update: {},
         create: {
-            id: questionId,
-            content: "What is AI?",
-            options: {},
+            id: "00000000-0000-4000-8000-000000000003",
+            content: "What is the primary goal of a rational agent?",
+            options: { A: "Maximize performance measure", B: "Minimize lines of code", C: "Avoid all uncertainty", D: "Use only symbolic logic" },
             correctAns: "A",
-            quizId: quiz.id,
+            quizId: quiz1.id,
+        },
+    });
+
+    await prisma.question.upsert({
+        where: { id: "00000000-0000-4000-8000-000000000004" },
+        update: {},
+        create: {
+            id: "00000000-0000-4000-8000-000000000004",
+            content: "Which algorithm is uninformed?",
+            options: { A: "A*", B: "BFS", C: "IDA*", D: "Greedy best-first with heuristic" },
+            correctAns: "B",
+            quizId: quiz1.id,
         },
     });
 
     await prisma.quizAttempt.upsert({
-        where: { id: attemptId },
-        update: {},
+        where: { id: "00000000-0000-4000-8000-000000000005" },
+        update: { score: 85 },
         create: {
-            id: attemptId,
-            score: 10,
-            quizId: quiz.id,
-            studnetId: studentProfile.id,
+            id: "00000000-0000-4000-8000-000000000005",
+            score: 85,
+            quizId: quiz1.id,
+            studnetId: student1.id,
         },
     });
 
     await prisma.progress.upsert({
         where: {
             studnetId_courseId: {
-                studnetId: studentProfile.id,
-                courseId: course.id,
+                studnetId: student1.id,
+                courseId: aiCourse.id,
             },
         },
-        update: {},
+        update: { resourceViewed: 5, averageScore: 82.5 },
         create: {
-            id: progressId,
-            resourceViewed: 3,
-            averageScore: 9,
-            studnetId: studentProfile.id,
-            courseId: course.id,
+            id: "00000000-0000-4000-8000-000000000006",
+            resourceViewed: 5,
+            averageScore: 82.5,
+            studnetId: student1.id,
+            courseId: aiCourse.id,
         },
     });
 
-    console.log("Seed Complete!");
-    console.log("Student: John@uni.test / 12345678");
-    console.log("Instructor: Ins@uni.test / 12345678");
-    console.log("Admin: Admin@uni.test / 12345678");
-    console.log(`Created ${await prisma.course.count()} course(s)`);
-    console.log(`Created ${await prisma.resource.count()} resource(s)`);
-    console.log(`Created ${await prisma.resourceChunk.count()} resource chunk(s)`);
-    console.log(`Created ${await prisma.quiz.count()} quiz(zes)`);
+    await prisma.progress.upsert({
+        where: {
+            studnetId_courseId: {
+                studnetId: student1.id,
+                courseId: dbCourse.id,
+            },
+        },
+        update: { resourceViewed: 2, averageScore: 74 },
+        create: {
+            id: "00000000-0000-4000-8000-000000000007",
+            resourceViewed: 2,
+            averageScore: 74,
+            studnetId: student1.id,
+            courseId: dbCourse.id,
+        },
+    });
+
+    console.log("\n======== UniLearn seed complete ========");
+    console.log(`All demo accounts use password: ${DEMO_PASSWORD}`);
+    console.log("Students:");
+    console.log(`  - ${student1.email} (${student1.name})`);
+    console.log(`  - ${student2.email} (${student2.name})`);
+    console.log(`  - ${student3.email} (${student3.name})`);
+    console.log("Instructors:");
+    console.log(`  - ${instructor1.email} (${instructor1.name})`);
+    console.log(`  - ${instructor2.email} (${instructor2.name})`);
+    console.log("Admin:");
+    console.log(`  - ${admin.email} (${admin.name})`);
+    // Re-seed cleanup: move any legacy rows off non–CS departments, then remove extra departments.
+    const otherDepts = await prisma.department.findMany({
+        where: { NOT: { id: deptCS.id } },
+    });
+    for (const d of otherDepts) {
+        await prisma.studentProfile.updateMany({
+            where: { departmentId: d.id },
+            data: { departmentId: deptCS.id },
+        });
+        await prisma.instructorProfile.updateMany({
+            where: { departmentId: d.id },
+            data: { departmentId: deptCS.id },
+        });
+        await prisma.course.updateMany({
+            where: { departmentId: d.id },
+            data: { departmentId: deptCS.id },
+        });
+        await prisma.department.delete({ where: { id: d.id } });
+    }
+
+    console.log(
+        `\nCounts: ${await prisma.department.count()} department (CS only), ${await prisma.user.count()} users, ${await prisma.course.count()} courses, ${await prisma.resource.count()} resources, ${await prisma.resourceChunk.count()} chunks.`
+    );
+    console.log("========================================\n");
 }
 
 main()
-    .catch(e => {
+    .catch((e) => {
         console.error(e);
-        // process.exit(1);
+        process.exit(1);
     })
     .finally(async () => {
         await prisma.$disconnect();
