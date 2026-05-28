@@ -55,6 +55,13 @@ export const ingestResourceSchema = z.object({
 });
 export type ingestResourceBody = z.infer<typeof ingestResourceSchema>
 
+export const askResourceSchema = z.object({
+    resourceId: z.string().uuid(),
+    question: z.string().min(1).max(4000),
+    topK: z.number().int().min(1).max(20).optional(),
+});
+export type askResourceBody = z.infer<typeof askResourceSchema>
+
 /** Body for DELETE /course/resource/:id — resource id is in the URL. */
 export const deleteResourceBodySchema = z.object({
     instructorId: z.string().uuid(),

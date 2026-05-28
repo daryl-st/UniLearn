@@ -4,6 +4,32 @@ import { Course, Resource } from "./resource.entity.js";
 import type { IngestChunk } from "../ai/ai.service.js";
 
 export class ResourceRepository {
+    async findChunksWithEmbeddings(resourceId: string): Promise<
+        Array<{
+            chunkIndex: number;
+            pageNumber: number;
+            content: string;
+            embedding: number[];
+        }>
+    > {
+        const rows = await prisma.resourceChunk.findMany({
+            where: {
+                resourceId,
+            },
+            orderBy: {
+                chunkIndex: "asc",
+            },
+        });
+        return rows
+            .filter((r) => Array.isArray(r.embedding) && r.embedding.length > 0)
+            .map((r) => ({
+                chunkIndex: r.chunkIndex,
+                pageNumber: r.pageNumber,
+                content: r.content,
+                embedding: r.embedding,
+            }));
+    }
+
     async findAll(courseId: string): Promise<Resource[]> {
         const resources = await prisma.resource.findMany({
             where: { courseId: courseId }

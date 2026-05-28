@@ -47,6 +47,26 @@ export type IngestResponseBody = {
     warnings: string[];
 };
 
+export type AskEmbedResponseBody = {
+    embedding: number[];
+};
+
+export type AskContextChunk = {
+    chunkIndex: number;
+    pageNumber: number;
+    content: string;
+    score: number;
+};
+
+export type AskAnswerResponseBody = {
+    answer: string;
+    citations: Array<{
+        chunkIndex: number;
+        pageNumber: number;
+        score: number;
+    }>;
+};
+
 async function readJsonBody(upstream: globalThis.Response): Promise<unknown> {
     const text = await upstream.text();
     if (!text) return null;
@@ -123,6 +143,47 @@ export async function proxyIngestResource(
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyAskEmbed(question: string): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/ask/embed`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyAskAnswer(
+    question: string,
+    chunks: AskContextChunk[],
+): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/ask/answer`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question, chunks }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
     const body = await readJsonBody(upstream);
     if (!upstream.ok) {
         return { ok: false, status: upstream.status, body };

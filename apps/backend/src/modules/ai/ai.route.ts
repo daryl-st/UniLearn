@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 
 import { validateBody } from "../../middlewares/validate.js";
-import { ingestResourceSchema } from "../../schemas/index.js";
+import { askResourceSchema, ingestResourceSchema } from "../../schemas/index.js";
 // import { authorize, requireAuth } from "../../middlewares/auth.js";
 import { AiController } from "./ai.controller.js";
 
@@ -33,6 +33,12 @@ router.post(
     "/ingest/resource",
     validateBody(ingestResourceSchema),
     controller.ingestResource,
+);
+
+router.post(
+    "/ask",
+    validateBody(askResourceSchema),
+    controller.askResource,
 );
 
 export default router;
