@@ -3,9 +3,7 @@ import { motion } from 'motion/react';
 import {
   ChevronRight,
   PlayCircle,
-  Pause,
   Settings,
-  Maximize,
   CheckCircle,
   Send,
   Mic,
@@ -18,7 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { Course, Resource } from '@unilearn/shared-types';
 import { CourseAPI } from '@/api/course';
 import { AiAPI, askResourceErrorMessage } from '@/api/ai';
-import { courseThumbUrl } from '@/lib/coursePlaceholders';
+import { ResourcePdfViewer } from '@/components/features/learning/ResourcePdfViewer';
 
 export default function Learning() {
   const navigate = useNavigate();
@@ -164,7 +162,6 @@ export default function Learning() {
     );
   }
 
-  const thumb = courseThumbUrl(course.id);
   const instructorSeed = course.instructorId;
 
   return (
@@ -178,35 +175,11 @@ export default function Learning() {
               <span className="text-primary truncate">{activeLesson.title}</span>
             </div>
 
-            <div className="aspect-video w-full bg-black rounded-sm relative overflow-hidden group border border-outline-variant/10 shadow-2xl">
-              <img src={thumb} alt="" className="w-full h-full object-cover opacity-40" referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
-
-              <div className="absolute inset-0 flex items-center justify-center">
-                <a
-                  href={String(selectedResource.fileUrl)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-20 h-20 rounded-full bg-primary/90 text-on-primary flex items-center justify-center scale-100 hover:scale-110 transition-transform shadow-2xl shadow-primary/40"
-                >
-                  <PlayCircle className="w-12 h-12 fill-current" />
-                </a>
-              </div>
-
-              <div className="absolute bottom-0 left-0 right-0 p-6 flex items-center gap-6 bg-linear-to-t from-black/80 to-transparent backdrop-blur-[2px]">
-                <Pause className="text-white w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
-                <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer group/progress">
-                  <div className="h-full w-1/3 bg-primary relative">
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover/progress:scale-100 transition-transform" />
-                  </div>
-                </div>
-                <span className="font-mono text-[11px] text-white">— / {activeLesson.duration}</span>
-                <div className="flex items-center gap-4">
-                  <Settings className="text-white w-4 h-4 cursor-pointer hover:text-primary transition-colors" />
-                  <Maximize className="text-white w-4 h-4 cursor-pointer hover:text-primary transition-colors" />
-                </div>
-              </div>
-            </div>
+            <ResourcePdfViewer
+              fileUrl={String(selectedResource.fileUrl)}
+              title={selectedResource.title}
+              type={selectedResource.type}
+            />
 
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -215,7 +188,7 @@ export default function Learning() {
                   <p className="text-on-surface-variant leading-relaxed text-lg max-w-3xl">
                     <span className="flex flex-wrap items-center gap-2">
                       <span>
-                        Type <span className="font-mono text-primary">{selectedResource.type}</span> · open the file externally.
+                        Type <span className="font-mono text-primary">{selectedResource.type}</span> · read below or open in a new tab.
                       </span>
                       <a
                         href={String(selectedResource.fileUrl)}
@@ -223,7 +196,8 @@ export default function Learning() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary text-sm font-mono underline"
                       >
-                        Open <ExternalLink className="w-3.5 h-3.5" />
+                        Open in new tab
+                        <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </span>
                   </p>
@@ -256,8 +230,8 @@ export default function Learning() {
                       This resource
                     </h3>
                     <p className="text-on-surface-variant text-sm leading-relaxed">
-                      Materials come from the course repository. An in-app PDF viewer is planned; for now use the open link above.
-                      Use the AI assistant on the right for questions about this file.
+                      Read the material in the viewer above without leaving the platform. Use the AI assistant on the right
+                      for questions grounded in this resource.
                     </p>
                   </div>
                 </div>
