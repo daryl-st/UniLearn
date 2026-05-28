@@ -11,24 +11,21 @@ import {
   Mic,
   Paperclip,
   User,
-  FileText,
   Sparkles,
   ExternalLink,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Course, Resource } from '@unilearn/shared-types';
 import { CourseAPI } from '@/api/course';
-import { useCourseStore } from '@/stores/courseStrore';
+import { AiAPI, askResourceErrorMessage } from '@/api/ai';
 import { courseThumbUrl } from '@/lib/coursePlaceholders';
 
 export default function Learning() {
   const navigate = useNavigate();
-  const { courseId } = useParams<{ courseId: string }>();
-  const { courses, fetchCourses } = useCourseStore();
+  const { courseId, resourceId } = useParams<{ courseId: string; resourceId: string }>();
 
   const [course, setCourse] = useState<Course | null>(null);
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,17 +35,7 @@ export default function Learning() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    void fetchCourses();
-  }, [fetchCourses]);
-
-  useEffect(() => {
-    if (!courseId && courses.length > 0) {
-      navigate(`/dashboard/learning/${courses[0].id}`, { replace: true });
-    }
-  }, [courseId, courses, navigate]);
-
-  useEffect(() => {
-    if (!courseId) return;
+    if (!courseId || !resourceId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -59,14 +46,23 @@ export default function Learning() {
           CourseAPI.getResourcesByCourseId(courseId),
         ]);
         if (cancelled) return;
-        setCourse(c);
+
         const list = Array.isArray(r) ? r : [];
-        setResources(list);
-        setSelectedIdx(0);
+        const resource = list.find((item) => item.id === resourceId) ?? null;
+
+        if (!resource) {
+          setError('Resource not found for this course.');
+          setCourse(c);
+          setSelectedResource(null);
+          return;
+        }
+
+        setCourse(c);
+        setSelectedResource(resource);
         setMessages([
           {
             role: 'ai',
-            content: `Welcome to the learning workspace for **${c.name}**. Select a resource on the left; links open in a new tab. AI replies are not connected to a backend yet.`,
+            content: `You're studying "${resource.title}" in ${c.name}. Ask questions about this material and I'll answer using the indexed course content.`,
           },
         ]);
       } catch (e) {
@@ -78,12 +74,10 @@ export default function Learning() {
     return () => {
       cancelled = true;
     };
-  }, [courseId]);
-
-  const selectedResource = resources[selectedIdx] ?? null;
+  }, [courseId, resourceId]);
 
   const activeLesson = useMemo(() => {
-    if (!selectedResource) return { title: 'Select a resource', duration: '—', type: 'reading' as const };
+    if (!selectedResource) return { title: 'Resource unavailable', duration: '—', type: 'reading' as const };
     return {
       title: selectedResource.title,
       duration: '—',
@@ -95,50 +89,76 @@ export default function Learning() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    const question = input.trim();
+    if (!question || !resourceId || !selectedResource) return;
 
-    const userMsg = { role: 'user' as const, content: input };
+    const userMsg = { role: 'user' as const, content: question };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'ai',
-          content:
-            'Assistant responses are not wired to an AI service yet. Use resource links above to study from uploaded materials.',
-        },
-      ]);
+
+    try {
+      const response = await AiAPI.askResource({ resourceId, question });
+      setMessages((prev) => [...prev, { role: 'ai', content: response.answer }]);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('askResource failed', err);
+      }
+      setMessages((prev) => [...prev, { role: 'ai', content: askResourceErrorMessage(err) }]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
-  if (!courseId) {
+  const canSend = Boolean(resourceId && selectedResource && input.trim() && !isTyping);
+
+  if (!courseId || !resourceId) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] text-on-surface-variant text-sm p-8">
-        <p>Loading workspace…</p>
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] text-on-surface-variant text-sm p-8">
+        <p>Invalid learning session.</p>
+        <button type="button" className="text-primary underline text-sm mt-4" onClick={() => navigate('/dashboard/courses')}>
+          Back to courses
+        </button>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] text-on-surface-variant text-sm">
-        Loading course…
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] text-on-surface-variant text-sm">
+        Loading workspace…
       </div>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 text-on-surface-variant p-8">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] gap-4 text-on-surface-variant p-8">
         <p className="text-error text-sm">{error || 'Course not found'}</p>
-        <button type="button" className="text-primary underline text-sm" onClick={() => navigate('/dashboard/courses')}>
-          Back to courses
+        <button
+          type="button"
+          className="text-primary underline text-sm"
+          onClick={() => navigate(courseId ? `/dashboard/courses/${courseId}` : '/dashboard/courses')}
+        >
+          Back to course
+        </button>
+      </div>
+    );
+  }
+
+  if (!selectedResource) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] gap-4 text-on-surface-variant p-8">
+        <p className="text-error text-sm">Resource not found for this course.</p>
+        <button
+          type="button"
+          className="text-primary underline text-sm"
+          onClick={() => navigate(`/dashboard/courses/${course.id}`)}
+        >
+          Back to course
         </button>
       </div>
     );
@@ -148,34 +168,7 @@ export default function Learning() {
   const instructorSeed = course.instructorId;
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden bg-surface">
-      <aside className="w-full lg:w-72 shrink-0 border-b lg:border-b-0 lg:border-r border-outline-variant/10 bg-surface-low overflow-y-auto max-h-48 lg:max-h-none">
-        <div className="p-4 border-b border-outline-variant/10">
-          <p className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">Resources</p>
-          <p className="text-sm font-bold text-white truncate mt-1">{course.name}</p>
-        </div>
-        <ul className="p-2 space-y-1">
-          {resources.length === 0 ? (
-            <li className="px-3 py-2 text-xs text-on-surface-variant">No files uploaded.</li>
-          ) : (
-            resources.map((res, idx) => (
-              <li key={res.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedIdx(idx)}
-                  className={`w-full text-left px-3 py-2 rounded-sm text-xs flex items-center gap-2 transition-colors ${
-                    idx === selectedIdx ? 'bg-primary/15 text-primary border border-primary/30' : 'hover:bg-surface-high text-on-surface-variant'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{res.title}</span>
-                </button>
-              </li>
-            ))
-          )}
-        </ul>
-      </aside>
-
+    <div className="-mx-4 -my-6 flex h-[calc(100vh-4rem)] min-h-[32rem] flex-col overflow-hidden bg-surface md:-mx-8 md:-my-8 lg:-mx-10 lg:-my-8 lg:flex-row">
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-6 md:p-10 subtle-scrollbar">
           <div className="mx-auto w-full max-w-6xl space-y-8">
@@ -190,18 +183,14 @@ export default function Learning() {
               <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
 
               <div className="absolute inset-0 flex items-center justify-center">
-                {selectedResource ? (
-                  <a
-                    href={String(selectedResource.fileUrl)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-20 h-20 rounded-full bg-primary/90 text-on-primary flex items-center justify-center scale-100 hover:scale-110 transition-transform shadow-2xl shadow-primary/40"
-                  >
-                    <PlayCircle className="w-12 h-12 fill-current" />
-                  </a>
-                ) : (
-                  <div className="text-on-surface-variant text-sm font-mono">No resource selected</div>
-                )}
+                <a
+                  href={String(selectedResource.fileUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-20 h-20 rounded-full bg-primary/90 text-on-primary flex items-center justify-center scale-100 hover:scale-110 transition-transform shadow-2xl shadow-primary/40"
+                >
+                  <PlayCircle className="w-12 h-12 fill-current" />
+                </a>
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-6 flex items-center gap-6 bg-linear-to-t from-black/80 to-transparent backdrop-blur-[2px]">
@@ -224,24 +213,19 @@ export default function Learning() {
                 <div className="space-y-2">
                   <h2 className="font-headline text-3xl font-bold text-white tracking-tight">{activeLesson.title}</h2>
                   <p className="text-on-surface-variant leading-relaxed text-lg max-w-3xl">
-                    {selectedResource ? (
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span>
-                          Type <span className="font-mono text-primary">{selectedResource.type}</span> · open the file
-                          externally.
-                        </span>
-                        <a
-                          href={String(selectedResource.fileUrl)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-primary text-sm font-mono underline"
-                        >
-                          Open <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span>
+                        Type <span className="font-mono text-primary">{selectedResource.type}</span> · open the file externally.
                       </span>
-                    ) : (
-                      'Pick a resource from the list to open its link.'
-                    )}
+                      <a
+                        href={String(selectedResource.fileUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary text-sm font-mono underline"
+                      >
+                        Open <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </span>
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 shrink-0">
@@ -272,8 +256,8 @@ export default function Learning() {
                       This resource
                     </h3>
                     <p className="text-on-surface-variant text-sm leading-relaxed">
-                      Materials come from the course repository. There is no embedded PDF viewer in this MVP; use the open link
-                      action above.
+                      Materials come from the course repository. An in-app PDF viewer is planned; for now use the open link above.
+                      Use the AI assistant on the right for questions about this file.
                     </p>
                   </div>
                 </div>
@@ -323,7 +307,7 @@ export default function Learning() {
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 subtle-scrollbar">
           <div className="bg-primary/5 border border-primary/10 p-4 rounded-sm text-[11px] text-on-surface-variant leading-relaxed">
             <span className="text-primary font-bold block mb-1 uppercase tracking-widest">Course context</span>
-            Workspace is bound to <span className="font-mono text-white">{course.code}</span>. Selected:{' '}
+            Workspace is bound to <span className="font-mono text-white">{course.code}</span>. Studying:{' '}
             <span className="text-white">{activeLesson.title}</span>.
           </div>
 
@@ -341,7 +325,7 @@ export default function Learning() {
               )}
               <div className={`max-w-[85%] space-y-2 ${msg.role === 'user' ? 'text-right' : ''}`}>
                 <div
-                  className={`text-[13px] p-3 rounded-sm border leading-relaxed ${
+                  className={`text-[13px] p-3 rounded-sm border leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'ai'
                       ? 'bg-surface-high border-outline-variant/5 rounded-tl-none text-on-surface'
                       : 'bg-primary/10 text-primary border-primary/20 rounded-tr-none'
@@ -392,14 +376,16 @@ export default function Learning() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), void handleSend())}
-              className="bg-transparent border-none focus:ring-0 text-[13px] w-full min-h-10 max-h-32 text-on-surface resize-none subtle-scrollbar placeholder:text-on-surface-variant/40"
+              disabled={!selectedResource || isTyping}
+              className="bg-transparent border-none focus:ring-0 text-[13px] w-full min-h-10 max-h-32 text-on-surface resize-none subtle-scrollbar placeholder:text-on-surface-variant/40 disabled:opacity-50"
               placeholder="Ask about this lesson..."
               rows={1}
             />
             <button
               type="button"
               onClick={() => void handleSend()}
-              className="bg-primary text-on-primary p-2 rounded-sm flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20"
+              disabled={!canSend}
+              className="bg-primary text-on-primary p-2 rounded-sm flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Send className="w-4 h-4" />
             </button>

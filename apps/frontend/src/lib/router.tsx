@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { asBackendRole, dashboardPathForBackendRole } from "@/utils/auth";
@@ -24,6 +24,17 @@ const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
+
+// needs better implementation
+function LearningCourseRedirect() {
+  const { courseId } = useParams<{ courseId: string }>();
+  if (!courseId) return <Navigate to="/dashboard/courses" replace />;
+  return <Navigate to={`/dashboard/courses/${courseId}`} replace />;
+}
+
+function LearningRootRedirect() {
+  return <Navigate to="/dashboard/courses" replace />;
+}
 // Instructor Pages
 const InstructorDashboardPage = lazy(() => import('@/pages/instructor/Dashboard').then((module) => ({ default: module.Dashboard })));
 const InstructorCourseManagementPage = lazy(() => import('@/pages/instructor/CourseManagement').then((module) => ({ default: module.CourseManagement })));
@@ -145,7 +156,7 @@ const protectedRoutes: RouteEntry[] = [
     ),
   },
   {
-    path: '/dashboard/learning/:courseId',
+    path: '/dashboard/learning/:courseId/:resourceId',
     element: (
       <RoleGate allowed={['STUDENT']}>
         <LearningWorkspace />
@@ -153,10 +164,18 @@ const protectedRoutes: RouteEntry[] = [
     ),
   },
   {
+    path: '/dashboard/learning/:courseId',
+    element: (
+      <RoleGate allowed={['STUDENT']}>
+        <LearningCourseRedirect />
+      </RoleGate>
+    ),
+  },
+  {
     path: '/dashboard/learning',
     element: (
       <RoleGate allowed={['STUDENT']}>
-        <LearningWorkspace />
+        <LearningRootRedirect />
       </RoleGate>
     ),
   },

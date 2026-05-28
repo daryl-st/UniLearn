@@ -42,8 +42,8 @@ export default function Dashboard() {
     navigate(`/dashboard/courses/${courseId}`);
   };
 
-  const openLearningWorkspace = (courseId: string) => {
-    navigate(`/dashboard/learning/${courseId}`);
+  const openCourseForLearning = (courseId: string) => {
+    navigate(`/dashboard/courses/${courseId}`);
   };
 
   const studentNotifications = [
@@ -205,7 +205,7 @@ export default function Dashboard() {
                   className="px-8 py-3 bg-primary text-on-primary font-headline font-bold rounded-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
                   onClick={(event) => {
                     event.stopPropagation();
-                    openLearningWorkspace(featured.id);
+                    openCourseForLearning(featured.id);
                   }}
                 >
                   Continue learning
