@@ -1,8 +1,9 @@
 import { api, ApiError } from "./client";
 import type { Course, CreateCourseInput, Resource } from "@unilearn/shared-types";
 
-// Row from GET /course (includes display name when backend sends it).
-export type CourseCatalogRow = Course & { instructorName?: string };
+// Row from GET /course and GET /course/:id (includes display name when backend sends it).
+export type CourseWithInstructor = Course & { instructorName?: string };
+export type CourseCatalogRow = CourseWithInstructor;
 
 export const CourseAPI = {
     getAllCourses: async () => {
@@ -25,7 +26,7 @@ export const CourseAPI = {
 
     getCourse: async (id: string) => {
         try {
-            return await api.get<Course>(`course/${encodeURIComponent(id)}`);
+            return await api.get<CourseWithInstructor>(`course/${encodeURIComponent(id)}`);
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.status == 404) throw new Error("Not Found!");

@@ -6,7 +6,6 @@ import {
   BarChart3,
   Bot,
   Settings,
-  Plus,
   HelpCircle,
   UserCircle,
   Layers,
@@ -160,32 +159,6 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto px-4">
-        {isDashboard ? (
-          <button
-            className="mb-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-2.5 font-headline text-sm font-bold text-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
-            onClick={() => handleNavigate('/dashboard/learning')}
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Inquiry</span>
-          </button>
-        ) : isAdmin ? (
-          <button
-            className="mb-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-2.5 font-headline text-sm font-bold text-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
-            onClick={() => handleNavigate('/admin/users')}
-          >
-            <Plus className="h-4 w-4" />
-            <span>New User</span>
-          </button>
-        ) : (
-          <button
-            className="mb-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-2.5 font-headline text-sm font-bold text-on-primary transition-all hover:opacity-90 active:scale-[0.98]"
-            onClick={() => handleNavigate('/instructor/courses')}
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Course</span>
-          </button>
-        )}
-
         <div className="space-y-1 border-t border-outline-variant/10 pt-4">
           <button
             className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-on-surface-variant transition-all hover:text-white"
