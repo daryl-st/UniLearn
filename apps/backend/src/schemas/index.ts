@@ -49,6 +49,12 @@ export const uploadResourceSchema = z.object({
 });
 export type uploadResourceBody = z.infer<typeof uploadResourceSchema>
 
+export const ingestResourceSchema = z.object({
+    resourceId: z.string().uuid(),
+    fileUrl: z.url().max(2048),
+});
+export type ingestResourceBody = z.infer<typeof ingestResourceSchema>
+
 /** Body for DELETE /course/resource/:id — resource id is in the URL. */
 export const deleteResourceBodySchema = z.object({
     instructorId: z.string().uuid(),

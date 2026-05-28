@@ -1,8 +1,9 @@
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { z } from "zod";
 
 import type { AuthRequest } from "../../middlewares/auth.js";
-import { AiConfigError, proxyExtractFile, proxyExtractUrl } from "./ai.service.js";
+import type { ingestResourceBody } from "../../schemas/index.js";
+import { AiConfigError, proxyExtractFile, proxyExtractUrl, proxyIngestResource } from "./ai.service.js";
 
 const extractUrlBodySchema = z.object({
     url: z.string().url().max(2048),
@@ -49,6 +50,27 @@ export class AiController {
             }
 
             const result = await proxyExtractUrl(parsed.data.url);
+            if (!result.ok) {
+                res.status(result.status).json(result.body);
+                return;
+            }
+            res.status(200).json(result.body);
+        } catch (e) {
+            if (e instanceof AiConfigError) {
+                res.status(503).json({ error: e.message });
+                return;
+            }
+            res.status(502).json({
+                error: "AI service unreachable",
+                detail: e instanceof Error ? e.message : String(e),
+            });
+        }
+    };
+
+    ingestResource = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const body = req.body as ingestResourceBody;
+            const result = await proxyIngestResource(body.resourceId, body.fileUrl);
             if (!result.ok) {
                 res.status(result.status).json(result.body);
                 return;

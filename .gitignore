@@ -45,6 +45,7 @@ prisma/dev.db
 # temp files
 remaining.md
 requirement.md
+ARCHITECTURE.md
 
 # Flutter / Dart (apps/mobile)
 .dart_tool/

@@ -74,11 +74,18 @@ export class ResourceController {
             // this is a placeholder, we can implement versioning logic later.
             version: 1,
         };
-        const resource = await resourceService.uploadResource(resourceData);
-        if (typeof resource === "string") {
-            return res.status(409).json({ error: resource });
+        const result = await resourceService.uploadResource(resourceData);
+        if (!result.ok && result.kind === "conflict") {
+            return res.status(409).json({ error: result.message });
         }
-        return res.status(201).json(resource);
+        if (!result.ok && result.kind === "ingest_failed") {
+            const status = result.status >= 400 && result.status < 500 ? result.status : 502;
+            return res.status(status).json({
+                error: result.message,
+                detail: result.detail,
+            });
+        }
+        return res.status(201).json(result.resource);
     }
 
     async createCourse(req: Request, res: Response) {
