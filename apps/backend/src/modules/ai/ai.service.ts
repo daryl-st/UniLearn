@@ -67,6 +67,17 @@ export type AskAnswerResponseBody = {
     }>;
 };
 
+export type RagAskResponseBody = {
+    resourceId: string;
+    answer: string;
+    citations: Array<{
+        chunkIndex: number;
+        pageNumber: number;
+        score: number;
+    }>;
+    usedChunks: number;
+};
+
 async function readJsonBody(upstream: globalThis.Response): Promise<unknown> {
     const text = await upstream.text();
     if (!text) return null;
@@ -182,6 +193,29 @@ export async function proxyAskAnswer(
             "Content-Type": "application/json",
         },
         body: JSON.stringify({ question, chunks }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyRagAsk(
+    resourceId: string,
+    question: string,
+    topK?: number,
+): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/rag/ask`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ resourceId, question, topK }),
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     const body = await readJsonBody(upstream);
