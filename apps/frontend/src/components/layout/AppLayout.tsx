@@ -2,6 +2,7 @@ import React from "react"
 import { useLocation } from "react-router-dom"
 import { Navbar } from "./NavBar"
 import { Footer } from "./Footer"
+import { DashboardFooter } from "./DashboardFooter"
 import Sidebar from "./Sidebar"
 import TopBar from "./Topbar"
 
@@ -31,6 +32,10 @@ function isPublicShell(pathname: string) {
   return !isDashboardShell(pathname) && !isAuthShell(pathname)
 }
 
+function isLearningWorkspace(pathname: string) {
+  return /^\/dashboard\/learning\/[^/]+\/[^/]+$/.test(pathname)
+}
+
 function getDashboardTitle(pathname: string) {
   if (pathname === "/dashboard") return "Dashboard"
   if (pathname.startsWith("/dashboard/courses")) return "Courses"
@@ -53,6 +58,7 @@ function getDashboardTitle(pathname: string) {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const { pathname } = useLocation()
+  const isLearning = isLearningWorkspace(pathname)
 
   const showSidebarLayout = isDashboardShell(pathname)
   const showPublicLayout = isPublicShell(pathname)
@@ -96,13 +102,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <TopBar title="" hideTitle />
           </header>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-6 md:px-8 md:py-8 lg:px-10">
+          <div
+            className={
+              isLearning
+                ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+                : 'flex-1 overflow-y-auto custom-scrollbar px-4 py-6 md:px-8 md:py-8 lg:px-10'
+            }
+          >
             {children}
           </div>
+
+          <DashboardFooter />
         </main>
       </div>
-
-      <Footer />
     </div>
   )
 }

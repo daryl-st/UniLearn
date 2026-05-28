@@ -14,14 +14,14 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Course, Resource } from '@unilearn/shared-types';
-import { CourseAPI } from '@/api/course';
+import type { Resource } from '@unilearn/shared-types';
+import { CourseAPI, type CourseWithInstructor } from '@/api/course';
 import { courseThumbUrl } from '@/lib/coursePlaceholders';
 
 export default function CourseDetail() {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseWithInstructor | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export default function CourseDetail() {
   }
 
   const thumb = courseThumbUrl(course.id);
-  const instructorLabel = course.instructorId;
+  const instructorLabel = course.instructorName?.trim() || course.instructorId;
 
   return (
     <div className="min-h-full bg-surface">

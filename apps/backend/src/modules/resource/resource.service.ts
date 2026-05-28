@@ -113,7 +113,18 @@ export class CourseService {
     }
 
     async getCourseById(data: { id: string }) {
-        return this.courseRepository.findOne(data);
+        const course = await this.courseRepository.findOne(data);
+        if (!course) return null;
+        const instructorName = await this.userRepository.getUserNameById(course.instructorId);
+        return {
+            id: course.id,
+            name: course.name,
+            code: course.code,
+            acadamicYear: course.acadamicYear,
+            instructorId: course.instructorId,
+            departmentId: course.departmentId,
+            instructorName: instructorName ?? "",
+        };
     }
 
     async createCourse(data: {
