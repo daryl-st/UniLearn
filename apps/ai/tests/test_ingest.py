@@ -27,6 +27,9 @@ def test_ingest_resource_pipeline_unit() -> None:
         with patch(
             "app.services.ingest_pipeline.download_pdf_bytes",
             new=AsyncMock(return_value=pdf),
+        ), patch(
+            "app.services.ingest_pipeline.embed_texts",
+            new=AsyncMock(return_value=[None]),
         ):
             result = await ingest_resource(resource_id, "https://example.com/test.pdf")
 
@@ -52,6 +55,10 @@ def test_ingest_resource_route_success(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "app.services.ingest_pipeline.download_pdf_bytes",
         fake_download,
+    )
+    monkeypatch.setattr(
+        "app.services.ingest_pipeline.embed_texts",
+        AsyncMock(return_value=[None]),
     )
 
     client = TestClient(app)
