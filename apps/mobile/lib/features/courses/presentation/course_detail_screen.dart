@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mobile/core/routing/app_routes.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
 
@@ -36,32 +38,31 @@ class LectureMaterial {
   final String title;
   final String size;
   final String time;
+  final String pdfUrl;
 
   const LectureMaterial({
     required this.id,
     required this.title,
     String? size,
     String? time,
+    String? pdfUrl,
     String? type,
     String? sizeOrDuration,
   }) : size = size ?? sizeOrDuration ?? 'N/A',
-       time = time ?? sizeOrDuration ?? (type == 'video' ? '00:00' : 'N/A');
+       time = time ?? sizeOrDuration ?? (type == 'video' ? '00:00' : 'N/A'),
+       pdfUrl = pdfUrl ?? '';
 }
 
 class CourseDetailsScreen extends StatefulWidget {
   final Course course;
   final List<LectureMaterial> materials;
   final VoidCallback onBack;
-  final Function(LectureMaterial) onSummarizeMaterial;
-  final VoidCallback onAssistantAsk;
 
   const CourseDetailsScreen({
     Key? key,
     required this.course,
     required this.materials,
     required this.onBack,
-    required this.onSummarizeMaterial,
-    required this.onAssistantAsk,
   }) : super(key: key);
 
   @override
@@ -87,26 +88,34 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     // sample/trash materials for now (ignore fetched materials)
-    final materials = <LectureMaterial>[
-      const LectureMaterial(
-        id: 'm1',
-        title: 'Lecture 1 — Introduction to CNNs',
-        size: '12.8 MB',
-        time: '18:24',
-      ),
-      const LectureMaterial(
-        id: 'm2',
-        title: 'Week 1 Slides',
-        size: '2.3 MB',
-        time: '06:12',
-      ),
-      const LectureMaterial(
-        id: 'm3',
-        title: 'Lab 1 — Build a small CNN',
-        size: '8.1 MB',
-        time: '24:40',
-      ),
-    ];
+    final materials = widget.materials.isEmpty
+        ? <LectureMaterial>[
+            const LectureMaterial(
+              id: 'm1',
+              title: 'Lecture 1 — Introduction to CNNs',
+              size: '12.8 MB',
+              time: '18:24',
+              pdfUrl:
+                  'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            ),
+            const LectureMaterial(
+              id: 'm2',
+              title: 'Week 1 Slides',
+              size: '2.3 MB',
+              time: '06:12',
+              pdfUrl:
+                  'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            ),
+            const LectureMaterial(
+              id: 'm3',
+              title: 'Lab 1 — Build a small CNN',
+              size: '8.1 MB',
+              time: '24:40',
+              pdfUrl:
+                  'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            ),
+          ]
+        : widget.materials;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -451,7 +460,10 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                                   horizontal: 14,
                                   vertical: 6,
                                 ),
-                                onTap: () => widget.onSummarizeMaterial(mat),
+                                onTap: () => context.push(
+                                  AppRoutes.pdfViewer,
+                                  extra: mat,
+                                ),
                                 leading: Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
@@ -480,8 +492,10 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                                       ),
                                 ),
                                 trailing: TextButton.icon(
-                                  onPressed: () =>
-                                      widget.onSummarizeMaterial(mat),
+                                  onPressed: () => context.push(
+                                    AppRoutes.pdfViewer,
+                                    extra: mat,
+                                  ),
                                   style: TextButton.styleFrom(
                                     foregroundColor: scheme.primary,
                                     padding: const EdgeInsets.symmetric(
@@ -505,108 +519,6 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // AI helper panel
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.stackGap),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          scheme.primaryContainer.withOpacity(0.22),
-                          scheme.secondaryContainer.withOpacity(0.16),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadii.xl),
-                      boxShadow: [
-                        BoxShadow(
-                          color: scheme.primary.withOpacity(0.08),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.auto_awesome,
-                              color: scheme.primary,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'UNI LEARN AI ASSISTANT',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: scheme.primary,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 16,
-                                    letterSpacing: 1.0,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          '"I noticed you\'re reviewing CNNs. Would you like me to generate a summary of the AlexNet vs VGG architectures from today\'s lecture?"',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                                fontStyle: FontStyle.italic,
-                              ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: scheme.primary.withOpacity(
-                                  0.16,
-                                ),
-                                shadowColor: Colors.transparent,
-                                side: BorderSide(
-                                  color: scheme.primary.withOpacity(0.24),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadii.md,
-                                  ),
-                                ),
-                              ),
-                              onPressed: widget.onAssistantAsk,
-                              child: Text(
-                                'Yes, summarize',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: scheme.primary,
-                                      fontSize: 16,
-                                    ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            TextButton(
-                              onPressed: () {},
-                              child: Text(
-                                'Not now',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                      fontSize: 12,
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),

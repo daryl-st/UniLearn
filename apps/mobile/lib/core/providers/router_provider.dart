@@ -10,6 +10,7 @@ import 'package:mobile/features/auth/presentation/register_screen.dart';
 import 'package:mobile/features/auth/presentation/splash_screen.dart';
 import 'package:mobile/features/courses/presentation/course_detail_screen.dart';
 import 'package:mobile/features/courses/presentation/courses_screen.dart';
+import 'package:mobile/features/courses/presentation/pdf_viewer_screen.dart';
 import 'package:mobile/features/home/presentation/home_screen.dart';
 import 'package:mobile/features/profile/presentation/profile_screen.dart';
 import 'package:mobile/features/shell/presentation/main_shell_screen.dart';
@@ -17,7 +18,10 @@ import 'package:mobile/features/stats/presentation/stats_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
-  ref.listen(authSessionProvider, (AuthSessionState? previous, AuthSessionState next) {
+  ref.listen(authSessionProvider, (
+    AuthSessionState? previous,
+    AuthSessionState next,
+  ) {
     refresh.value++;
   });
   ref.onDispose(refresh.dispose);
@@ -34,7 +38,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.home;
       }
 
-      final isPublic = path == AppRoutes.splash ||
+      final isPublic =
+          path == AppRoutes.splash ||
           path == AppRoutes.onboarding ||
           path == AppRoutes.login ||
           path == AppRoutes.register;
@@ -61,6 +66,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.pdfViewer,
+        builder: (context, state) {
+          final material = state.extra as LectureMaterial?;
+          return PdfViewerScreen(material: material);
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainShellScreen(navigationShell: navigationShell);
@@ -85,7 +97,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) {
                       final id = state.pathParameters['courseId']!;
                       final apiCourse = MockCatalog.courseById(id);
-                      final summary = MockCatalog.enrolledSummaries.where((s) => s.courseId == id).firstOrNull;
+                      final summary = MockCatalog.enrolledSummaries
+                          .where((s) => s.courseId == id)
+                          .firstOrNull;
 
                       final course = Course(
                         id: id,
@@ -101,17 +115,36 @@ final routerProvider = Provider<GoRouter>((ref) {
                       );
 
                       const materials = <LectureMaterial>[
-                        LectureMaterial(id: 'm1', title: 'Lecture Notes - Week 1', type: 'pdf', sizeOrDuration: '2.3 MB'),
-                        LectureMaterial(id: 'm2', title: 'Lecture Recording - Intro', type: 'video', sizeOrDuration: '18 min'),
-                        LectureMaterial(id: 'm3', title: 'Lab Sheet 01', type: 'pdf', sizeOrDuration: '1.1 MB'),
+                        LectureMaterial(
+                          id: 'm1',
+                          title: 'Lecture Notes - Week 1',
+                          type: 'pdf',
+                          sizeOrDuration: '2.3 MB',
+                          pdfUrl:
+                              'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                        ),
+                        LectureMaterial(
+                          id: 'm2',
+                          title: 'Lecture Recording - Intro',
+                          type: 'video',
+                          sizeOrDuration: '18 min',
+                          pdfUrl:
+                              'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                        ),
+                        LectureMaterial(
+                          id: 'm3',
+                          title: 'Lab Sheet 01',
+                          type: 'pdf',
+                          sizeOrDuration: '1.1 MB',
+                          pdfUrl:
+                              'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                        ),
                       ];
 
                       return CourseDetailsScreen(
                         course: course,
                         materials: materials,
                         onBack: () => context.pop(),
-                        onSummarizeMaterial: (_) {},
-                        onAssistantAsk: () {},
                       );
                     },
                   ),
