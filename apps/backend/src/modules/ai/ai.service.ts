@@ -28,6 +28,56 @@ export type ProxyResult =
     | { ok: true; status: number; body: unknown }
     | { ok: false; status: number; body: unknown };
 
+export type IngestChunk = {
+    chunk_index: number;
+    page_number: number;
+    content: string;
+    token_count: number;
+    embedding: number[] | null;
+};
+
+export type IngestResponseBody = {
+    resource_id: string;
+    metadata: {
+        title: string | null;
+        author: string | null;
+        page_count: number;
+    };
+    chunks: IngestChunk[];
+    warnings: string[];
+};
+
+export type AskEmbedResponseBody = {
+    embedding: number[];
+};
+
+export type AskContextChunk = {
+    chunkIndex: number;
+    pageNumber: number;
+    content: string;
+    score: number;
+};
+
+export type AskAnswerResponseBody = {
+    answer: string;
+    citations: Array<{
+        chunkIndex: number;
+        pageNumber: number;
+        score: number;
+    }>;
+};
+
+export type RagAskResponseBody = {
+    resourceId: string;
+    answer: string;
+    citations: Array<{
+        chunkIndex: number;
+        pageNumber: number;
+        score: number;
+    }>;
+    usedChunks: number;
+};
+
 async function readJsonBody(upstream: globalThis.Response): Promise<unknown> {
     const text = await upstream.text();
     if (!text) return null;
@@ -77,6 +127,97 @@ export async function proxyExtractUrl(url: string): Promise<ProxyResult> {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyIngestResource(
+    resourceId: string,
+    fileUrl: string,
+): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+
+    const upstream = await fetch(`${base}/ingest/resource`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            resource_id: resourceId,
+            pdf_url: fileUrl,
+        }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyAskEmbed(question: string): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/ask/embed`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyAskAnswer(
+    question: string,
+    chunks: AskContextChunk[],
+): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/ask/answer`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question, chunks }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyRagAsk(
+    resourceId: string,
+    question: string,
+    topK?: number,
+): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/rag/ask`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ resourceId, question, topK }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
     const body = await readJsonBody(upstream);
     if (!upstream.ok) {
         return { ok: false, status: upstream.status, body };

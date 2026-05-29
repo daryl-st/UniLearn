@@ -10,7 +10,7 @@ async def ingest_resource(resource_id: UUID, pdf_url: str) -> IngestResourceResp
     data = await download_pdf_bytes(pdf_url)
     pages, metadata, warnings = extract_pages_from_pdf_bytes(data)
     semantic_chunks = semantic_chunk_pages(pages)
-    embeddings = embed_texts([c.content for c in semantic_chunks])
+    embeddings = await embed_texts([c.content for c in semantic_chunks])
 
     chunks_out: list[ChunkOut] = []
     for index, (chunk, embedding) in enumerate(zip(semantic_chunks, embeddings, strict=True)):

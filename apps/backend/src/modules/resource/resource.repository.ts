@@ -1,8 +1,35 @@
-import type { FileType } from "@prisma/client";
+import type { FileType, ResourceStatus } from "@prisma/client";
 import prisma from "../../config/db.js";
 import { Course, Resource } from "./resource.entity.js";
+import type { IngestChunk } from "../ai/ai.service.js";
 
 export class ResourceRepository {
+    async findChunksWithEmbeddings(resourceId: string): Promise<
+        Array<{
+            chunkIndex: number;
+            pageNumber: number;
+            content: string;
+            embedding: number[];
+        }>
+    > {
+        const rows = await prisma.resourceChunk.findMany({
+            where: {
+                resourceId,
+            },
+            orderBy: {
+                chunkIndex: "asc",
+            },
+        });
+        return rows
+            .filter((r) => Array.isArray(r.embedding) && r.embedding.length > 0)
+            .map((r) => ({
+                chunkIndex: r.chunkIndex,
+                pageNumber: r.pageNumber,
+                content: r.content,
+                embedding: r.embedding,
+            }));
+    }
+
     async findAll(courseId: string): Promise<Resource[]> {
         const resources = await prisma.resource.findMany({
             where: { courseId: courseId }
@@ -55,7 +82,15 @@ export class ResourceRepository {
         }));
     }
 
-    async create(data: {title: string, type: FileType, fileUrl: string, version: number, instructorId: string, courseId: string}) : Promise<Resource | null> {
+    async create(data: {
+        title: string;
+        type: FileType;
+        fileUrl: string;
+        version: number;
+        instructorId: string;
+        courseId: string;
+        status?: ResourceStatus;
+    }): Promise<Resource | null> {
         // fileUrl is unique to prevent duplicate file uploads
         const existingResource = await prisma.resource.findUnique({ where: {fileUrl: data.fileUrl }});
         if (existingResource) return null;
@@ -87,6 +122,42 @@ export class ResourceRepository {
         const resource = await prisma.resource.delete({ where: {id: data.id}});
         if (!resource) return null;
         return resource;
+    }
+
+    async updateStatus(resourceId: string, status: ResourceStatus): Promise<void> {
+        await prisma.resource.update({
+            where: { id: resourceId },
+            data: { status },
+        });
+    }
+
+    async upsertChunks(resourceId: string, chunks: IngestChunk[]): Promise<void> {
+        await prisma.$transaction(
+            chunks.map((chunk) =>
+                prisma.resourceChunk.upsert({
+                    where: {
+                        resourceId_chunkIndex: {
+                            resourceId,
+                            chunkIndex: chunk.chunk_index,
+                        },
+                    },
+                    update: {
+                        pageNumber: chunk.page_number,
+                        content: chunk.content,
+                        tokenCount: chunk.token_count,
+                        embedding: chunk.embedding ?? [],
+                    },
+                    create: {
+                        resourceId,
+                        chunkIndex: chunk.chunk_index,
+                        pageNumber: chunk.page_number,
+                        content: chunk.content,
+                        tokenCount: chunk.token_count,
+                        embedding: chunk.embedding ?? [],
+                    },
+                }),
+            ),
+        );
     }
 }
 

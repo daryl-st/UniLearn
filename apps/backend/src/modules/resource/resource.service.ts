@@ -2,6 +2,21 @@ import type { FileType } from "@unilearn/shared-types";
 import type { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { Course, Resource } from "./resource.entity.js";
 import type { UserRepository } from "../user/user.repository.js";
+import { proxyIngestResource, type IngestResponseBody } from "../ai/ai.service.js";
+
+type UploadResourceSuccess = { ok: true; resource: Resource };
+type UploadResourceConflict = { ok: false; kind: "conflict"; message: string };
+type UploadResourceUpstreamFailure = {
+    ok: false;
+    kind: "ingest_failed";
+    status: number;
+    message: string;
+    detail: unknown;
+};
+export type UploadResourceResult =
+    | UploadResourceSuccess
+    | UploadResourceConflict
+    | UploadResourceUpstreamFailure;
 
 export class ResourceService {
     constructor(private resourceRepository: ResourceRepository) {}
@@ -17,11 +32,33 @@ export class ResourceService {
         version: number;
         instructorId: string;
         courseId: string;
-    }) {
-        const resource = await this.resourceRepository.create(data);
-        if (!resource) return "Resource already exists";
+    }): Promise<UploadResourceResult> {
+        const resource = await this.resourceRepository.create({
+            ...data,
+            status: "QUEUED",
+        });
+        if (!resource) {
+            return { ok: false, kind: "conflict", message: "Resource already exists" };
+        }
 
-        return resource;
+        await this.resourceRepository.updateStatus(resource.id, "PROCESSING");
+
+        const ingest = await proxyIngestResource(resource.id, String(resource.fileUrl));
+        if (!ingest.ok) {
+            await this.resourceRepository.updateStatus(resource.id, "FAILED");
+            return {
+                ok: false,
+                kind: "ingest_failed",
+                status: ingest.status,
+                message: "FastAPI ingest failed",
+                detail: ingest.body,
+            };
+        }
+
+        const body = ingest.body as IngestResponseBody;
+        await this.resourceRepository.upsertChunks(resource.id, body.chunks ?? []);
+        await this.resourceRepository.updateStatus(resource.id, "READY");
+        return { ok: true, resource };
     }
 
     async getResourceByCourseId(data: { id: string }) {
@@ -76,7 +113,18 @@ export class CourseService {
     }
 
     async getCourseById(data: { id: string }) {
-        return this.courseRepository.findOne(data);
+        const course = await this.courseRepository.findOne(data);
+        if (!course) return null;
+        const instructorName = await this.userRepository.getUserNameById(course.instructorId);
+        return {
+            id: course.id,
+            name: course.name,
+            code: course.code,
+            acadamicYear: course.acadamicYear,
+            instructorId: course.instructorId,
+            departmentId: course.departmentId,
+            instructorName: instructorName ?? "",
+        };
     }
 
     async createCourse(data: {

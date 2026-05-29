@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { asBackendRole, dashboardPathForBackendRole } from "@/utils/auth";
@@ -24,6 +24,20 @@ const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
+const StudentAnalyticsPage = lazy(() => import('@/pages/student/Analytics'));
+const StudentAiToolsPage = lazy(() => import('@/pages/student/AiTools'));
+const StudentSettingsPage = lazy(() => import('@/pages/student/Settings'));
+
+// needs better implementation
+function LearningCourseRedirect() {
+  const { courseId } = useParams<{ courseId: string }>();
+  if (!courseId) return <Navigate to="/dashboard/courses" replace />;
+  return <Navigate to={`/dashboard/courses/${courseId}`} replace />;
+}
+
+function LearningRootRedirect() {
+  return <Navigate to="/dashboard/courses" replace />;
+}
 // Instructor Pages
 const InstructorDashboardPage = lazy(() => import('@/pages/instructor/Dashboard').then((module) => ({ default: module.Dashboard })));
 const InstructorCourseManagementPage = lazy(() => import('@/pages/instructor/CourseManagement').then((module) => ({ default: module.CourseManagement })));
@@ -36,31 +50,6 @@ const AdminCourseManagementPage = lazy(() => import('@/pages/admin/CourseMangeme
 const AdminAnalyticsPage = lazy(() => import('@/pages/admin/Analytics').then((module) => ({ default: module.Analytics })));
 const AdminSettingsPage = lazy(() => import('@/pages/admin/Settings').then((module) => ({ default: module.Settings })));
 const AdminUserManagementPage = lazy(() => import('@/pages/admin/UserManagement').then((module) => ({ default: module.UserManagement })));
-
-function DashboardDemoPage({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="p-8 md:p-10">
-      <section className="rounded-sm border border-outline-variant/10 bg-surface-low p-8 shadow-[0_20px_40px_rgba(0,0,0,0.18)]">
-        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-on-surface-variant">
-          Demo route
-        </p>
-        <h1 className="mt-3 font-headline text-3xl font-bold text-white">{title}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
-          {description}
-        </p>
-        <div className="mt-8 inline-flex items-center rounded-sm border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
-          This section is a placeholder for the next iteration.
-        </div>
-      </section>
-    </div>
-  );
-}
 
 // function ProtectedRoute({ children }: { children: React.ReactNode }) {
 //   const user = useAuthStore((state) => state.user);
@@ -145,10 +134,18 @@ const protectedRoutes: RouteEntry[] = [
     ),
   },
   {
-    path: '/dashboard/learning/:courseId',
+    path: '/dashboard/learning/:courseId/:resourceId',
     element: (
       <RoleGate allowed={['STUDENT']}>
         <LearningWorkspace />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/dashboard/learning/:courseId',
+    element: (
+      <RoleGate allowed={['STUDENT']}>
+        <LearningCourseRedirect />
       </RoleGate>
     ),
   },
@@ -156,7 +153,7 @@ const protectedRoutes: RouteEntry[] = [
     path: '/dashboard/learning',
     element: (
       <RoleGate allowed={['STUDENT']}>
-        <LearningWorkspace />
+        <LearningRootRedirect />
       </RoleGate>
     ),
   },
@@ -164,10 +161,7 @@ const protectedRoutes: RouteEntry[] = [
     path: '/dashboard/analytics',
     element: (
       <RoleGate allowed={['STUDENT']}>
-        <DashboardDemoPage
-          title="Analytics"
-          description="This demo route will eventually show progress breakdowns, course completion charts, and cohort trends."
-        />
+        <StudentAnalyticsPage />
       </RoleGate>
     ),
   },
@@ -175,10 +169,7 @@ const protectedRoutes: RouteEntry[] = [
     path: '/dashboard/ai-tools',
     element: (
       <RoleGate allowed={['STUDENT']}>
-        <DashboardDemoPage
-          title="AI Tools"
-          description="This demo route will host assistants, prompt labs, and course generation tools."
-        />
+        <StudentAiToolsPage />
       </RoleGate>
     ),
   },
@@ -186,10 +177,7 @@ const protectedRoutes: RouteEntry[] = [
     path: '/dashboard/settings',
     element: (
       <RoleGate allowed={['STUDENT']}>
-        <DashboardDemoPage
-          title="Settings"
-          description="This demo route will contain profile preferences, workspace options, and notification controls."
-        />
+        <StudentSettingsPage />
       </RoleGate>
     ),
   },

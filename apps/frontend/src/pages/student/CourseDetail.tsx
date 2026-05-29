@@ -18,6 +18,8 @@ import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy } from 'pdfjs-d
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { Course, Resource } from '@unilearn/shared-types';
 import { CourseAPI } from '@/api/course';
+import type { Resource } from '@unilearn/shared-types';
+import { CourseAPI, type CourseWithInstructor } from '@/api/course';
 import { courseThumbUrl } from '@/lib/coursePlaceholders';
 
 GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -25,7 +27,7 @@ GlobalWorkerOptions.workerSrc = pdfjsWorker;
 export default function CourseDetail() {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseWithInstructor | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,8 +128,12 @@ export default function CourseDetail() {
     navigate('/dashboard/courses');
   };
 
-  const handleStart = () => {
-    if (course) navigate(`/dashboard/learning/${course.id}`);
+  const openInWorkspace = (resourceId: string) => {
+    if (courseId) navigate(`/dashboard/learning/${courseId}/${resourceId}`);
+  };
+
+  const scrollToMaterials = () => {
+    document.getElementById('course-materials')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   if (loading) {
@@ -148,7 +154,7 @@ export default function CourseDetail() {
   }
 
   const thumb = courseThumbUrl(course.id);
-  const instructorLabel = course.instructorId;
+  const instructorLabel = course.instructorName?.trim() || course.instructorId;
 
   return (
     <div className="min-h-full bg-surface">
@@ -198,11 +204,11 @@ export default function CourseDetail() {
           <div className="space-y-4">
             <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight">Course materials</h3>
             <p className="text-on-surface-variant leading-relaxed">
-              Resources uploaded for this course. Click "Open" to view materials inline; download if needed for offline study.
+              Choose a resource below to open the learning workspace with AI assistance grounded in that file.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div id="course-materials" className="space-y-4">
             <div className="bg-surface-low rounded-sm border border-outline-variant/5 overflow-hidden">
               <div className="p-5 flex items-center justify-between bg-surface-high/30">
                 <div className="flex items-center gap-4">
@@ -244,7 +250,8 @@ export default function CourseDetail() {
                         <button
                           type="button"
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-primary hover:bg-primary/10 rounded-sm"
-                          onClick={handleStart}
+                          title="Study in workspace"
+                          onClick={() => openInWorkspace(res.id)}
                         >
                           <ArrowRight className="w-4 h-4" />
                         </button>
@@ -359,11 +366,11 @@ export default function CourseDetail() {
             <div className="space-y-4">
               <button
                 type="button"
-                onClick={handleStart}
+                onClick={scrollToMaterials}
                 className="w-full py-4 bg-primary text-on-primary font-headline font-bold rounded-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3"
               >
                 <Play className="w-4 h-4 fill-current" />
-                Open learning workspace
+                Choose a resource to study
               </button>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -403,11 +410,11 @@ export default function CourseDetail() {
                 <ul className="space-y-3">
                   <li className="flex items-center gap-3 text-[13px] text-on-surface-variant">
                     <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                    <span>Open course resources inline. PDFs, presentations, and documents render inside the app.</span>
+                    <span>Use the arrow on a resource to open the learning workspace with AI chat.</span>
                   </li>
                   <li className="flex items-center gap-3 text-[13px] text-on-surface-variant opacity-60">
                     <CheckCircle2 className="w-4 h-4 text-on-surface-variant shrink-0" />
-                    <span>AI summary & quiz generation require backend AI routes (not available yet).</span>
+                    <span>AI summary and quiz generation are coming soon.</span>
                   </li>
                 </ul>
               </div>
