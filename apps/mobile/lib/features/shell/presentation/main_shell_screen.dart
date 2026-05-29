@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/core/widgets/widgets.dart';
 
 class MainShellScreen extends StatelessWidget {
   const MainShellScreen({super.key, required this.navigationShell});
@@ -18,7 +19,12 @@ class MainShellScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: navigationShell,
+      body: Column(
+        children: [
+          const AppHeader(),
+          Expanded(child: navigationShell),
+        ],
+      ),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(

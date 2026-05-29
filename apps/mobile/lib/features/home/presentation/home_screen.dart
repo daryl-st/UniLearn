@@ -1,6 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile/core/providers/auth_session_provider.dart';
 import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/core/widgets/widgets.dart';
 import 'package:mobile/features/home/presentation/widgets/deadlines_section.dart';
@@ -19,8 +20,6 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final session = ref.watch(authSessionProvider);
-    final displayName = session.user?.name ?? MockCatalog.userFirstName;
 
     return Stack(
       fit: StackFit.expand,
@@ -47,13 +46,19 @@ class HomeScreen extends ConsumerWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    _bottomBackgroundImageUrl,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.bottomCenter,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const SizedBox.shrink();
-                    },
+                  ClipRect(
+                    child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Image.network(
+                        _bottomBackgroundImageUrl,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.bottomCenter,
+                        filterQuality: FilterQuality.low,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
                   ),
                   DecoratedBox(
                     decoration: BoxDecoration(
@@ -75,98 +80,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.containerPadding,
-                  12,
-                  AppSpacing.containerPadding,
-                  18,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: scheme.primaryContainer,
-                      child: Text(
-                        displayName.isNotEmpty
-                            ? displayName[0].toUpperCase()
-                            : '?',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: scheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${MockCatalog.greeting},',
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                  letterSpacing: 0.8,
-                                ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            displayName,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: scheme.onSurface,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          MockCatalog.brandTitle,
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(
-                                color: scheme.secondary,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Keep learning',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.notifications_none_rounded),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Divider(
-                    height: 1,
-                    thickness: 1.75,
-                    color: scheme.outlineVariant.withValues(alpha: 0.42),
-                  ),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.containerPadding,
