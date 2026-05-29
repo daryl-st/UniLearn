@@ -7,6 +7,10 @@ import 'package:mobile/core/routing/app_routes.dart';
 import 'package:mobile/core/widgets/widgets.dart';
 import 'package:mobile/theme/app_spacing.dart';
 
+final loginPasswordObscureProvider = StateProvider.autoDispose<bool>(
+  (ref) => true,
+);
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,7 +21,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController(text: 'student@university.edu');
   final _password = TextEditingController();
-  bool _obscure = true;
 
   @override
   void dispose() {
@@ -40,6 +43,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final obscure = ref.watch(loginPasswordObscureProvider);
 
     return Scaffold(
       body: Container(
@@ -228,13 +232,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     label: 'Password',
                                     hint: 'Enter your password',
                                     controller: _password,
-                                    obscureText: _obscure,
+                                    obscureText: obscure,
                                     prefixIcon: Icons.lock_outline,
                                     suffixIcon: IconButton(
                                       onPressed: () =>
-                                          setState(() => _obscure = !_obscure),
+                                          ref
+                                                  .read(
+                                                    loginPasswordObscureProvider
+                                                        .notifier,
+                                                  )
+                                                  .state =
+                                              !obscure,
                                       icon: Icon(
-                                        _obscure
+                                        obscure
                                             ? Icons.visibility_outlined
                                             : Icons.visibility_off_outlined,
                                         color: scheme.onSurfaceVariant,

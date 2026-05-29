@@ -93,24 +93,18 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
             const LectureMaterial(
               id: 'm1',
               title: 'Lecture 1 — Introduction to CNNs',
-              size: '12.8 MB',
-              time: '18:24',
               pdfUrl:
                   'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
             ),
             const LectureMaterial(
               id: 'm2',
               title: 'Week 1 Slides',
-              size: '2.3 MB',
-              time: '06:12',
               pdfUrl:
                   'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
             ),
             const LectureMaterial(
               id: 'm3',
               title: 'Lab 1 — Build a small CNN',
-              size: '8.1 MB',
-              time: '24:40',
               pdfUrl:
                   'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
             ),
@@ -482,13 +476,6 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                                       ?.copyWith(
                                         color: scheme.onSurface,
                                         fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                subtitle: Text(
-                                  'Size: ${mat.size}  •  Time: ${mat.time}',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
                                       ),
                                 ),
                                 trailing: TextButton.icon(

@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/features/courses/presentation/course_detail_screen.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
-class PdfViewerScreen extends StatefulWidget {
+final pdfChatMessagesProvider =
+    StateNotifierProvider.autoDispose<
+      PdfChatMessagesNotifier,
+      List<_ChatMessage>
+    >((ref) => PdfChatMessagesNotifier());
+
+class PdfViewerScreen extends ConsumerStatefulWidget {
   final LectureMaterial? material;
 
   const PdfViewerScreen({super.key, required this.material});
 
   @override
-  State<PdfViewerScreen> createState() => _PdfViewerScreenState();
+  ConsumerState<PdfViewerScreen> createState() => _PdfViewerScreenState();
 }
 
-class _PdfViewerScreenState extends State<PdfViewerScreen> {
+class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final List<_ChatMessage> _messages = [
-    const _ChatMessage(
-      text: 'Ask me anything about this PDF and I will help summarize it.',
-      isBot: true,
-    ),
-  ];
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -36,16 +37,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       return;
     }
 
-    setState(() {
-      _messages.add(_ChatMessage(text: text, isBot: false));
-      _messages.add(
-        const _ChatMessage(
-          text:
-              'I can help with a summary, key points, or a quick explanation of any section.',
-          isBot: true,
-        ),
-      );
-    });
+    ref.read(pdfChatMessagesProvider.notifier).send(text);
 
     _messageController.clear();
 
@@ -65,6 +57,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final materialData = widget.material;
+    final messages = ref.watch(pdfChatMessagesProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -150,35 +143,10 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                                   ?.copyWith(fontWeight: FontWeight.w800),
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Text(
-                                  materialData == null
-                                      ? 'Document loaded in-app'
-                                      : 'Size: ${materialData.size}',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                      ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '•',
-                                  style: TextStyle(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  materialData == null
-                                      ? ''
-                                      : '${materialData.time}',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ],
+                            Text(
+                              'Open the document below to review the lecture material.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ),
@@ -360,11 +328,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                         Expanded(
                           child: ListView.separated(
                             controller: _scrollController,
-                            itemCount: _messages.length,
+                            itemCount: messages.length,
                             separatorBuilder: (_, _) =>
                                 const SizedBox(height: 10),
                             itemBuilder: (context, index) {
-                              final message = _messages[index];
+                              final message = messages[index];
                               return Row(
                                 mainAxisAlignment: message.isBot
                                     ? MainAxisAlignment.start
@@ -465,4 +433,26 @@ class _ChatMessage {
   final bool isBot;
 
   const _ChatMessage({required this.text, required this.isBot});
+}
+
+class PdfChatMessagesNotifier extends StateNotifier<List<_ChatMessage>> {
+  PdfChatMessagesNotifier()
+    : super([
+        const _ChatMessage(
+          text: 'Ask me anything about this PDF and I will help summarize it.',
+          isBot: true,
+        ),
+      ]);
+
+  void send(String text) {
+    state = [
+      ...state,
+      _ChatMessage(text: text, isBot: false),
+      const _ChatMessage(
+        text:
+            'I can help with a summary, key points, or a quick explanation of any section.',
+        isBot: true,
+      ),
+    ];
+  }
 }

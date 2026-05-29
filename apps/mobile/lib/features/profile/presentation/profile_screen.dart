@@ -16,7 +16,16 @@ class ProfileScreen extends ConsumerWidget {
     final session = ref.watch(authSessionProvider);
     final user = session.user;
     final scheme = Theme.of(context).colorScheme;
-    final initials = _initials(user?.name);
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go(AppRoutes.login);
+        }
+      });
+      return const SizedBox.shrink();
+    }
+
+    final initials = _initials(user.name);
 
     return Stack(
       children: [
@@ -99,7 +108,7 @@ class ProfileScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user?.name ?? 'Guest',
+                                user.name,
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
                                       color: scheme.onSurface,
@@ -108,7 +117,7 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                user?.email ?? 'No email available',
+                                user.email,
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(color: scheme.onSurfaceVariant),
                               ),
@@ -160,14 +169,14 @@ class ProfileScreen extends ConsumerWidget {
                     _ProfileRow(
                       icon: Icons.email_outlined,
                       label: 'Email',
-                      value: user?.email ?? 'No email connected',
+                      value: user.email,
                       scheme: scheme,
                     ),
                     const SizedBox(height: 10),
                     _ProfileRow(
                       icon: Icons.person_outline,
                       label: 'Name',
-                      value: user?.name ?? 'Guest',
+                      value: user.name,
                       scheme: scheme,
                     ),
                   ],

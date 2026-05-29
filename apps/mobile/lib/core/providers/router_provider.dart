@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/core/providers/auth_session_provider.dart';
 import 'package:mobile/core/routing/app_routes.dart';
 import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/features/auth/presentation/login_screen.dart';
@@ -17,36 +15,9 @@ import 'package:mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:mobile/features/stats/presentation/stats_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final refresh = ValueNotifier<int>(0);
-  ref.listen(authSessionProvider, (
-    AuthSessionState? previous,
-    AuthSessionState next,
-  ) {
-    refresh.value++;
-  });
-  ref.onDispose(refresh.dispose);
-
   return GoRouter(
     initialLocation: AppRoutes.splash,
-    refreshListenable: refresh,
     redirect: (context, state) {
-      final auth = ref.read(authSessionProvider);
-      final path = state.uri.path;
-      final authed = auth.isAuthenticated;
-
-      if (authed && (path == AppRoutes.login || path == AppRoutes.register)) {
-        return AppRoutes.home;
-      }
-
-      final isPublic =
-          path == AppRoutes.splash ||
-          path == AppRoutes.onboarding ||
-          path == AppRoutes.login ||
-          path == AppRoutes.register;
-
-      if (!authed && !isPublic) {
-        return AppRoutes.login;
-      }
       return null;
     },
     routes: [

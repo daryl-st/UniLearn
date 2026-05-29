@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +8,8 @@ import 'package:mobile/core/widgets/widgets.dart';
 import 'package:mobile/theme/app_spacing.dart';
 import 'package:mobile/theme/uni_learn_theme_extension.dart';
 
+final onboardingPageIndexProvider = StateProvider.autoDispose<int>((ref) => 0);
+
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -19,7 +19,6 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
-  int _index = 0;
 
   static const _imageUrl =
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCd2f_sjcHXIxK5-vjcV3crxZZbYQ-9MnavBsJxNzkQYdRBGpFxWy48q7sNstg3LhSMcTLXJ6OBnlYUBgHp4hd-xmLltdFA1LroFrnzKjgJ4HSWXoTbuQGGI0aLV83CQr6XZoBMZSyMQaxd_TtWcw-nExp1qlNvVeYxfUQs6Qz7e1zIxlrMDBgmwJTjW1xX52wnbQlE4hCcj9S_gCojITarFWDV8rGb5IcVJlGiDadlimqw4wcngxovFxEN5Xgseq0H0bchB9xVgXjj';
@@ -62,6 +61,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final extras = context.uniLearnExtras;
+    final index = ref.watch(onboardingPageIndexProvider);
 
     return Scaffold(
       body: Container(
@@ -87,7 +87,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       child: PageView.builder(
                         controller: _pageController,
                         itemCount: _pages.length,
-                        onPageChanged: (i) => setState(() => _index = i),
+                        onPageChanged: (i) =>
+                            ref
+                                    .read(onboardingPageIndexProvider.notifier)
+                                    .state =
+                                i,
                         itemBuilder: (context, i) {
                           final p = _pages[i];
                           return _OnboardPage(
@@ -100,7 +104,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(_pages.length, (i) {
-                        final active = i == _index;
+                        final active = i == index;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -129,12 +133,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: GradientCtaButton(
-                        label: _index == _pages.length - 1
+                        label: index == _pages.length - 1
                             ? 'Get started'
                             : 'Next',
                         icon: Icons.arrow_forward,
                         onPressed: () async {
-                          if (_index < _pages.length - 1) {
+                          if (index < _pages.length - 1) {
                             await _pageController.nextPage(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeOutCubic,
