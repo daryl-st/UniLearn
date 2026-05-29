@@ -60,6 +60,14 @@ export class ResourceRepository {
         const existingResource = await prisma.resource.findUnique({ where: {fileUrl: data.fileUrl }});
         if (existingResource) return null;
 
+        const existingResourceByTitle = await prisma.resource.findFirst({
+            where: {
+                courseId: data.courseId,
+                title: data.title,
+            }
+        });
+        if (existingResourceByTitle) return null;
+
         const resource = await prisma.resource.create({ data });
         return new Resource({ 
             id: resource.id, 

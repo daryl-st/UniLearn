@@ -13,6 +13,7 @@ export interface AuthRequest extends Request {
     user?: AuthUser;
 }
 
+
 function userFromAccessTokenPayload(decoded: jwt.JwtPayload): AuthUser | null {
     const sub = typeof decoded.sub === "string" ? decoded.sub : null;
     const role = decoded.role;
