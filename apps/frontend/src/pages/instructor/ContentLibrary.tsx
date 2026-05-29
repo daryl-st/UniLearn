@@ -30,10 +30,40 @@ const colorForType = (t: FileType) => {
   return 'text-primary';
 };
 
+const inferFileType = (file: File): FileType => {
+  const name = file.name.toLowerCase();
+  const mime = file.type.toLowerCase();
+
+  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'PDF';
+  if (
+    mime === 'application/vnd.ms-powerpoint' ||
+    mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+    name.endsWith('.ppt') ||
+    name.endsWith('.pptx')
+  ) {
+    return 'PPT';
+  }
+
+  if (
+    mime === 'application/msword' ||
+    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    name.endsWith('.doc') ||
+    name.endsWith('.docx') ||
+    name.endsWith('.odt') ||
+    name.endsWith('.odf')
+  ) {
+    return 'DOC';
+  }
+
+  if (mime.startsWith('image/') || mime.startsWith('video/')) return 'DOC';
+  return 'DOC';
+};
+
 export const ContentLibrary: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedFileName, setSelectedFileName] = useState<string>('No file selected');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const { courses, fetchCourses } = useCourseStore();
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
@@ -90,8 +120,15 @@ export const ContentLibrary: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      const inferredType = inferFileType(file);
       setSelectedFileName(file.name);
-      setFormTitle((t) => t || file.name.replace(/\.[^/.]+$/, ''));
+      setSelectedFile(file);
+      setFormType(inferredType);
+      setFormTitle((previousTitle) =>
+        previousTitle.trim() === '' || previousTitle === selectedFileName
+          ? file.name.replace(/\.[^/.]+$/, '')
+          : previousTitle,
+      );
     }
   };
 
@@ -99,20 +136,61 @@ export const ContentLibrary: React.FC = () => {
     if (!selectedCourseId || !selectedCourse) return;
     const title = formTitle.trim();
     const fileUrl = formUrl.trim();
-    if (!title || !fileUrl) return;
+    if (!title) return;
     setSubmitting(true);
     try {
-      await CourseAPI.uploadResource({
-        title,
-        type: formType,
-        fileUrl,
-        courseId: selectedCourseId,
-        instructorId: selectedCourse.instructorId,
-      });
+      if (selectedFile) {
+        const duplicateFile = resources.some(
+          (resource) =>
+            resource.courseId === selectedCourseId &&
+            resource.title === title,
+        );
+        if (duplicateFile) {
+          alert('A resource with this title already exists for this course.');
+          return;
+        }
+
+        const fd = new FormData();
+        fd.append('file', selectedFile);
+        fd.append('title', title);
+        fd.append('type', inferFileType(selectedFile));
+        fd.append('courseId', selectedCourseId);
+        fd.append('instructorId', selectedCourse.instructorId);
+        const localPlaceholder = `local://${selectedCourseId}/${selectedFile.name}/${selectedFile.size}`;
+        fd.append('fileUrl', localPlaceholder);
+
+        await CourseAPI.uploadResource(fd as any);
+      } else {
+        if (!fileUrl) return;
+        const duplicateUrl = resources.some(
+          (resource) =>
+            resource.courseId === selectedCourseId &&
+            resource.fileUrl === fileUrl,
+        );
+        if (duplicateUrl) {
+          alert('This resource URL already exists for this course.');
+          return;
+        }
+
+        await CourseAPI.uploadResource({
+          title,
+          type: formType,
+          fileUrl,
+          courseId: selectedCourseId,
+          instructorId: selectedCourse.instructorId,
+        });
+      }
+
       const r = await CourseAPI.getResourcesByCourseId(selectedCourseId);
       setResources(Array.isArray(r) ? r : []);
       setFormUrl('');
+      setFormTitle('');
       setSelectedFileName('No file selected');
+      setSelectedFile(null);
+      setFormType('PDF');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (e) {
       console.error(e);
       alert(e instanceof Error ? e.message : 'Upload failed');

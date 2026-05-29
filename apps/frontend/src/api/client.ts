@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export class ApiError extends Error {
     constructor(
         public status: number,
@@ -30,7 +32,9 @@ class APIClient {
     private refreshInFlight: Promise<string | null> | null = null;
 
     constructor(baseUrl?: string) {
-        const fromEnv = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL;
+        const fromEnv = typeof import.meta !== 'undefined' && typeof (import.meta as any).env !== 'undefined'
+            ? (import.meta as any).env.VITE_API_BASE_URL
+            : undefined;
         this.baseUrl = normalizeBaseUrl(baseUrl ?? (typeof fromEnv === 'string' && fromEnv ? fromEnv : 'http://localhost:4000'));
     }
 
@@ -94,6 +98,13 @@ class APIClient {
             ...(restInit.headers as Record<string, string> | undefined),
         };
 
+        // If body is FormData, do not send Content-Type header; the browser will set multipart boundary.
+        // restInit.body can be FormData when callers pass it through.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (restInit.body instanceof FormData) {
+            delete headers['Content-Type'];
+        }
+
         const controller = new AbortController();
         const timeoutId = timeout ? setTimeout(() => controller.abort(), timeout) : null;
 
@@ -120,6 +131,8 @@ class APIClient {
                         ...this.defaultHeaders,
                         ...(restInit.headers as Record<string, string> | undefined),
                     };
+                    // If retry body was FormData, ensure we don't set Content-Type here either.
+                    if ((restInit as any).body instanceof FormData) delete retryHeaders['Content-Type'];
                     response = await fetch(url.toString(), {
                         ...restInit,
                         credentials: 'include',
@@ -142,7 +155,17 @@ class APIClient {
             }
 
             if (!response.ok) {
-                throw new ApiError(response.status, response.statusText, data);
+                let errorMessage = response.statusText;
+                if (data && typeof data === 'object' && data !== null) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const errorBody = data as any;
+                    if (typeof errorBody.error === 'string') {
+                        errorMessage = errorBody.error;
+                    } else if (typeof errorBody.message === 'string') {
+                        errorMessage = errorBody.message;
+                    }
+                }
+                throw new ApiError(response.status, errorMessage, data);
             }
 
             return data as T;
@@ -184,6 +207,11 @@ class APIClient {
     }
 
     post<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
+        // Support FormData bodies (for file uploads). When FormData is provided, pass through directly
+        // so the browser can set the multipart boundary header.
+        if (body instanceof FormData) {
+            return this.request<T>(endpoint, { ...config, method: 'POST', body });
+        }
         return this.request<T>(endpoint, {
             ...config,
             method: 'POST',

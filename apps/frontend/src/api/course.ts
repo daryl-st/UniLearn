@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { api, ApiError } from "./client";
 import type { Course, CreateCourseInput, Resource } from "@unilearn/shared-types";
 
@@ -92,9 +93,9 @@ export const CourseAPI = {
         fileUrl: string;
         courseId: string;
         instructorId: string;
-    }) => {
+    } | FormData) => {
         try {
-            return await api.post<Resource>("course/resource", body);
+            return await api.post<Resource>("course/resource", body as any);
         } catch (err) {
             if (err instanceof ApiError) {
                 throw err;
