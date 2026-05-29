@@ -22,6 +22,7 @@ class EnrolledCoursesSection extends StatelessWidget {
           final s = summaries[i];
           final course = MockCatalog.courseById(s.courseId);
           final title = course?.name ?? 'Course';
+          final subtitle = course?.code ?? 'Course code';
           return SizedBox(
             width: 220,
             child: Container(
