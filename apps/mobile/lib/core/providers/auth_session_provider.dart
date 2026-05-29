@@ -36,11 +36,12 @@ final class AuthSessionNotifier extends Notifier<AuthSessionState> {
   Future<void> signInWithMockCredentials({
     required String email,
     required String password,
+    String? name,
   }) async {
     final user = AuthUser(
       id: 'mock-user-1',
       email: email,
-      name: _displayNameFromEmail(email),
+      name: _displayNameFromInput(name) ?? _displayNameFromEmail(email),
       role: 'STUDENT',
     );
     const token = 'mock_access_token_replace_with_login_response';
@@ -52,8 +53,13 @@ final class AuthSessionNotifier extends Notifier<AuthSessionState> {
   Future<void> registerWithMockCredentials({
     required String email,
     required String password,
+    String? name,
   }) async {
-    await signInWithMockCredentials(email: email, password: password);
+    await signInWithMockCredentials(
+      email: email,
+      password: password,
+      name: name,
+    );
   }
 
   Future<void> signOut() async {
@@ -73,7 +79,15 @@ final class AuthSessionNotifier extends Notifier<AuthSessionState> {
     if (local.isEmpty) return 'Student';
     return '${local[0].toUpperCase()}${local.length > 1 ? local.substring(1) : ''}';
   }
+
+  static String? _displayNameFromInput(String? name) {
+    final value = name?.trim();
+    if (value == null || value.isEmpty) return null;
+    return value;
+  }
 }
 
 final authSessionProvider =
-    NotifierProvider<AuthSessionNotifier, AuthSessionState>(AuthSessionNotifier.new);
+    NotifierProvider<AuthSessionNotifier, AuthSessionState>(
+      AuthSessionNotifier.new,
+    );
