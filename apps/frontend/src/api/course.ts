@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { api, ApiError } from "./client";
-import type { Course, CreateCourseInput, Resource } from "@unilearn/shared-types";
+import type { Course, CreateCourseInput, Resource, UploadResourceResponse } from "@unilearn/shared-types";
 
 // Row from GET /course and GET /course/:id (includes display name when backend sends it).
 export type CourseWithInstructor = Course & { instructorName?: string };
@@ -90,12 +90,12 @@ export const CourseAPI = {
     uploadResource: async (body: {
         title: string;
         type: "PDF" | "PPT" | "DOC";
-        fileUrl: string;
+        fileUrl?: string;
         courseId: string;
         instructorId: string;
     } | FormData) => {
         try {
-            return await api.post<Resource>("course/resource", body as any);
+            return await api.post<UploadResourceResponse>("course/resource", body as any);
         } catch (err) {
             if (err instanceof ApiError) {
                 throw err;

@@ -43,7 +43,7 @@ export type createCourseBody = z.infer<typeof createCourseSchema>
 export const uploadResourceSchema = z.object({
     title: name,
     type: z.enum(["PDF", "PPT", "DOC"]),
-    fileUrl: z.string().min(1).max(2048),
+    fileUrl: z.string().min(1).max(2048).optional(),
     courseId: z.string().uuid(),
     instructorId: z.string().uuid(),
 });

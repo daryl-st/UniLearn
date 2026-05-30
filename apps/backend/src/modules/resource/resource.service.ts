@@ -1,22 +1,23 @@
-import type { FileType } from "@unilearn/shared-types";
+import type { FileType, IngestStatus } from "@unilearn/shared-types";
 import type { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { Course, Resource } from "./resource.entity.js";
 import type { UserRepository } from "../user/user.repository.js";
 import { proxyIngestResource, type IngestResponseBody } from "../ai/ai.service.js";
+import { cloudinaryService } from "./cloudinary.service.js";
+import {
+    isConversionComplete,
+    isConversionFailure,
+    parseCloudinaryPublicId,
+} from "./cloudinary.utils.js";
 
-type UploadResourceSuccess = { ok: true; resource: Resource };
-type UploadResourceConflict = { ok: false; kind: "conflict"; message: string };
-type UploadResourceUpstreamFailure = {
-    ok: false;
-    kind: "ingest_failed";
-    status: number;
-    message: string;
-    detail: unknown;
+type UploadResourceSuccess = {
+    ok: true;
+    resource: Resource;
+    ingestStatus: IngestStatus;
 };
-export type UploadResourceResult =
-    | UploadResourceSuccess
-    | UploadResourceConflict
-    | UploadResourceUpstreamFailure;
+type UploadResourceConflict = { ok: false; kind: "conflict"; message: string };
+
+export type UploadResourceResult = UploadResourceSuccess | UploadResourceConflict;
 
 export class ResourceService {
     constructor(private resourceRepository: ResourceRepository) {}
@@ -32,33 +33,72 @@ export class ResourceService {
         version: number;
         instructorId: string;
         courseId: string;
+        cloudinaryPublicId?: string;
+        needsConversion?: boolean;
     }): Promise<UploadResourceResult> {
+        // Viewable immediately for native PDFs; Office files stay PROCESSING until conversion webhook.
+        const initialStatus = data.needsConversion ? "PROCESSING" : "READY";
+
         const resource = await this.resourceRepository.create({
-            ...data,
-            status: "QUEUED",
+            title: data.title,
+            type: data.type,
+            fileUrl: data.fileUrl,
+            version: data.version,
+            instructorId: data.instructorId,
+            courseId: data.courseId,
+            status: initialStatus,
+            ...(data.cloudinaryPublicId ? { cloudinaryPublicId: data.cloudinaryPublicId } : {}),
         });
         if (!resource) {
             return { ok: false, kind: "conflict", message: "Resource already exists" };
         }
 
-        await this.resourceRepository.updateStatus(resource.id, "PROCESSING");
-
-        const ingest = await proxyIngestResource(resource.id, String(resource.fileUrl));
-        if (!ingest.ok) {
-            await this.resourceRepository.updateStatus(resource.id, "FAILED");
-            return {
-                ok: false,
-                kind: "ingest_failed",
-                status: ingest.status,
-                message: "FastAPI ingest failed",
-                detail: ingest.body,
-            };
+        if (data.needsConversion) {
+            return { ok: true, resource, ingestStatus: "pending" };
         }
 
-        const body = ingest.body as IngestResponseBody;
-        await this.resourceRepository.upsertChunks(resource.id, body.chunks ?? []);
+        void this.ingestResourceAsync(resource.id, String(resource.fileUrl));
+        return { ok: true, resource, ingestStatus: "pending" };
+    }
+
+    async ingestResourceAsync(resourceId: string, pdfUrl: string): Promise<IngestStatus> {
+        try {
+            const ingest = await proxyIngestResource(resourceId, pdfUrl);
+            if (!ingest.ok) {
+                // Keep READY so uploads remain viewable when AI indexing is unavailable.
+                await this.resourceRepository.updateStatus(resourceId, "READY");
+                return "failed";
+            }
+
+            const body = ingest.body as IngestResponseBody;
+            await this.resourceRepository.upsertChunks(resourceId, body.chunks ?? []);
+            await this.resourceRepository.updateStatus(resourceId, "READY");
+            return "ready";
+        } catch {
+            await this.resourceRepository.updateStatus(resourceId, "READY");
+            return "failed";
+        }
+    }
+
+    async handleCloudinaryNotification(payload: Record<string, unknown>): Promise<void> {
+        const publicId = parseCloudinaryPublicId(payload);
+        if (!publicId) return;
+
+        const resource = await this.resourceRepository.findByCloudinaryPublicId(publicId);
+        if (!resource) return;
+
+        if (isConversionFailure(payload)) {
+            await this.resourceRepository.updateStatus(resource.id, "FAILED");
+            return;
+        }
+
+        if (!isConversionComplete(payload)) return;
+
+        const pdfUrl = cloudinaryService.buildPdfUrl(publicId);
+        await this.resourceRepository.updateFileUrl(resource.id, pdfUrl);
         await this.resourceRepository.updateStatus(resource.id, "READY");
-        return { ok: true, resource };
+        resource.fileUrl = pdfUrl;
+        void this.ingestResourceAsync(resource.id, pdfUrl);
     }
 
     async getResourceByCourseId(data: { id: string }) {
@@ -83,7 +123,6 @@ export class CourseService {
         private userRepository: UserRepository,
     ) {}
 
-    /** Catalog rows: real `instructorId` UUID plus display name for UIs. */
     async getCourses(): Promise<
         Array<{
             id: string;

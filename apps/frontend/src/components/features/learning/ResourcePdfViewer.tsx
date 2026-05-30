@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Document, Page } from 'react-pdf';
-import type { FileType } from '@unilearn/shared-types';
+import type { FileType, ResourceStatus } from '@unilearn/shared-types';
 import { ChevronLeft, ChevronRight, ExternalLink, Loader2, Minus, Plus } from 'lucide-react';
+import { isPdfPreviewPending, shouldAttemptPdfPreview } from '@/lib/resourceStatus';
+import { PDFJS_DOCUMENT_OPTIONS, resolveCloudinaryViewerUrl } from '@/lib/cloudinaryViewer';
 
 const ZOOM_LEVELS = [0.75, 1, 1.25, 1.5] as const;
 
@@ -9,10 +11,11 @@ type ResourcePdfViewerProps = {
   fileUrl: string;
   title: string;
   type: FileType;
+  status?: ResourceStatus;
   initialPage?: number;
 };
 
-export function ResourcePdfViewer({ fileUrl, title, type, initialPage = 1 }: ResourcePdfViewerProps) {
+export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 1 }: ResourcePdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [numPages, setNumPages] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
@@ -22,7 +25,9 @@ export function ResourcePdfViewer({ fileUrl, title, type, initialPage = 1 }: Res
   const [isDocumentLoading, setIsDocumentLoading] = useState(true);
 
   const zoom = ZOOM_LEVELS[zoomIndex] ?? 1;
-  const url = String(fileUrl);
+  const url = resolveCloudinaryViewerUrl(String(fileUrl), type);
+  const previewPending = isPdfPreviewPending({ type, status });
+  const canPreview = shouldAttemptPdfPreview({ type, status });
 
   useEffect(() => {
     setPageNumber(Math.max(1, initialPage));
@@ -74,12 +79,23 @@ export function ResourcePdfViewer({ fileUrl, title, type, initialPage = 1 }: Res
     </a>
   );
 
-  if (type !== 'PDF') {
+  if (previewPending) {
+    return (
+      <div className="flex min-h-[min(70vh,720px)] flex-col items-center justify-center gap-4 rounded-sm border border-outline-variant/10 bg-surface-high p-8 text-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-on-surface-variant text-sm max-w-md leading-relaxed">
+          Converting {type} to PDF… This may take a minute.
+        </p>
+        {externalLink}
+      </div>
+    );
+  }
+
+  if (!canPreview) {
     return (
       <div className="flex min-h-[min(70vh,720px)] flex-col items-center justify-center gap-4 rounded-sm border border-outline-variant/10 bg-surface-high p-8 text-center">
         <p className="text-on-surface-variant text-sm max-w-md leading-relaxed">
-          In-app viewing is available for PDF resources. {type} files will be supported after Cloudinary converts uploads
-          to a canonical PDF.
+          This resource is not ready for in-app PDF viewing yet.
         </p>
         {externalLink}
       </div>
@@ -93,6 +109,7 @@ export function ResourcePdfViewer({ fileUrl, title, type, initialPage = 1 }: Res
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/10 bg-surface-low/80 px-4 py-3 shrink-0">
         <p className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant truncate max-w-[40%]">
           {title}
+          {type !== 'PDF' ? ' · PDF preview' : ''}
         </p>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -182,9 +199,7 @@ export function ResourcePdfViewer({ fileUrl, title, type, initialPage = 1 }: Res
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
                 loading={null}
-                options={{
-                  withCredentials: false,
-                }}
+                options={PDFJS_DOCUMENT_OPTIONS}
               >
                 {pageWidth != null && pageWidth > 0 && numPages > 0 && (
                   <Page
