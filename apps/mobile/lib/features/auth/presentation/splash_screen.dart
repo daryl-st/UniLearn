@@ -16,7 +16,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   static const _minSplashDuration = Duration(milliseconds: 1800);
   static const _backgroundImageUrl =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB8eEmwxGtwcZGuL78pXL9F0XDxuX3q6KfZUCJdg2R2Z4DGNAfqI5P0o3JMNlGcjljZX0xrScWv5bE_7oSNOfmsnqzY6kQSF71qfYoSJUT-MfRlBxz9b-K1-IV8CSZLu1eCgE2h4mnFS7-HppKZ_NvF6UAjj4Gcop51PKeZI1aY-scIILL8smc6-Ywq8H1hcYh2twu2x6Tv3RPGTYDSd0PVGuX4exp7hPoc6C5wAE9aPYqHSwvBdBWIVXsYNWq3-pm0Zup2Oo577RJm';
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCd2f_sjcHXIxK5-vjcV3crxZZbYQ-9MnavBsJxNzkQYdRBGpFxWy48q7sNstg3LhSMcTLXJ6OBnlYUBgHp4hd-xmLltdFA1LroFrnzKjgJ4HSWXoTbuQGGI0aLV83CQr6XZoBMZSyMQaxd_TtWcw-nExp1qlNvVeYxfUQs6Qz7e1zIxlrMDBgmwJTjW1xX52wnbQlE4hCcj9S_gCojITarFWDV8rGb5IcVJlGiDadlimqw4wcngxovFxEN5Xgseq0H0bchB9xVgXjj';
 
   late final DateTime _openedAt = DateTime.now();
 
@@ -101,26 +101,132 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 children: [
                   const Spacer(flex: 2),
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerHigh.withValues(
-                        alpha: 0.52,
+                        alpha: 0.58,
                       ),
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(34),
                       border: Border.all(
                         color: scheme.outlineVariant.withValues(alpha: 0.28),
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: scheme.shadow.withValues(alpha: 0.18),
-                          blurRadius: 28,
-                          offset: const Offset(0, 14),
+                          blurRadius: 30,
+                          offset: const Offset(0, 16),
                         ),
                       ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        SizedBox(
+                          width: double.infinity,
+                          height: 240,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(28),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  scheme.primary.withValues(alpha: 0.14),
+                                  scheme.secondary.withValues(alpha: 0.10),
+                                  scheme.surfaceContainerHighest.withValues(
+                                    alpha: 0.96,
+                                  ),
+                                ],
+                              ),
+                              border: Border.all(
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: 0.32,
+                                ),
+                                width: 1.2,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.network(
+                                    _backgroundImageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(color: scheme.surface);
+                                    },
+                                  ),
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          scheme.surface.withValues(
+                                            alpha: 0.10,
+                                          ),
+                                          scheme.primary.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          scheme.surface.withValues(
+                                            alpha: 0.28,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: RadialGradient(
+                                        center: Alignment.topRight,
+                                        radius: 1.1,
+                                        colors: [
+                                          scheme.secondary.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                          Colors.transparent,
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: scheme.surfaceContainerHigh
+                                            .withValues(alpha: 0.55),
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                        border: Border.all(
+                                          color: scheme.outlineVariant
+                                              .withValues(alpha: 0.30),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'UniLearn',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              color: scheme.onSurface,
+                                              fontWeight: FontWeight.w900,
+                                              letterSpacing: 0.4,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
                         ShaderMask(
                           shaderCallback: (bounds) =>
                               extras.primaryGradient.createShader(bounds),
@@ -151,31 +257,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                               ?.copyWith(
                                 color: scheme.onSurface.withValues(alpha: 0.88),
                               ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Initializing academic core',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: AppSpacing.sectionGap),
+                        SizedBox(
+                          width: 220,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              minHeight: 5,
+                              backgroundColor: scheme.surfaceContainerHigh
+                                  .withValues(alpha: 0.8),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                scheme.secondary,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sectionGap),
-                  Text(
-                    'Initializing academic core',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sectionGap),
-                  SizedBox(
-                    width: 220,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        minHeight: 5,
-                        backgroundColor: scheme.surfaceContainerHigh.withValues(
-                          alpha: 0.8,
-                        ),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          scheme.secondary,
-                        ),
-                      ),
                     ),
                   ),
                   const Spacer(flex: 3),

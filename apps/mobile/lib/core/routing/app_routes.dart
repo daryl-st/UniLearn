@@ -6,6 +6,7 @@ abstract final class AppRoutes {
   static const register = '/register';
   static const home = '/home';
   static const courses = '/courses';
+  static const pdfViewer = '/pdf-viewer';
   static const stats = '/stats';
   static const profile = '/profile';
 }
