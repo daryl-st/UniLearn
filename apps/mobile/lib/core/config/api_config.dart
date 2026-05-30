@@ -5,13 +5,13 @@
 abstract final class ApiConfig {
   static const String _rawBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.0.100:4000',
+    defaultValue: 'http://127.0.0.1:4000',
   );
 
   static String get apiBaseUrl {
     final trimmed = _rawBaseUrl.trim();
     if (trimmed.isEmpty) {
-      return 'http://192.168.0.100:4000';
+      return 'http://127.0.0.1:4000';
     }
     return trimmed.endsWith('/') ? trimmed : '$trimmed/';
   }

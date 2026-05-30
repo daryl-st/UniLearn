@@ -1,289 +1,150 @@
-# UniLearn
+# UniLearn Mobile
 
-## Overview
-
-UniLearn is a production-grade, modular monolith academic system designed for students, instructors, and administrators. It supports structured course management, learning progress tracking, analytics, and AI-assisted learning features through an isolated AI service.
-
-The system is designed with strong architectural boundaries, clear service separation, and future scalability in mind.
-
----
-
-## Architecture
-
-The platform follows a three-tier architecture with logical service separation.
-
-Presentation Layer:
-- Web Frontend (React + TypeScript + Vite)
-- Optional Mobile App (Flutter, consumes same API)
-
-Application Layer:
-- Node.js + Express backend (API Gateway and orchestration layer)
-- Modular service structure (users, content, learning, analytics, AI orchestration)
-
-AI Layer:
-- FastAPI-based stateless AI service
-- No direct database access
-- Invoked only through the backend
-
-Data Layer:
-- PostgreSQL
-- Prisma ORM
-- UUID primary keys
-- Versioned migrations
-
-All client communication flows through the Node backend. The frontend never communicates directly with the database or the AI service.
-
----
-
-## Monorepo Structure
+Flutter client for [UniLearn](.) — a PNPM monorepo that also includes the Node API (`apps/backend`), React web app (`apps/frontend`), and Python AI service (`apps/ai`). The mobile app talks only to the **backend API** on port **4000**.
 
 ```
 UniLearn/
-├── apps/
-│   ├── frontend/
-│   ├── backend/
-│   └── ai/
-├── packages/
-│   ├── shared-types/
-│   ├── api-contracts/
-│   ├── eslint-config/
-│   └── tsconfig/
-├── infrastructure/
-│   ├── docker/
-│   └── scripts/
-├── docker-compose.yml
-├── pnpm-workspace.yaml
-└── README.md
+├── apps/mobile/      ← Flutter (Dart 3.10+, package name: mobile)
+├── apps/backend/     ← Express API :4000
+├── apps/frontend/    ← Vite web (not required for mobile)
+├── apps/ai/          ← FastAPI (required when backend runs in Docker Compose)
+└── docker-compose.yml
 ```
 
-### apps/
-Contains deployable applications.
+## Prerequisites
 
-### packages/
-Contains shared logic, configuration, and type contracts used across applications.
+- [Flutter](https://docs.flutter.dev/get-started/install) (SDK **^3.10.8** per `apps/mobile/pubspec.yaml`)
+- Android Studio / Xcode toolchain for a device or emulator
+- A running backend at **`http://<host>:4000`** (see below)
+- For Docker-based API: Docker Compose + root `.env` (see [Backend for mobile](#backend-for-mobile))
 
-### infrastructure/
-Contains Docker configuration, initialization scripts, and deployment-related files.
+## Configure the API URL
 
----
+The app reads `API_BASE_URL` at build time ([`apps/mobile/lib/core/config/api_config.dart`](apps/mobile/lib/core/config/api_config.dart)). Default if unset:
 
-## Technology Stack
+**`http://127.0.0.1:4000`**
 
-Frontend:
-- React
-- TypeScript
-- Vite
-- Tailwind / shadcn UI
+| Target | `API_BASE_URL` |
+|--------|----------------|
+| Android emulator | `http://10.0.2.2:4000` |
+| iOS Simulator / desktop | `http://127.0.0.1:4000` |
+| Physical Android (USB + `adb reverse`) | `http://127.0.0.1:4000` |
+| Physical device (same Wi‑Fi as PC) | `http://<your-lan-ip>:4000` |
 
-Backend:
-- Node.js
-- Express
-- Prisma ORM
-- PostgreSQL
+HTTP is allowed on Android (`android:usesCleartextTraffic="true"` in `AndroidManifest.xml`).
 
-AI Service:
-- Python
-- FastAPI
+**Physical Android over USB** (backend on your machine, e.g. Docker or `pnpm dev`):
 
-Infrastructure:
-- Docker
-- Docker Compose
-- PNPM (workspace package manager)
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (LTS)
-- PNPM
-- Docker + Docker Compose
-- Python 3.10+ (for AI service local development)
-
----
-
-## Installation
-
-### 1. Clone the Repository
-
-```
-git clone <repository-url>
-cd UniLearn
+```bash
+adb reverse tcp:4000 tcp:4000
+cd apps/mobile
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:4000
 ```
 
-### 2. Install Dependencies
+**Android emulator:**
 
+```bash
+cd apps/mobile
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000
 ```
-pnpm install
+
+**Default (127.0.0.1, no extra flag):**
+
+```bash
+cd apps/mobile
+flutter run
 ```
 
----
+Verify the API from your machine:
 
-## Environment Configuration
+```bash
+curl http://127.0.0.1:4000/
+# → Express API running...
+```
 
-Copy example env files as needed (root `.env` for Docker Compose is common; see [`apps/backend/.env.example`](apps/backend/.env.example) and [`apps/frontend/.env.example`](apps/frontend/.env.example)).
+Auth uses Dio against paths such as `auth/login`, `auth/me`, and `auth/refresh` with Bearer tokens and refresh cookies ([`apps/mobile/lib/core/providers/dio_provider.dart`](apps/mobile/lib/core/providers/dio_provider.dart)). CORS / `CLIENT_ORIGIN` only affect the web app, not Flutter.
 
-Configure (in your root `.env` used by Docker Compose, or per-app for local dev):
+## Backend for mobile
 
-- `DATABASE_URL`
-- **`ACCESS_TOKEN_SECRET`** and **`REFRESH_TOKEN_SECRET`** — access JWT is signed and verified with `ACCESS_TOKEN_SECRET` (`sub` + `role`); refresh tokens use `REFRESH_TOKEN_SECRET`.
-- **`CLIENT_ORIGIN`** — browser origin allowed for CORS with credentials (e.g. `http://localhost:5173` for Vite). Must match the URL you use to open the frontend so login/register can set the httpOnly refresh cookie.
-- **`AI_SERVICE_URL`** — Base URL of the FastAPI service as seen by the Node backend (local: `http://127.0.0.1:8000`; Docker Compose: `http://ai:8000`).
-- **`AI_INTERNAL_API_KEY`** — Shared secret: backend sends it as `X-Internal-API-Key` when proxying; the AI service must use the **same** value. Required for `/extract/*` routes.
+You need Postgres + the API. Pick one approach.
 
-AI-only variables (same `.env` when using Compose, or see [`apps/ai/README.md`](apps/ai/README.md)):
+### Option A — Docker (API only)
 
-- **`EXTRACT_URL_ALLOWED_HOSTS`** — Comma-separated hostnames allowed for `POST /ai/extract/url` (e.g. your CDN). If unset, URL extraction stays disabled on the AI service.
+From the repo root, create **`.env`** (Compose loads it). Minimum for `db`, `ai`, and `backend`:
+
+```env
+DATABASE_URL=postgresql://postgres:password@db:5432/unilearn?schema=public
+AI_SERVICE_URL=http://ai:8000
+AI_INTERNAL_API_KEY=change-me-in-development
+ACCESS_TOKEN_SECRET=change-me-access
+REFRESH_TOKEN_SECRET=change-me-refresh
+CLIENT_ORIGIN=http://localhost:3000
+```
+
+Start services (backend depends on `db` and `ai` in [`docker-compose.yml`](docker-compose.yml)):
+
+```bash
+docker compose up --build db ai backend
+```
+
+API: **http://127.0.0.1:4000**
+
+**First time — migrations** (DB exposed on host port **5433**):
+
+```bash
+cd apps/backend
+DATABASE_URL="postgresql://postgres:password@localhost:5433/unilearn?schema=public" npx prisma migrate deploy
+```
+
+Optional seed: `npx prisma db seed`
+
+### Option B — Local API, Docker Postgres
+
+```bash
+# Repo root — database only
+docker compose up db -d
+
+cd apps/backend
+cp .env.example .env
+# DATABASE_URL in .env.example already uses localhost:5433
+npx prisma migrate dev
+pnpm dev
+```
+
+API: **http://127.0.0.1:4000** (`pnpm dev` → `tsx watch src/server.ts`).
+
+## Run the Flutter app
+
+```bash
+cd apps/mobile
+flutter pub get
+flutter run
+# add --dart-define=API_BASE_URL=... when needed (see table above)
+```
+
+Release-style run example:
+
+```bash
+flutter run --release --dart-define=API_BASE_URL=http://10.0.2.2:4000
+```
+
+Android application id: **`com.unilearn.mobile.mobile`**
+
+## Tests
+
+```bash
+cd apps/mobile
+flutter test
+```
+
+## Rest of the monorepo
+
+| Piece | Location |
+|-------|----------|
+| Backend env reference | [`apps/backend/.env.example`](apps/backend/.env.example) |
+| Web app | `cd apps/frontend && pnpm dev` → http://localhost:5173 |
+| Full stack in Docker | `docker compose up --build` → web :3000, API :4000 |
+| OpenAPI | [`packages/api-contracts/openapi.json`](packages/api-contracts/openapi.json) |
+| AI service | [`apps/ai/README.md`](apps/ai/README.md) |
 
 Do not commit `.env` files.
-
----
-
-## Database Setup (Prisma)
-
-Navigate to backend:
-
-```
-cd apps/backend
-```
-
-Run migrations:
-
-```
-npx prisma migrate dev
-```
-
-Generate Prisma client:
-
-```
-npx prisma generate
-```
-
----
-
-## Running the System (Docker Recommended)
-
-From root:
-
-```
-docker compose up --build
-```
-
-Services:
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:4000
-- AI Service: internal container
-- PostgreSQL: internal container
-
----
-
-## Running Services Individually (Development Mode)
-
-### Frontend
-
-```
-cd apps/frontend
-pnpm dev
-```
-
-### Backend
-
-```
-cd apps/backend
-pnpm dev
-```
-
-### AI Service
-
-```
-cd apps/ai
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
----
-
-## Architectural Principles
-
-- Modular monolith backend with logical service separation
-- Clear boundaries between persistence, business logic, and transport layers
-- Shared TypeScript DTOs for API contracts
-- AI service is isolated and stateless
-- Frontend never directly accesses database or AI
-- Prisma schema is internal to backend
-
----
-
-## API Contracts
-
-OpenAPI specification is maintained in:
-
-packages/api-contracts/openapi.json
-
-The backend is the source of truth for API structure.
-
----
-
-## Security
-
-- JWT Authentication
-- Role-Based Access Control
-- Password hashing (bcrypt)
-- Request validation
-- Rate limiting for AI endpoints
-- Centralized error handling
-
----
-
-## Testing
-
-Backend tests:
-
-```
-cd apps/backend
-pnpm test
-```
-
-AI service tests:
-
-```
-cd apps/ai
-pip install -r requirements-dev.txt
-pytest
-```
-
----
-
-## Scalability Strategy
-
-The architecture supports:
-
-- Independent AI service scaling
-- Horizontal backend scaling
-- Future migration to Kubernetes
-- Clean separation for microservice extraction if required
-
----
-
-## Contribution Guidelines
-
-1. Create feature branch from main
-2. Follow ESLint and TypeScript standards
-3. Ensure tests pass
-4. Submit pull request with description
-
----
-
-## License
-
-
----
-
-## Design Philosophy
-
-This system is designed as a structured academic platform, not a prototype. It emphasizes maintainability, extensibility, and clear subsystem boundaries while allowing AI to function as an enhancement rather than a dependency.
-
