@@ -58,12 +58,6 @@ class MainShellScreen extends StatelessWidget {
                       selected: navigationShell.currentIndex == 1,
                       onTap: () => _onDestinationSelected(1),
                     ),
-                    SizedBox(
-                      width: 52,
-                      child: Center(
-                        child: _AiNavButton(scheme: scheme, onTap: () {}),
-                      ),
-                    ),
                     _ShellDestination(
                       icon: Icons.bar_chart_outlined,
                       selectedIcon: Icons.bar_chart,
@@ -137,44 +131,6 @@ class _ShellDestination extends StatelessWidget {
                       ? scheme.primary
                       : scheme.onSurfaceVariant,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AiNavButton extends StatelessWidget {
-  const _AiNavButton({required this.scheme, required this.onTap});
-
-  final ColorScheme scheme;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: scheme.primary,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.auto_awesome, color: scheme.onPrimary, size: 16),
-              Text(
-                'AI',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 9,
-                  letterSpacing: 0.6,
                 ),
               ),
             ],
