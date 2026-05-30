@@ -6,6 +6,7 @@ import aiRouter from "./modules/ai/ai.route.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { handleCloudinaryNotification } from "./modules/resource/cloudinary.controller.js";
 
 const clientOrigin = process.env.CLIENT_ORIGIN;
 const corsOptions: Parameters<typeof cors>[0] = {
@@ -16,6 +17,15 @@ const corsOptions: Parameters<typeof cors>[0] = {
 };
 
 const app: Express = express();
+
+app.post(
+    "/course/cloudinary/notification",
+    express.raw({ type: "application/json" }),
+    (req, res) => {
+        void handleCloudinaryNotification(req, res);
+    },
+);
+
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());

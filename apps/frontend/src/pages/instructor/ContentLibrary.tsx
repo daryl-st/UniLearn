@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useCourseStore } from '@/stores/courseStrore';
 import { CourseAPI } from '@/api/course';
 import type { FileType, Resource } from '@unilearn/shared-types';
+import { resourceStatusClass, resourceStatusLabel } from '@/lib/resourceStatus';
 
 const iconForType = (t: FileType) => {
   if (t === 'PPT') return Video;
@@ -73,6 +74,7 @@ export const ContentLibrary: React.FC = () => {
   const [formTitle, setFormTitle] = useState('');
   const [formUrl, setFormUrl] = useState('');
   const [formType, setFormType] = useState<FileType>('PDF');
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   const itemsPerPage = 10;
 
@@ -138,6 +140,7 @@ export const ContentLibrary: React.FC = () => {
     const fileUrl = formUrl.trim();
     if (!title) return;
     setSubmitting(true);
+    setUploadSuccess(null);
     try {
       if (selectedFile) {
         const duplicateFile = resources.some(
@@ -156,10 +159,13 @@ export const ContentLibrary: React.FC = () => {
         fd.append('type', inferFileType(selectedFile));
         fd.append('courseId', selectedCourseId);
         fd.append('instructorId', selectedCourse.instructorId);
-        const localPlaceholder = `local://${selectedCourseId}/${selectedFile.name}/${selectedFile.size}`;
-        fd.append('fileUrl', localPlaceholder);
 
-        await CourseAPI.uploadResource(fd as any);
+        const response = await CourseAPI.uploadResource(fd as any);
+        const ingestNote =
+          response.ingestStatus === 'pending'
+            ? ' Indexing for AI may take a moment.'
+            : '';
+        setUploadSuccess(`Uploaded "${response.resource.title}".${ingestNote}`);
       } else {
         if (!fileUrl) return;
         const duplicateUrl = resources.some(
@@ -179,6 +185,7 @@ export const ContentLibrary: React.FC = () => {
           courseId: selectedCourseId,
           instructorId: selectedCourse.instructorId,
         });
+        setUploadSuccess(`Saved "${title}" from URL.`);
       }
 
       const r = await CourseAPI.getResourcesByCourseId(selectedCourseId);
@@ -207,9 +214,12 @@ export const ContentLibrary: React.FC = () => {
         <div>
           <h1 className="text-4xl font-headline font-bold tracking-tight">Content upload</h1>
           <p className="text-outline max-w-xl mt-2">
-            Register materials via <span className="font-mono text-primary">POST /course/resource</span> (metadata + public{' '}
-            <span className="font-mono">fileUrl</span>). This does not upload binary files to the server yet.
+            Upload PDF, PowerPoint, or Word files to Cloudinary. Office files are converted to PDF automatically.
+            You can also paste a public URL for externally hosted materials.
           </p>
+          {uploadSuccess ? (
+            <p className="text-sm text-secondary mt-2">{uploadSuccess}</p>
+          ) : null}
           <p className="text-[10px] font-mono text-outline mt-2 uppercase tracking-widest">{selectedFileName}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -231,7 +241,7 @@ export const ContentLibrary: React.FC = () => {
               onClick={handleSelectFile}
             >
               <FolderPlus size={20} />
-              <span>Select file (local only)</span>
+              <span>Select file</span>
             </button>
           </div>
         </div>
@@ -259,7 +269,7 @@ export const ContentLibrary: React.FC = () => {
         <input
           value={formUrl}
           onChange={(e) => setFormUrl(e.target.value)}
-          placeholder="Public file URL (https://...)"
+          placeholder="Public file URL (optional when uploading a file)"
           className="w-full bg-surface-high border border-outline-variant/20 rounded-lg px-3 py-2 text-sm text-on-surface"
         />
         <button
@@ -282,6 +292,7 @@ export const ContentLibrary: React.FC = () => {
                   <tr className="bg-surface-high/50 text-outline text-[11px] font-mono uppercase tracking-[0.2em]">
                     <th className="px-6 py-4 font-medium">Resource</th>
                     <th className="px-4 py-4 font-medium">File type</th>
+                    <th className="px-4 py-4 font-medium">Status</th>
                     <th className="px-4 py-4 font-medium text-right">Version</th>
                     <th className="px-6 py-4 font-medium text-right">Link</th>
                   </tr>
@@ -289,13 +300,13 @@ export const ContentLibrary: React.FC = () => {
                 <tbody className="divide-y divide-outline-variant/5">
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-sm text-outline">
+                      <td colSpan={5} className="px-6 py-8 text-sm text-outline">
                         Loading…
                       </td>
                     </tr>
                   ) : paginatedAssets.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-sm text-outline">
+                      <td colSpan={5} className="px-6 py-8 text-sm text-outline">
                         No resources for this course.
                       </td>
                     </tr>
@@ -323,6 +334,16 @@ export const ContentLibrary: React.FC = () => {
                           <td className="px-4 py-4">
                             <span className="px-2 py-0.5 rounded bg-surface-highest text-[10px] font-mono text-outline">
                               {asset.type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span
+                              className={cn(
+                                'px-2 py-0.5 rounded border text-[10px] font-mono uppercase',
+                                resourceStatusClass(asset.status),
+                              )}
+                            >
+                              {resourceStatusLabel(asset.status)}
                             </span>
                           </td>
                           <td className="px-4 py-4 text-right">
@@ -433,6 +454,15 @@ export const ContentLibrary: React.FC = () => {
               </div>
 
               <div className="pt-1 flex flex-col gap-2">
+                {selectedCourseId ? (
+                  <button
+                    type="button"
+                    className="w-full bg-primary text-on-primary py-2 rounded font-bold text-sm hover:brightness-110 active:scale-95 transition-all"
+                    onClick={() => navigate(`/dashboard/courses/${selectedCourseId}`)}
+                  >
+                    Preview course materials
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="w-full bg-on-surface text-surface py-2 rounded font-bold text-sm hover:opacity-90 active:scale-95 transition-all"
@@ -449,8 +479,9 @@ export const ContentLibrary: React.FC = () => {
               <span className="text-[10px] font-mono text-primary tracking-widest uppercase">Note</span>
             </div>
             <p className="text-xs text-outline leading-relaxed">
-              Binary upload and Cloudinary integration are not implemented. Paste a reachable URL to the file (e.g. from your
-              university storage).
+              Files upload to Cloudinary. PPT and DOC materials are converted to PDF via the Aspose add-on (enable it in
+              your Cloudinary dashboard). Set <span className="font-mono">PUBLIC_API_URL</span> on the backend for conversion
+              webhooks in local development.
             </p>
           </div>
         </div>

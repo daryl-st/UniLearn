@@ -4,9 +4,8 @@ import { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { CourseService, ResourceService } from "./resource.service.js";
 import type { createCourseBody, deleteResourceBody, uploadResourceBody } from "../../schemas/index.js";
 import { UserRepository } from "../user/user.repository.js";
-import { cloudinaryService } from "./cloudinary.service.js";
+import { cloudinaryService, CloudinaryNotConfiguredError } from "./cloudinary.service.js";
 
-// This will get me the id from req.params.id.
 function paramId(value: string | string[] | undefined): string | undefined {
     if (value === undefined) return undefined;
     return Array.isArray(value) ? value[0] : value;
@@ -18,14 +17,12 @@ const courseRepo = new CourseRepository();
 const userRepository = new UserRepository();
 const courseService = new CourseService(courseRepo, userRepository);
 
-// we might need to move this validation schema somewhere.
 const courseIdQuerySchema = z.object({
     courseId: z.string().uuid(),
 });
 
 export class ResourceController {
     async getResources(req: Request, res: Response) {
-        // parsing and validating the courseId query parameter using Zod before fetching resources.
         const parsed = courseIdQuerySchema.safeParse(req.query);
         if (!parsed.success) {
             return res.status(400).json({
@@ -42,7 +39,6 @@ export class ResourceController {
     }
 
     async getResourceById(req: Request, res: Response) {
-        // this will get me the id from req.params.id.
         const id = paramId(req.params.id);
         if (!id) {
             return res.status(400).json({ error: "Missing resource id." });
@@ -55,7 +51,6 @@ export class ResourceController {
     }
 
     async getCourseById(req: Request, res: Response) {
-        // this will get me the id from req.params.id.
         const id = paramId(req.params.id);
         if (!id) {
             return res.status(400).json({ error: "Missing course id." });
@@ -68,49 +63,63 @@ export class ResourceController {
     }
 
     async uploadResource(req: Request, res: Response) {
-        // Support both JSON body uploads (existing flow) and multipart/form-data (file upload).
         const resourceDetails = req.body as uploadResourceBody;
 
-        // If a multipart file was provided by the instructor, upload to Cloudinary and replace `fileUrl`.
-        // `maybeSingle` middleware will populate `req.file` when multipart/form-data is used.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const maybeFile = (req as any).file;
-        if (maybeFile && maybeFile.buffer) {
-            if (cloudinaryService.isConfigured) {
-                try {
-                    const secureUrl = await cloudinaryService.uploadBuffer(maybeFile.buffer, maybeFile.originalname);
-                    // overwrite fileUrl so the existing DB contract (fileUrl) remains unchanged.
-                    if (secureUrl) {
-                        (resourceDetails as any).fileUrl = secureUrl;
-                    }
-                } catch (err) {
-                    // keep original comments and return an error without changing API contract.
-                    return res.status(500).json({ error: "Failed to upload file to storage." });
-                }
-            } else if (!resourceDetails.fileUrl) {
-                // Allow instructor uploads to proceed even when Cloudinary is not configured,
-                // preserving the resource contract with a temporary placeholder URL.
-                (resourceDetails as any).fileUrl = `${maybeFile.originalname ?? 'file'}:${Date.now()}`;
+        const maybeFile = (req as any).file as
+            | { buffer: Buffer; originalname?: string; mimetype?: string }
+            | undefined;
+
+        let cloudinaryPublicId: string | undefined;
+        let needsConversion = false;
+
+        if (maybeFile?.buffer) {
+            if (!cloudinaryService.isConfigured) {
+                return res.status(503).json({
+                    error: "Cloudinary is not configured. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET.",
+                });
             }
+
+            try {
+                const upload = await cloudinaryService.uploadResourceFile(
+                    maybeFile.buffer,
+                    maybeFile.originalname ?? "file",
+                    maybeFile.mimetype,
+                );
+                cloudinaryPublicId = upload.publicId;
+                needsConversion = upload.needsConversion;
+                resourceDetails.fileUrl = needsConversion ? upload.originalUrl : upload.pdfUrl;
+            } catch (err) {
+                if (err instanceof CloudinaryNotConfiguredError) {
+                    return res.status(503).json({ error: err.message });
+                }
+                console.error("Cloudinary upload failed:", err);
+                return res.status(502).json({ error: "Failed to upload file to storage." });
+            }
+        } else if (!resourceDetails.fileUrl?.trim()) {
+            return res.status(400).json({ error: "Provide a file upload or a public fileUrl." });
         }
 
         const resourceData = {
-            ...resourceDetails,
-            // this is a placeholder, we can implement versioning logic later.
+            title: resourceDetails.title,
+            type: resourceDetails.type,
+            fileUrl: resourceDetails.fileUrl!.trim(),
+            courseId: resourceDetails.courseId,
+            instructorId: resourceDetails.instructorId,
             version: 1,
+            ...(cloudinaryPublicId ? { cloudinaryPublicId } : {}),
+            needsConversion,
         };
+
         const result = await resourceService.uploadResource(resourceData);
-        if (!result.ok && result.kind === "conflict") {
+        if (!result.ok) {
             return res.status(409).json({ error: result.message });
         }
-        if (!result.ok && result.kind === "ingest_failed") {
-            const status = result.status >= 400 && result.status < 500 ? result.status : 502;
-            return res.status(status).json({
-                error: result.message,
-                detail: result.detail,
-            });
-        }
-        return res.status(201).json(result.resource);
+
+        return res.status(201).json({
+            resource: result.resource,
+            ingestStatus: result.ingestStatus,
+        });
     }
 
     async createCourse(req: Request, res: Response) {

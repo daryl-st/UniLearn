@@ -11,10 +11,14 @@ extension ApiResourceMapper on ApiResource {
       id: id,
       title: title,
       type: type.toLowerCase(),
-      pdfUrl: fileUrl,
+      pdfUrl: _resolveCloudinaryViewerUrl(fileUrl, type),
       size: '—',
     );
   }
+}
+
+String _resolveCloudinaryViewerUrl(String fileUrl, String type) {
+  return fileUrl;
 }
 
 class CourseDetailRouteScreen extends ConsumerWidget {

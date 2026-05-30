@@ -188,6 +188,7 @@ export default function Learning() {
               fileUrl={String(selectedResource.fileUrl)}
               title={selectedResource.title}
               type={selectedResource.type}
+              status={selectedResource.status}
             />
           </div>
         </div>
