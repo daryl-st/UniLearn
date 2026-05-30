@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/core/routing/app_navigation.dart';
 import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/core/widgets/widgets.dart';
-import 'package:mobile/features/home/presentation/widgets/deadlines_section.dart';
 import 'package:mobile/features/home/presentation/widgets/enrolled_courses_section.dart';
-import 'package:mobile/features/home/presentation/widgets/home_ai_card.dart';
 import 'package:mobile/features/home/presentation/widgets/quick_actions_grid.dart';
 import 'package:mobile/features/home/presentation/widgets/recent_activity_section.dart';
+import 'package:mobile/features/home/presentation/widgets/study_updates_section.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
 import 'package:mobile/theme/app_typography.dart';
@@ -33,12 +33,11 @@ class HomeScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _StreakHeroCard(days: MockCatalog.streakDays),
-                  const SizedBox(height: AppSpacing.stackGap),
-                  HomeAiCard(suggestion: MockCatalog.aiSuggestion),
                   const SizedBox(height: AppSpacing.sectionGap),
-                  const SectionHeader(
+                  SectionHeader(
                     title: 'Enrolled courses',
                     actionLabel: 'View all',
+                    onAction: () => context.goToCoursesTab(),
                   ),
                   EnrolledCoursesSection(
                     summaries: MockCatalog.enrolledSummaries,
@@ -50,11 +49,38 @@ class HomeScreen extends ConsumerWidget {
                   const SectionHeader(title: 'Recent activity'),
                   RecentActivitySection(items: MockCatalog.recentActivity),
                   const SizedBox(height: AppSpacing.sectionGap),
-                  const SectionHeader(title: 'Upcoming deadlines'),
-                  DeadlinesSection(items: MockCatalog.deadlines),
+                  const SectionHeader(title: 'Study updates'),
+                  StudyUpdatesSection(items: MockCatalog.studyUpdates),
                   const SizedBox(height: AppSpacing.sectionGap),
                   const SectionHeader(title: 'Quick actions'),
-                  const QuickActionsGrid(),
+                  QuickActionsGrid(
+                    actions: [
+                      QuickAction(
+                        icon: Icons.menu_book_outlined,
+                        label: 'Browse courses',
+                        onTap: () => context.goToCoursesTab(),
+                      ),
+                      QuickAction(
+                        icon: Icons.folder_open_outlined,
+                        label: 'Study resources',
+                        onTap: () => context.openCourseDetail(
+                          MockCatalog.primaryEnrolledCourseId,
+                        ),
+                      ),
+                      QuickAction(
+                        icon: Icons.insights_outlined,
+                        label: 'Learning stats',
+                        onTap: () => context.goToStatsTab(),
+                      ),
+                      QuickAction(
+                        icon: Icons.auto_awesome_outlined,
+                        label: 'Resource Q&A',
+                        onTap: () => context.openCourseDetail(
+                          MockCatalog.primaryEnrolledCourseId,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 88),
                 ],
               ),

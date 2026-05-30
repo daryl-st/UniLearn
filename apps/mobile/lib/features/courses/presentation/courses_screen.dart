@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:mobile/core/routing/app_navigation.dart';
 import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/core/widgets/uni_card.dart';
 import 'package:mobile/theme/app_radii.dart';
@@ -22,11 +22,7 @@ class CoursesScreen extends ConsumerWidget {
 
     final years = [1, 2, 3, 4];
     final List<int?> tags = [null, ...years];
-    final filtered = selectedYear == null
-        ? MockCatalog.apiCourses
-        : MockCatalog.apiCourses
-              .where((course) => course.academicYear == selectedYear)
-              .toList();
+    final filtered = MockCatalog.coursesForYear(selectedYear);
 
     return ColoredBox(
       color: ColorTokens.background,
@@ -63,7 +59,9 @@ class CoursesScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: ListView.separated(
+            child: filtered.isEmpty
+                ? _EmptyYearState(selectedYear: selectedYear)
+                : ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.containerPadding),
               itemCount: filtered.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
@@ -78,7 +76,7 @@ class CoursesScreen extends ConsumerWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(AppRadii.lg),
-                    onTap: () => context.push('/courses/${c.id}'),
+                    onTap: () => context.openCourseDetail(c.id),
                     child: UniCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,6 +161,48 @@ class CoursesScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyYearState extends StatelessWidget {
+  const _EmptyYearState({required this.selectedYear});
+
+  final int? selectedYear;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final label = selectedYear == null
+        ? 'No courses available'
+        : 'No courses in Year $selectedYear';
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.containerPadding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.menu_book_outlined,
+              size: 48,
+              color: scheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try another year or browse all courses.',
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

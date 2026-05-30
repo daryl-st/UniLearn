@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
-import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
 import 'package:mobile/theme/app_typography.dart';
 import 'package:mobile/theme/uni_learn_theme_extension.dart';
+
+class AiTaskSuggestion {
+  const AiTaskSuggestion({required this.title, required this.body});
+
+  final String title;
+  final String body;
+}
 
 class HomeAiCard extends StatelessWidget {
   const HomeAiCard({super.key, required this.suggestion});

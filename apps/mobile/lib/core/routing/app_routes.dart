@@ -9,4 +9,6 @@ abstract final class AppRoutes {
   static const pdfViewer = '/pdf-viewer';
   static const stats = '/stats';
   static const profile = '/profile';
+
+  static String courseDetail(String courseId) => '$courses/$courseId';
 }
