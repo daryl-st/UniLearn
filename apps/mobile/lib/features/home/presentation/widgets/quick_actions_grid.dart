@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 
 import 'package:mobile/theme/app_radii.dart';
 
-class QuickActionsGrid extends StatelessWidget {
-  const QuickActionsGrid({super.key});
+class QuickAction {
+  const QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
-  static const _actions = [
-    (Icons.document_scanner_outlined, 'Scan PDF'),
-    (Icons.note_alt_outlined, 'Quick note'),
-    (Icons.calendar_month_outlined, 'Schedule'),
-    (Icons.help_outline, 'Help hub'),
-  ];
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+}
+
+class QuickActionsGrid extends StatelessWidget {
+  const QuickActionsGrid({super.key, required this.actions});
+
+  final List<QuickAction> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +30,26 @@ class QuickActionsGrid extends StatelessWidget {
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       childAspectRatio: 1.35,
-      children: _actions.map((a) {
+      children: actions.map((action) {
         return Material(
           color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            side: BorderSide(color: scheme.outlineVariant),
+          ),
           child: InkWell(
-            onTap: () {},
+            onTap: action.onTap,
             borderRadius: BorderRadius.circular(AppRadii.lg),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(a.$1, color: scheme.secondary, size: 28),
+                Icon(action.icon, color: scheme.secondary, size: 28),
                 const SizedBox(height: 8),
-                Text(a.$2, style: Theme.of(context).textTheme.labelLarge),
+                Text(
+                  action.label,
+                  style: Theme.of(context).textTheme.labelLarge,
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),

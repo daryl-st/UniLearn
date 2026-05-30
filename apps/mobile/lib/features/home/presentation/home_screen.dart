@@ -1,125 +1,144 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
+import 'package:mobile/core/providers/auth_session_provider.dart';
+import 'package:mobile/core/providers/course_providers.dart';
+import 'package:mobile/core/routing/app_navigation.dart';
 import 'package:mobile/core/widgets/widgets.dart';
-import 'package:mobile/features/home/presentation/widgets/deadlines_section.dart';
 import 'package:mobile/features/home/presentation/widgets/enrolled_courses_section.dart';
-import 'package:mobile/features/home/presentation/widgets/home_ai_card.dart';
 import 'package:mobile/features/home/presentation/widgets/quick_actions_grid.dart';
 import 'package:mobile/features/home/presentation/widgets/recent_activity_section.dart';
+import 'package:mobile/features/home/presentation/widgets/study_updates_section.dart';
+import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
+import 'package:mobile/theme/app_typography.dart';
+import 'package:mobile/theme/color_tokens.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  static const _bottomBackgroundImageUrl =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB8eEmwxGtwcZGuL78pXL9F0XDxuX3q6KfZUCJdg2R2Z4DGNAfqI5P0o3JMNlGcjljZX0xrScWv5bE_7oSNOfmsnqzY6kQSF71qfYoSJUT-MfRlBxz9b-K1-IV8CSZLu1eCgE2h4mnFS7-HppKZ_NvF6UAjj4Gcop51PKeZI1aY-scIILL8smc6-Ywq8H1hcYh2twu2x6Tv3RPGTYDSd0PVGuX4exp7hPoc6C5wAE9aPYqHSwvBdBWIVXsYNWq3-pm0Zup2Oo577RJm';
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final userName = ref.watch(authSessionProvider).user?.name ?? 'Student';
+    final firstName = userName.split(' ').first;
+    final dashboardAsync = ref.watch(studentDashboardProvider);
+    final catalogAsync = ref.watch(courseCatalogProvider);
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                scheme.surface,
-                scheme.surface.withValues(alpha: 0.96),
-                scheme.surfaceContainerLowest,
-              ],
+    final primaryCourseId = dashboardAsync.maybeWhen(
+      data: (dashboard) => dashboard.primaryCourseId,
+      orElse: () => null,
+    ) ??
+        catalogAsync.maybeWhen(
+          data: (courses) => courses.isNotEmpty ? courses.first.id : null,
+          orElse: () => null,
+        );
+
+    return ColoredBox(
+      color: ColorTokens.background,
+      child: CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.containerPadding,
             ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: IgnorePointer(
-            child: SizedBox(
-              width: double.infinity,
-              height: 280,
-              child: Stack(
-                fit: StackFit.expand,
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ClipRect(
-                    child: ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Image.network(
-                        _bottomBackgroundImageUrl,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.bottomCenter,
-                        filterQuality: FilterQuality.low,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const SizedBox.shrink();
-                        },
-                      ),
+                  Text(
+                    'Good morning, $firstName',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          scheme.surface.withValues(alpha: 0.00),
-                          scheme.surface.withValues(alpha: 0.44),
-                          scheme.surface.withValues(alpha: 0.88),
-                        ],
-                      ),
+                  const SizedBox(height: AppSpacing.sectionGap),
+                  const _StreakHeroCard(days: 7),
+                  const SizedBox(height: AppSpacing.sectionGap),
+                  SectionHeader(
+                    title: 'Courses',
+                    actionLabel: 'View all',
+                    onAction: () => context.goToCoursesTab(),
+                  ),
+                  dashboardAsync.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, _) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(error.toString()),
+                    ),
+                    data: (dashboard) => EnrolledCoursesSection(
+                      summaries: dashboard.courseSummaries,
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.sectionGap),
+                  const SectionHeader(title: 'Learning progress'),
+                  const _DemoLabel(label: 'Sample data'),
+                  _LearningProgressChart(scheme: scheme),
+                  const SizedBox(height: AppSpacing.sectionGap),
+                  const SectionHeader(title: 'Recent activity'),
+                  const RecentActivitySection(items: []),
+                  const SizedBox(height: AppSpacing.sectionGap),
+                  const SectionHeader(title: 'Study updates'),
+                  const StudyUpdatesSection(items: []),
+                  const SizedBox(height: AppSpacing.sectionGap),
+                  const SectionHeader(title: 'Quick actions'),
+                  QuickActionsGrid(
+                    actions: [
+                      QuickAction(
+                        icon: Icons.menu_book_outlined,
+                        label: 'Browse courses',
+                        onTap: () => context.goToCoursesTab(),
+                      ),
+                      if (primaryCourseId != null) ...[
+                        QuickAction(
+                          icon: Icons.folder_open_outlined,
+                          label: 'Study resources',
+                          onTap: () =>
+                              context.openCourseDetail(primaryCourseId),
+                        ),
+                        QuickAction(
+                          icon: Icons.auto_awesome_outlined,
+                          label: 'Resource Q&A',
+                          onTap: () =>
+                              context.openCourseDetail(primaryCourseId),
+                        ),
+                      ],
+                      QuickAction(
+                        icon: Icons.insights_outlined,
+                        label: 'Learning stats',
+                        onTap: () => context.goToStatsTab(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 88),
                 ],
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DemoLabel extends StatelessWidget {
+  const _DemoLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        CustomScrollView(
-          slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.containerPadding,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _StreakHeroCard(days: MockCatalog.streakDays),
-                    const SizedBox(height: AppSpacing.stackGap),
-                    HomeAiCard(suggestion: MockCatalog.aiSuggestion),
-                    const SizedBox(height: AppSpacing.sectionGap),
-                    const SectionHeader(
-                      title: 'Enrolled courses',
-                      actionLabel: 'View all',
-                    ),
-                    EnrolledCoursesSection(
-                      summaries: MockCatalog.enrolledSummaries,
-                    ),
-                    const SizedBox(height: AppSpacing.sectionGap),
-                    const SectionHeader(title: 'Learning progress'),
-                    _LearningProgressChart(scheme: scheme),
-                    const SizedBox(height: AppSpacing.sectionGap),
-                    const SectionHeader(title: 'Recent activity'),
-                    RecentActivitySection(items: MockCatalog.recentActivity),
-                    const SizedBox(height: AppSpacing.sectionGap),
-                    const SectionHeader(title: 'Upcoming deadlines'),
-                    DeadlinesSection(items: MockCatalog.deadlines),
-                    const SizedBox(height: AppSpacing.sectionGap),
-                    const SectionHeader(title: 'Quick actions'),
-                    const QuickActionsGrid(),
-                    const SizedBox(height: 88),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }
@@ -132,46 +151,40 @@ class _StreakHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      constraints: const BoxConstraints(minHeight: 188),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            scheme.primaryContainer.withValues(alpha: 0.84),
-            scheme.secondaryContainer.withValues(alpha: 0.74),
-            scheme.surfaceContainerHigh.withValues(alpha: 0.90),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.14)),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+
+    return UniCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            children: [
+              Text(
+                'STUDY STREAK',
+                style: AppTypography.eyebrow(scheme),
+              ),
+              const Spacer(),
+              Text(
+                'Sample',
+                style: AppTypography.eyebrow(scheme, opacity: 0.6),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.16),
-                  shape: BoxShape.circle,
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  border: Border.all(color: scheme.outlineVariant),
                 ),
                 child: Icon(
                   Icons.local_fire_department_rounded,
                   color: scheme.primary,
-                  size: 28,
+                  size: 24,
                 ),
               ),
               const SizedBox(width: 14),
@@ -182,38 +195,31 @@ class _StreakHeroCard extends StatelessWidget {
                     Text(
                       '$days day streak',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.2,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'You have studied every day this week. Keep the momentum and extend it tonight.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.35,
-                      ),
+                      'You have studied every day this week.',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                    const SizedBox(height: 12),
+                    Row(
                       children: [
-                        _StreakInfoChip(
-                          label: 'Today',
-                          value: '2 sessions',
-                          scheme: scheme,
+                        Expanded(
+                          child: _StreakInfoChip(
+                            label: 'Best run',
+                            value: '11 days',
+                            scheme: scheme,
+                          ),
                         ),
-                        _StreakInfoChip(
-                          label: 'Best run',
-                          value: '11 days',
-                          scheme: scheme,
-                        ),
-                        _StreakInfoChip(
-                          label: 'Reward',
-                          value: '+120 XP',
-                          scheme: scheme,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _StreakInfoChip(
+                            label: 'Reward',
+                            value: '+120 XP',
+                            scheme: scheme,
+                          ),
                         ),
                       ],
                     ),
@@ -223,26 +229,22 @@ class _StreakHeroCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: LinearProgressIndicator(
-                  value: 0.84,
-                  minHeight: 7,
-                  borderRadius: BorderRadius.circular(999),
-                  backgroundColor: scheme.surface.withValues(alpha: 0.18),
-                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Streak goal 84%',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadii.full),
+            child: LinearProgressIndicator(
+              value: 0.84,
+              minHeight: 4,
+              backgroundColor: scheme.surfaceContainerHigh,
+              valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Streak goal 84%',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: scheme.secondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -264,30 +266,24 @@ class _StreakInfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.28),
-        ),
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 2),
+          Text(label, style: AppTypography.eyebrow(scheme, opacity: 0.7)),
+          const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: scheme.onSurface,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -306,55 +302,22 @@ class _LearningProgressChart extends StatelessWidget {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final values = <double>[0.35, 0.55, 0.42, 0.9, 0.64, 0.78, 0.5];
 
-    return Container(
-      height: 234,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            scheme.surfaceContainerHighest.withValues(alpha: 0.90),
-            scheme.surfaceContainerLow.withValues(alpha: 0.78),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+    return UniCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.insights_rounded, color: scheme.primary, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Weekly learning trend',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: scheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
           Text(
-            'A quick look at your learning rhythm this week.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            'WEEKLY TREND',
+            style: AppTypography.eyebrow(scheme),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your learning rhythm this week.',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 18),
-          Expanded(
+          SizedBox(
+            height: 120,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -372,28 +335,10 @@ class _LearningProgressChart extends StatelessWidget {
                                 heightFactor: values[i],
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: i == 3
-                                          ? [scheme.primary, scheme.secondary]
-                                          : [
-                                              scheme.surfaceContainerHigh,
-                                              scheme.surfaceContainerHighest,
-                                            ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: i == 3
-                                        ? [
-                                            BoxShadow(
-                                              color: scheme.primary.withValues(
-                                                alpha: 0.22,
-                                              ),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 6),
-                                            ),
-                                          ]
-                                        : null,
+                                    color: i == 3
+                                        ? scheme.primary
+                                        : scheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
                               ),
@@ -408,7 +353,7 @@ class _LearningProgressChart extends StatelessWidget {
                                       ? scheme.primary
                                       : scheme.onSurfaceVariant,
                                   fontWeight: i == 3
-                                      ? FontWeight.w800
+                                      ? FontWeight.w700
                                       : FontWeight.w500,
                                 ),
                           ),

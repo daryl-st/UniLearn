@@ -1,10 +1,9 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=C:\Users\hp\develop\flutter"
-export "FLUTTER_APPLICATION_PATH=D:\UniLearn\UniLearn\apps\mobile"
-export "FLUTTER_FRAMEWORK_SWIFT_PACKAGE_PATH=D:\UniLearn\UniLearn\apps\mobile\ios\Flutter\ephemeral\Packages\.packages\FlutterFramework"
+export "FLUTTER_ROOT=/home/darnell/Documents/Development/flutter"
+export "FLUTTER_APPLICATION_PATH=/home/darnell/Documents/Projects/UniLearn/apps/mobile"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
-export "FLUTTER_TARGET=lib\main.dart"
+export "FLUTTER_TARGET=lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"
 export "FLUTTER_BUILD_NAME=1.0.0"
 export "FLUTTER_BUILD_NUMBER=1"

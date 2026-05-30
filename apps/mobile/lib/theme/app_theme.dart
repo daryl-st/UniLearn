@@ -6,7 +6,7 @@ import 'app_typography.dart';
 import 'color_tokens.dart';
 import 'uni_learn_theme_extension.dart';
 
-/// UniLearn mobile [ThemeData] from [docs/DESIGN.md] (dark-first).
+/// UniLearn mobile [ThemeData] from [docs/DESIGN.md] (dark-first, shadcn-aligned).
 abstract final class AppTheme {
   static ThemeData get dark {
     const scheme = ColorScheme(
@@ -60,6 +60,7 @@ abstract final class AppTheme {
     );
 
     final textTheme = AppTypography.textTheme(scheme);
+    final extras = UniLearnThemeExtension.dark;
 
     return ThemeData(
       useMaterial3: true,
@@ -68,21 +69,22 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: ColorTokens.background,
       canvasColor: ColorTokens.background,
       textTheme: textTheme,
-      extensions: [UniLearnThemeExtension.dark],
+      extensions: [extras],
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        backgroundColor: ColorTokens.surfaceContainer,
+        backgroundColor: ColorTokens.surfaceContainerLow,
         foregroundColor: ColorTokens.onSurface,
-        titleTextStyle: textTheme.titleLarge,
+        titleTextStyle: textTheme.titleSmall,
+        surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: ColorTokens.surfaceContainerLow,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.lg),
-          side: BorderSide(color: ColorTokens.outlineVariant.withValues(alpha: 0.35)),
+          side: BorderSide(color: extras.cardBorderColor),
         ),
       ),
       dividerTheme: DividerThemeData(
@@ -90,30 +92,71 @@ abstract final class AppTheme {
         thickness: 1,
         space: 1,
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: ColorTokens.primary,
+          foregroundColor: ColorTokens.onPrimary,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: ColorTokens.onPrimary,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: ColorTokens.onSurface,
+          backgroundColor: ColorTokens.surfaceContainerHigh,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+          side: BorderSide(color: extras.cardBorderColor),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: ColorTokens.onSurfaceVariant,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: ColorTokens.surfaceContainer,
+        fillColor: ColorTokens.surfaceContainerHigh,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          borderSide: BorderSide(color: ColorTokens.outlineVariant.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          borderSide: BorderSide(
+            color: ColorTokens.onSurface.withValues(alpha: 0.05),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          borderSide: BorderSide(color: ColorTokens.outlineVariant.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          borderSide: BorderSide(
+            color: ColorTokens.onSurface.withValues(alpha: 0.05),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          borderSide: const BorderSide(color: ColorTokens.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          borderSide: BorderSide(color: extras.focusRingColor, width: 1),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.stackGap,
-          vertical: AppSpacing.stackGap,
+          vertical: 14,
         ),
-        labelStyle: textTheme.labelMedium,
-        hintStyle: textTheme.bodyMedium,
+        labelStyle: AppTypography.eyebrow(scheme),
+        hintStyle: textTheme.bodyMedium?.copyWith(
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.2),
+        ),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: ColorTokens.secondary,
+        color: ColorTokens.primary,
         linearTrackColor: ColorTokens.surfaceContainerHigh,
       ),
     );

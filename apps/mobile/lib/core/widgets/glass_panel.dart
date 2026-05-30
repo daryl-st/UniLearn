@@ -1,9 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:mobile/theme/app_radii.dart';
+import 'package:mobile/theme/uni_learn_theme_extension.dart';
 
-/// Shared frosted panel (DESIGN.md). Use from any feature.
+/// Flat bordered panel (web shadcn card). Use from any feature.
 class GlassPanel extends StatelessWidget {
   const GlassPanel({
     super.key,
@@ -16,25 +15,13 @@ class GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final extras = context.uniLearnExtras;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadii.lg),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainer.withValues(alpha: 0.42),
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
-            ),
-          ),
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
-        ),
+    return DecoratedBox(
+      decoration: extras.cardDecoration(radius: AppRadii.lg),
+      child: Padding(
+        padding: padding,
+        child: child,
       ),
     );
   }

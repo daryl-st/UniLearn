@@ -1,46 +1,52 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/core/providers/course_providers.dart';
+import 'package:mobile/core/widgets/uni_card.dart';
+import 'package:mobile/features/home/domain/home_models.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
+import 'package:mobile/theme/app_typography.dart';
+import 'package:mobile/theme/color_tokens.dart';
 
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
-  static const _bottomBackgroundImageUrl =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB8eEmwxGtwcZGuL78pXL9F0XDxuX3q6KfZUCJdg2R2Z4DGNAfqI5P0o3JMNlGcjljZX0xrScWv5bE_7oSNOfmsnqzY6kQSF71qfYoSJUT-MfRlBxz9b-K1-IV8CSZLu1eCgE2h4mnFS7-HppKZ_NvF6UAjj4Gcop51PKeZI1aY-scIILL8smc6-Ywq8H1hcYh2twu2x6Tv3RPGTYDSd0PVGuX4exp7hPoc6C5wAE9aPYqHSwvBdBWIVXsYNWq3-pm0Zup2Oo577RJm';
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final summaries = MockCatalog.enrolledSummaries;
+    final dashboardAsync = ref.watch(studentDashboardProvider);
+    final summaries = dashboardAsync.maybeWhen(
+      data: (dashboard) => dashboard.courseSummaries,
+      orElse: () => const <CourseResourceSummary>[],
+    );
     final totalProgress = summaries.isEmpty
         ? 0
-        : (summaries.fold<int>(0, (sum, item) => sum + item.progressPercent) /
-                  summaries.length)
-              .round();
+        : (summaries.fold<double>(
+                0,
+                (sum, item) => sum + item.progressPercent,
+              ) /
+              summaries.length)
+            .round();
     final totalModulesDone = summaries.fold<int>(
       0,
-      (sum, item) => sum + item.modulesDone,
+      (sum, item) => sum + item.resourcesViewed,
     );
     final totalModules = summaries.fold<int>(
       0,
-      (sum, item) => sum + item.modulesTotal,
+      (sum, item) => sum + item.resourcesTotal,
     );
     final remainingModules = totalModules - totalModulesDone;
-    final totalStudyHours = 18.6;
+    const totalStudyHours = 18.6;
     final weeklyMinutes = <double>[32, 46, 28, 58, 64, 40, 52];
 
     final courseRows = summaries.map((summary) {
-      final course = MockCatalog.courseById(summary.courseId);
       return _CourseMomentumRow(
-        title: course?.name ?? 'Course ${summary.courseId}',
-        code: course?.code ?? 'N/A',
+        title: summary.title ?? 'Course ${summary.courseId}',
+        code: summary.code ?? 'N/A',
         progress: summary.progressPercent / 100,
-        modulesDone: summary.modulesDone,
-        modulesTotal: summary.modulesTotal,
-        accent: _accentForCode(summary.courseId, scheme),
+        modulesDone: summary.resourcesViewed,
+        modulesTotal: summary.resourcesTotal,
+        accent: scheme.primary,
       );
     }).toList();
 
@@ -56,187 +62,123 @@ class StatsScreen extends StatelessWidget {
             (a, b) => a.progressPercent >= b.progressPercent ? a : b,
           )
         : null;
-    final topCourseModel = topCourse == null
-        ? null
-        : MockCatalog.courseById(topCourse.courseId);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  scheme.surface,
-                  scheme.surface.withValues(alpha: 0.96),
-                  scheme.surfaceContainerLowest,
-                ],
-              ),
+    return ColoredBox(
+      color: ColorTokens.background,
+      child: CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.containerPadding,
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: IgnorePointer(
-              child: SizedBox(
-                width: double.infinity,
-                height: 280,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.network(
-                      _bottomBackgroundImageUrl,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.bottomCenter,
-                      filterQuality: FilterQuality.low,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const SizedBox.shrink();
-                      },
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      border: Border.all(color: scheme.outlineVariant),
                     ),
-                    ClipRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                        child: const SizedBox.expand(),
-                      ),
+                    child: Text(
+                      'Sample analytics — detailed stats coming soon.',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            scheme.surface.withValues(alpha: 0.00),
-                            scheme.surface.withValues(alpha: 0.58),
-                            scheme.surface.withValues(alpha: 0.90),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: CustomScrollView(
-              slivers: [
-                const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.containerPadding,
                   ),
-                  sliver: SliverToBoxAdapter(
+                  const SizedBox(height: AppSpacing.stackGap),
+                  _StatsHeroCard(
+                    totalProgress: totalProgress,
+                    streakDays: 7,
+                    activeCourses: summaries.length,
+                    totalStudyHours: totalStudyHours,
+                    topCourseTitle:
+                        topCourse?.title ?? 'No course spotlight',
+                    topCourseProgress: topCourse?.progressPercent ?? 0,
+                  ),
+                  const SizedBox(height: AppSpacing.stackGap),
+                  _SectionCard(
+                    title: 'This week momentum',
+                    subtitle: 'Study rhythm across the last seven days.',
+                    child: _WeeklyBarChart(values: weeklyMinutes),
+                  ),
+                  const SizedBox(height: AppSpacing.stackGap),
+                  _SectionCard(
+                    title: 'Course momentum',
+                    subtitle: 'Completion and module progress.',
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _StatsHeroCard(
-                          totalProgress: totalProgress,
-                          streakDays: MockCatalog.streakDays,
-                          activeCourses: summaries.length,
-                          totalStudyHours: totalStudyHours,
-                          topCourseTitle:
-                              topCourseModel?.name ?? 'No course spotlight',
-                          topCourseProgress: topCourse?.progressPercent ?? 0,
-                        ),
-                        const SizedBox(height: AppSpacing.stackGap),
-                        _SectionCard(
-                          title: 'This week momentum',
-                          subtitle:
-                              'A quick view of your study rhythm across the last seven days.',
-                          child: _WeeklyBarChart(values: weeklyMinutes),
-                        ),
-                        const SizedBox(height: AppSpacing.stackGap),
-                        _SectionCard(
-                          title: 'Course momentum',
-                          subtitle:
-                              'Your strongest courses based on completion and module progress.',
-                          child: Column(
-                            children: [
-                              for (var i = 0; i < courseRows.length; i++) ...[
-                                courseRows[i],
-                                if (i != courseRows.length - 1)
-                                  const SizedBox(height: 14),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.stackGap),
-                        _SectionCard(
-                          title: 'Engagement split',
-                          subtitle:
-                              'How your study time is currently distributed.',
-                          child: _ActivityBreakdownChart(
-                            slices: activityBreakdown,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.stackGap),
-                        _SectionCard(
-                          title: 'Performance snapshot',
-                          subtitle:
-                              'Pulling together the most useful indicators from the dashboard and course details.',
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _MetricTile(
-                                  width: 176,
-                                  height: 156,
-                                  label: 'Avg. completion',
-                                  value: '$totalProgress%',
-                                  helper: 'Across active courses',
-                                  icon: Icons.insights_rounded,
-                                  accent: scheme.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                _MetricTile(
-                                  width: 176,
-                                  height: 156,
-                                  label: 'Modules completed',
-                                  value: '$totalModulesDone',
-                                  helper: 'Out of $totalModules total',
-                                  icon: Icons.check_circle_outline_rounded,
-                                  accent: scheme.secondary,
-                                ),
-                                const SizedBox(width: 12),
-                                _MetricTile(
-                                  width: 176,
-                                  height: 156,
-                                  label: 'Remaining modules',
-                                  value: '$remainingModules',
-                                  helper: 'Keep the momentum going',
-                                  icon: Icons.timelapse_rounded,
-                                  accent: scheme.tertiary,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 96),
+                        if (courseRows.isEmpty)
+                          Text(
+                            'No course progress yet.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          )
+                        else
+                          for (var i = 0; i < courseRows.length; i++) ...[
+                            courseRows[i],
+                            if (i != courseRows.length - 1)
+                              const SizedBox(height: 12),
+                          ],
                       ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.stackGap),
+                  _SectionCard(
+                    title: 'Engagement split',
+                    subtitle: 'How your study time is distributed.',
+                    child: _ActivityBreakdownChart(
+                      slices: activityBreakdown,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.stackGap),
+                  _SectionCard(
+                    title: 'Performance snapshot',
+                    subtitle: 'Key indicators from your workload.',
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _MetricTile(
+                            width: 160,
+                            label: 'Avg. completion',
+                            value: '$totalProgress%',
+                            helper: 'Across active courses',
+                            icon: Icons.insights_rounded,
+                            accent: scheme.primary,
+                          ),
+                          const SizedBox(width: 12),
+                          _MetricTile(
+                            width: 160,
+                            label: 'Modules done',
+                            value: '$totalModulesDone',
+                            helper: 'Out of $totalModules total',
+                            icon: Icons.check_circle_outline_rounded,
+                            accent: scheme.secondary,
+                          ),
+                          const SizedBox(width: 12),
+                          _MetricTile(
+                            width: 160,
+                            label: 'Remaining',
+                            value: '$remainingModules',
+                            helper: 'Keep the momentum',
+                            icon: Icons.timelapse_rounded,
+                            accent: scheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 96),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  Color _accentForCode(String id, ColorScheme scheme) {
-    final palette = [
-      scheme.primary,
-      scheme.secondary,
-      scheme.tertiary,
-      scheme.error,
-    ];
-    final index = id.codeUnits.fold<int>(0, (sum, unit) => sum + unit);
-    return palette[index % palette.length];
   }
 }
 
@@ -260,39 +202,12 @@ class _StatsHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            scheme.primaryContainer.withValues(alpha: 0.92),
-            scheme.secondaryContainer.withValues(alpha: 0.80),
-            scheme.surfaceContainerHighest.withValues(alpha: 0.86),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.10)),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withValues(alpha: 0.10),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
+
+    return UniCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Analytics dashboard',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
-              letterSpacing: 1.1,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          Text('ANALYTICS', style: AppTypography.eyebrow(scheme)),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,29 +219,25 @@ class _StatsHeroCard extends StatelessWidget {
                     Text(
                       '$totalProgress%',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Average course progress across your active workload.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.4,
-                      ),
+                      'Average course progress.',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         _HeroPill(
                           label: '$streakDays-day streak',
                           icon: Icons.local_fire_department_rounded,
                         ),
                         _HeroPill(
-                          label: '$activeCourses active courses',
+                          label: '$activeCourses courses',
                           icon: Icons.menu_book_rounded,
                         ),
                       ],
@@ -334,50 +245,19 @@ class _StatsHeroCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
               SizedBox(
-                width: 112,
-                height: 112,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 112,
-                      height: 112,
-                      child: CircularProgressIndicator(
-                        value: totalProgress / 100,
-                        strokeWidth: 10,
-                        strokeCap: StrokeCap.round,
-                        backgroundColor: scheme.surface.withValues(alpha: 0.24),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          scheme.primary,
-                        ),
-                      ),
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$totalProgress%',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: scheme.onSurface,
-                                fontWeight: FontWeight.w900,
-                              ),
-                        ),
-                        Text(
-                          'overall',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ],
+                width: 72,
+                height: 72,
+                child: CircularProgressIndicator(
+                  value: totalProgress / 100,
+                  strokeWidth: 6,
+                  backgroundColor: scheme.surfaceContainerHigh,
+                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -385,16 +265,14 @@ class _StatsHeroCard extends StatelessWidget {
                   label: 'Study hours',
                   value: '${totalStudyHours.toStringAsFixed(1)}h',
                   icon: Icons.schedule_rounded,
-                  accent: scheme.primary,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _MiniStat(
-                  label: 'Spotlight course',
+                  label: 'Spotlight',
                   value: topCourseTitle,
                   icon: Icons.rocket_launch_rounded,
-                  accent: scheme.secondary,
                 ),
               ),
             ],
@@ -404,17 +282,10 @@ class _StatsHeroCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadii.full),
             child: LinearProgressIndicator(
               value: topCourseProgress / 100,
-              minHeight: 8,
-              backgroundColor: scheme.surface.withValues(alpha: 0.18),
+              minHeight: 4,
+              backgroundColor: scheme.surfaceContainerHigh,
               valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$topCourseProgress% completion in your most advanced course.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -432,24 +303,21 @@ class _HeroPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.22),
-        ),
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: scheme.primary),
+          Icon(icon, size: 14, color: scheme.primary),
           const SizedBox(width: 6),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: scheme.onSurface,
-              fontWeight: FontWeight.w700,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -472,32 +340,17 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.84),
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.24),
-        ),
-      ),
+
+    return UniCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            title.toUpperCase(),
+            style: AppTypography.eyebrow(scheme, opacity: 0.8),
           ),
           const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-              height: 1.35,
-            ),
-          ),
+          Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 16),
           child,
         ],
@@ -518,11 +371,12 @@ class _WeeklyBarChart extends StatelessWidget {
     final maxValue = values.reduce((a, b) => a > b ? a : b);
 
     return SizedBox(
-      height: 170,
+      height: 140,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: List.generate(values.length, (index) {
           final heightFactor = values[index] / maxValue;
+          final highlight = index == 3;
           return Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : 4),
@@ -531,38 +385,27 @@ class _WeeklyBarChart extends StatelessWidget {
                 children: [
                   Text(
                     '${values[index].round()}m',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall,
                   ),
-                  const SizedBox(height: 8),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    height: 110 * heightFactor,
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 90 * heightFactor,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [scheme.primary, scheme.secondary],
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: scheme.primary.withValues(alpha: 0.18),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
+                      color: highlight
+                          ? scheme.primary
+                          : scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     labels[index],
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w800,
+                      color: highlight
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                      fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ],
@@ -595,88 +438,38 @@ class _CourseMomentumRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.18),
-        ),
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      accent.withValues(alpha: 0.92),
-                      accent.withValues(alpha: 0.65),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.menu_book_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      code,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '${(progress * 100).round()}%',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: accent,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const SizedBox(height: 12),
+          Text(code, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 8),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadii.full),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 10,
-              backgroundColor: scheme.surfaceContainerHighest.withValues(
-                alpha: 0.84,
-              ),
+              minHeight: 4,
+              backgroundColor: scheme.surfaceContainerHighest,
               valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            '$modulesDone of $modulesTotal modules completed',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            '$modulesDone of $modulesTotal viewed · ${(progress * 100).round()}%',
+            style: Theme.of(context).textTheme.labelSmall,
           ),
         ],
       ),
@@ -703,94 +496,40 @@ class _ActivityBreakdownChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final total = slices.fold<int>(0, (sum, item) => sum + item.value);
 
     return Column(
       children: [
-        SizedBox(
-          height: 170,
-          child: Row(
-            children: [
-              Expanded(
-                flex: 42,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    color: scheme.surfaceContainerHigh.withValues(alpha: 0.56),
-                    child: Column(
-                      children: [
-                        for (final slice in slices)
-                          Expanded(
-                            flex: slice.value,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    slice.color.withValues(alpha: 0.95),
-                                    slice.color.withValues(alpha: 0.70),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+        for (final slice in slices)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: slice.color,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 58,
-                child: Column(
-                  children: [
-                    for (final slice in slices) ...[
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: slice.color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                slice.label,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            Text(
-                              '${((slice.value / total) * 100).round()}%',
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(
-                                    color: slice.color,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    slice.label,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  '${((slice.value / total) * 100).round()}%',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: slice.color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'Total tracked activity: $total%',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-        ),
       ],
     );
   }
@@ -799,7 +538,6 @@ class _ActivityBreakdownChart extends StatelessWidget {
 class _MetricTile extends StatelessWidget {
   const _MetricTile({
     required this.width,
-    required this.height,
     required this.label,
     required this.value,
     required this.helper,
@@ -808,7 +546,6 @@ class _MetricTile extends StatelessWidget {
   });
 
   final double width;
-  final double height;
   final String label;
   final String value;
   final String helper;
@@ -818,57 +555,29 @@ class _MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: width,
-      height: height,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              accent.withValues(alpha: 0.14),
-              scheme.surfaceContainerHigh.withValues(alpha: 0.72),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: accent.withValues(alpha: 0.14)),
+          color: scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: accent, size: 18),
-            ),
-            const SizedBox(height: 10),
+            Icon(icon, color: accent, size: 18),
+            const SizedBox(height: 8),
             Text(
               value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w800,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
-            Text(
-              helper,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.25,
-              ),
-            ),
+            Text(label, style: Theme.of(context).textTheme.labelSmall),
+            Text(helper, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),
@@ -881,46 +590,37 @@ class _MiniStat extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
-    required this.accent,
   });
 
   final String label;
   final String value;
   final IconData icon;
-  final Color accent;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.16),
-        ),
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: accent, size: 18),
-          const SizedBox(height: 8),
+          Icon(icon, size: 16, color: scheme.primary),
+          const SizedBox(height: 6),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-          ),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
         ],
       ),
     );

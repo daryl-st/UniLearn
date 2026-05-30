@@ -1,6 +1,11 @@
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/core/api/auth_token_store.dart';
+import 'package:mobile/core/api/api_exception.dart';
+import 'package:mobile/core/api/auth_api.dart';
 import 'package:mobile/core/contracts/auth_contract.dart';
+import 'package:mobile/core/providers/dio_provider.dart';
 import 'package:mobile/core/providers/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,53 +24,65 @@ class AuthSessionState {
       accessToken != null && accessToken!.isNotEmpty && user != null;
 }
 
-final class AuthSessionNotifier extends Notifier<AuthSessionState> {
+class AuthSessionNotifier extends Notifier<AuthSessionState> {
   @override
   AuthSessionState build() => const AuthSessionState();
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
+  AuthApi get _authApi => ref.read(authApiProvider);
+  AuthTokenStore get _tokenStore => ref.read(authTokenStoreProvider);
+  CookieJar get _cookieJar => ref.read(cookieJarProvider);
 
   Future<void> tryRestore() async {
     final token = _prefs.getString(_kAccessToken);
     final user = AuthUser.tryFromJsonString(_prefs.getString(_kUserJson));
-    if (token != null && user != null) {
-      state = AuthSessionState(accessToken: token, user: user);
+    if (token == null || user == null) return;
+
+    _tokenStore.setToken(token);
+    state = AuthSessionState(accessToken: token, user: user);
+
+    try {
+      final me = await _authApi.fetchMe();
+      await _persistSession(token: token, user: me.user);
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) {
+        await _clearLocalSession();
+      }
+    } catch (_) {
+      // Keep cached session when offline or server unreachable.
     }
   }
 
-  Future<void> signInWithMockCredentials({
+  Future<void> signIn({
     required String email,
     required String password,
-    String? name,
   }) async {
-    final user = AuthUser(
-      id: 'mock-user-1',
-      email: email,
-      name: _displayNameFromInput(name) ?? _displayNameFromEmail(email),
-      role: 'STUDENT',
-    );
-    const token = 'mock_access_token_replace_with_login_response';
-    state = AuthSessionState(accessToken: token, user: user);
-    await _prefs.setString(_kAccessToken, token);
-    await _prefs.setString(_kUserJson, user.toJsonString());
+    final response = await _authApi.login(email: email, password: password);
+    await _applyLoginResponse(response);
   }
 
-  Future<void> registerWithMockCredentials({
+  Future<void> register({
     required String email,
     required String password,
-    String? name,
+    required String fullName,
   }) async {
-    await signInWithMockCredentials(
+    final nameParts = splitFullName(fullName);
+    final response = await _authApi.register(
       email: email,
       password: password,
-      name: name,
+      firstName: nameParts.firstName,
+      lastName: nameParts.lastName,
     );
+    await _applyLoginResponse(response);
   }
 
   Future<void> signOut() async {
-    state = const AuthSessionState();
-    await _prefs.remove(_kAccessToken);
-    await _prefs.remove(_kUserJson);
+    try {
+      await _authApi.logout();
+    } catch (_) {
+      // Clear local session even if logout request fails.
+    }
+    await _clearLocalSession();
   }
 
   bool get onboardingCompleted => _prefs.getBool(_kOnboardingDone) ?? false;
@@ -74,16 +91,26 @@ final class AuthSessionNotifier extends Notifier<AuthSessionState> {
     await _prefs.setBool(_kOnboardingDone, true);
   }
 
-  static String _displayNameFromEmail(String email) {
-    final local = email.split('@').first;
-    if (local.isEmpty) return 'Student';
-    return '${local[0].toUpperCase()}${local.length > 1 ? local.substring(1) : ''}';
+  Future<void> _applyLoginResponse(LoginResponse response) async {
+    _tokenStore.setToken(response.accessToken);
+    await _persistSession(token: response.accessToken, user: response.user);
   }
 
-  static String? _displayNameFromInput(String? name) {
-    final value = name?.trim();
-    if (value == null || value.isEmpty) return null;
-    return value;
+  Future<void> _persistSession({
+    required String token,
+    required AuthUser user,
+  }) async {
+    state = AuthSessionState(accessToken: token, user: user);
+    await _prefs.setString(_kAccessToken, token);
+    await _prefs.setString(_kUserJson, user.toJsonString());
+  }
+
+  Future<void> _clearLocalSession() async {
+    _tokenStore.clear();
+    await _cookieJar.deleteAll();
+    state = const AuthSessionState();
+    await _prefs.remove(_kAccessToken);
+    await _prefs.remove(_kUserJson);
   }
 }
 
