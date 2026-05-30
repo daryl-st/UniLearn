@@ -3,8 +3,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../../config/db.js";
 import { generateAccessToken, generateRefreshToken } from "./auth.tokens.js";
+import { User, Student } from "../user/user.entity.js";
 
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const DEFAULT_DEPARTMENT_CODE = "CS101";
 
 export class AuthService {
     constructor(private userRepository: UserRepository) {}
@@ -21,23 +23,65 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
-    /** Public self-registration: always STUDENT regardless of body role (instructor/admin via admin only). */
+    /** Public self-registration: always STUDENT regardless of body role. */
     async registerUser(data: { email: string; firstName: string; lastName: string; password: string }) {
         const existingUser = await this.userRepository.findUserByEmail(data.email);
         if (existingUser) throw new Error("Email already registered!");
 
-        const hashedPass = await bcrypt.hash(data.password, 10);
+        const department = await prisma.department.findUnique({
+            where: { code: DEFAULT_DEPARTMENT_CODE },
+        });
+        if (!department) throw new Error("Run database seed first");
 
-        const user = await this.userRepository.create({
-            email: data.email,
-            name: `${data.firstName} ${data.lastName}`,
-            role: "STUDENT",
-            password: hashedPass,
+        const hashedPass = await bcrypt.hash(data.password, 10);
+        const name = `${data.firstName} ${data.lastName}`;
+
+        const { user, profile } = await prisma.$transaction(async (tx) => {
+            const createdUser = await tx.user.create({
+                data: {
+                    email: data.email,
+                    name,
+                    role: "STUDENT",
+                    password: hashedPass,
+                },
+            });
+
+            const studnetId = `UGR/${createdUser.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+
+            const createdProfile = await tx.studentProfile.create({
+                data: {
+                    id: createdUser.id,
+                    studnetId,
+                    departmentId: department.id,
+                    acadamicYear: 1,
+                },
+            });
+
+            return { user: createdUser, profile: createdProfile };
+        });
+
+        const userEntity = new User({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            password: user.password,
+            role: user.role,
+        });
+
+        const userProfile = new Student({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            password: user.password,
+            role: user.role,
+            studentId: profile.studnetId,
+            departmentId: profile.departmentId,
+            academicYear: profile.acadamicYear,
         });
 
         const { accessToken, refreshToken } = await this.issueSession(user.id, user.role);
 
-        return { user, accessToken, refreshToken };
+        return { user: userEntity, userProfile, accessToken, refreshToken };
     }
 
     async loginUser(data: { email: string; password: string }) {
@@ -123,23 +167,23 @@ export class AuthService {
         const existing = await this.userRepository.findUserByEmail(email);
         if (!existing) throw new Error("Internal Error!");
 
-        const department = await prisma.department.findUnique({ where: { code: "CS101" } });
-        if (!department) throw new Error("Invalid Department");
+        const department = await prisma.department.findUnique({ where: { code: DEFAULT_DEPARTMENT_CODE } });
+        if (!department) throw new Error("Run database seed first");
 
-        const userProfile = await this.userRepository.createStudentProfile(data, existing.id, department);
-
-        return userProfile;
+        return this.userRepository.createStudentProfile(
+            { studentId: data.studentId, year: data.year },
+            existing.id,
+            department,
+        );
     }
 
     async createInstructorProfile(data: { instructorId: string }, email: string) {
         const existing = await this.userRepository.findUserByEmail(email);
         if (!existing) throw new Error("Internal Error!");
 
-        const department = await prisma.department.findUnique({ where: { code: "CS101" } });
-        if (!department) throw new Error("Invalid Department");
+        const department = await prisma.department.findUnique({ where: { code: DEFAULT_DEPARTMENT_CODE } });
+        if (!department) throw new Error("Run database seed first");
 
-        const instructorProfile = await this.userRepository.createInstructorProfile(data, existing.id, department);
-
-        return instructorProfile;
+        return this.userRepository.createInstructorProfile(data, existing.id, department);
     }
 }

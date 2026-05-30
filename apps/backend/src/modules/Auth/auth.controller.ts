@@ -8,46 +8,35 @@ import { REFRESH_TOKEN_COOKIE_NAME, refreshTokenCookieOptions } from "./auth.coo
 const userRepository = new UserRepository();
 const authService = new AuthService(userRepository);
 
-const profileData = {
-    studentId: "UGR/0906/15",
-    year: 2024,
-}
-
-const instructorData = {
-    instructorId: "INS/0905/15",
-    departmentId: 'CS',
-}
-
-let userProfile;
-
 export class AuthController {
     async registerUser(req: Request, res: Response) {
         const userData = req.body as RegisterBody;
-        const { user, accessToken, refreshToken } = await authService.registerUser(userData);
+        const { user, userProfile, accessToken, refreshToken } =
+            await authService.registerUser(userData);
 
-        if (user.role === "STUDENT") {
-            userProfile = await authService.createStudentProfile(profileData, user.email);
-        } else if (user.role === "INSTRUCTOR") {
-            userProfile = await authService.createInstructorProfile(instructorData, user.email);
-        } else {
-            throw new Error("Failed to create profile");
-        }
+        res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, refreshTokenCookieOptions());
 
-        const cookieOpts = refreshTokenCookieOptions();
-        res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, cookieOpts);
-
-        res.status(201).json({ user, userProfile, accessToken });
+        res.status(201).json({
+            user: user.toJson(),
+            userProfile: {
+                studentId: userProfile.studentId,
+                academicYear: userProfile.academicYear,
+                departmentId: userProfile.departmentId,
+            },
+            accessToken,
+        });
     }
 
     async loginUser(req: Request, res: Response) {
         const user = req.body as LoginBody;
-
-        // user type has to correct to be in sync with returned data
         const userData = await authService.loginUser(user);
 
         res.cookie(REFRESH_TOKEN_COOKIE_NAME, userData.refreshToken, refreshTokenCookieOptions());
 
-        res.status(200).json({ user: userData.existingUser, accessToken: userData.accessToken });
+        res.status(200).json({
+            user: userData.existingUser.toJson(),
+            accessToken: userData.accessToken,
+        });
     }
 
     async refresh(req: Request, res: Response) {
@@ -80,22 +69,16 @@ export class AuthController {
         return res.sendStatus(204);
     }
 
-    // refactor
     async me(req: AuthRequest, res: Response) {
         if (!req.user) {
-            return res.status(401).json({ error: "Unauthorized" });
+            return res.status(401).json({ message: "Unauthorized" });
         }
         const userId = req.user.userId;
         const user = await userRepository.findUserById(userId);
         if (!user) throw new Error("User not found!");
 
         return res.json({
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role
-            }
+            user: user.toJson(),
         });
     }
 }

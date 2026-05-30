@@ -5,6 +5,7 @@ import resourceRouter from "./modules/resource/resource.route.js";
 import aiRouter from "./modules/ai/ai.route.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const clientOrigin = process.env.CLIENT_ORIGIN;
 const corsOptions: Parameters<typeof cors>[0] = {
@@ -27,5 +28,7 @@ app.use("/users", userRoute);
 app.use("/auth", authRouter);
 app.use("/course", resourceRouter);
 app.use("/ai", aiRouter);
+
+app.use(errorHandler);
 
 export default app;

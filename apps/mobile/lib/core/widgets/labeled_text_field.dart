@@ -14,6 +14,7 @@ class LabeledTextField extends StatelessWidget {
     this.keyboardType,
     this.prefixIcon,
     this.suffixIcon,
+    this.errorText,
   });
 
   final String label;
@@ -23,6 +24,7 @@ class LabeledTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +77,15 @@ class LabeledTextField extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadii.sm),
               borderSide: BorderSide(color: extras.focusRingColor, width: 1),
             ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              borderSide: BorderSide(color: scheme.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              borderSide: BorderSide(color: scheme.error, width: 1),
+            ),
+            errorText: errorText,
           ),
         ),
       ],

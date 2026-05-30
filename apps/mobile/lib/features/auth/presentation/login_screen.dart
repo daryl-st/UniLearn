@@ -2,8 +2,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/core/api/api_exception.dart';
 import 'package:mobile/core/providers/auth_session_provider.dart';
 import 'package:mobile/core/routing/app_routes.dart';
+import 'package:mobile/core/validation/auth_validation.dart';
+import 'package:mobile/features/auth/presentation/widgets/auth_error_banner.dart';
 import 'package:mobile/core/widgets/widgets.dart';
 import 'package:mobile/theme/app_spacing.dart';
 import 'package:mobile/theme/app_typography.dart';
@@ -21,8 +24,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _email = TextEditingController(text: 'student@university.edu');
+  final _email = TextEditingController();
   final _password = TextEditingController();
+  String? _emailError;
+  String? _passwordError;
+  String? _apiError;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -32,14 +39,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    await ref
-        .read(authSessionProvider.notifier)
-        .signInWithMockCredentials(
-          email: _email.text.trim(),
-          password: _password.text,
-        );
-    if (!mounted) return;
-    context.go(AppRoutes.home);
+    final emailError = AuthValidation.emailError(_email.text);
+    final passwordError = AuthValidation.passwordError(_password.text);
+
+    setState(() {
+      _emailError = emailError;
+      _passwordError = passwordError;
+      _apiError = null;
+    });
+
+    if (emailError != null || passwordError != null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authSessionProvider.notifier).signIn(
+            email: _email.text.trim(),
+            password: _password.text,
+          );
+      if (!mounted) return;
+      context.go(AppRoutes.home);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _apiError = e.message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -69,7 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Sign in with your university email to continue.',
+                'Sign in with your AAU email to continue.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
@@ -81,10 +105,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_apiError != null) ...[
+                      AuthErrorBanner(message: _apiError!),
+                      const SizedBox(height: AppSpacing.stackGap),
+                    ],
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: scheme.surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(8),
@@ -93,22 +121,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: Icon(
                             Icons.school_outlined,
                             color: scheme.primary,
-                            size: 20,
+                            size: 18,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Sign in to your workspace',
-                                style: Theme.of(context).textTheme.titleMedium,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 2),
                               Text(
                                 'Enter your university credentials.',
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -118,10 +148,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: AppSpacing.sectionGap),
                     LabeledTextField(
                       label: 'University email',
-                      hint: 'student@university.edu',
+                      hint: 'username@aau.edu.et',
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.mail_outline,
+                      errorText: _emailError,
                     ),
                     const SizedBox(height: AppSpacing.stackGap),
                     LabeledTextField(
@@ -130,6 +161,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _password,
                       obscureText: obscure,
                       prefixIcon: Icons.lock_outline,
+                      errorText: _passwordError,
                       suffixIcon: IconButton(
                         onPressed: () =>
                             ref
@@ -163,7 +195,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 8),
                     GradientCtaButton(
                       label: 'Sign in',
-                      onPressed: _submit,
+                      onPressed: _isLoading ? null : _submit,
                       icon: Icons.arrow_forward_rounded,
                     ),
                     const SizedBox(height: AppSpacing.sectionGap),

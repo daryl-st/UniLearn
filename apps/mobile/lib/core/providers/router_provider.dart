@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/core/providers/auth_session_provider.dart';
 import 'package:mobile/core/routing/app_routes.dart';
 import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/features/auth/presentation/login_screen.dart';
@@ -14,10 +16,37 @@ import 'package:mobile/features/profile/presentation/profile_screen.dart';
 import 'package:mobile/features/shell/presentation/main_shell_screen.dart';
 import 'package:mobile/features/stats/presentation/stats_screen.dart';
 
+final _routerRefreshProvider = Provider<RouterRefreshNotifier>((ref) {
+  final notifier = RouterRefreshNotifier();
+  ref.listen(authSessionProvider, (_, _) => notifier.notify());
+  ref.onDispose(notifier.dispose);
+  return notifier;
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
+  final refresh = ref.watch(_routerRefreshProvider);
+
   return GoRouter(
     initialLocation: AppRoutes.splash,
+    refreshListenable: refresh,
     redirect: (context, state) {
+      final auth = ref.read(authSessionProvider);
+      final location = state.matchedLocation;
+      final isAuthenticated = auth.isAuthenticated;
+
+      if (location == AppRoutes.splash || location == AppRoutes.onboarding) {
+        return null;
+      }
+
+      if (isAuthenticated &&
+          (location == AppRoutes.login || location == AppRoutes.register)) {
+        return AppRoutes.home;
+      }
+
+      if (!isAuthenticated && _requiresAuth(location)) {
+        return AppRoutes.login;
+      }
+
       return null;
     },
     routes: [
@@ -144,3 +173,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+bool _requiresAuth(String location) {
+  return location.startsWith(AppRoutes.home) ||
+      location.startsWith(AppRoutes.courses) ||
+      location.startsWith(AppRoutes.stats) ||
+      location.startsWith(AppRoutes.profile) ||
+      location.startsWith(AppRoutes.pdfViewer);
+}
+
+final class RouterRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}

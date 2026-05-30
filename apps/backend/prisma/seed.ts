@@ -44,6 +44,28 @@ async function main() {
         },
     });
 
+    const mobileStudent = await prisma.user.upsert({
+        where: { email: "m@aau.edu.et" },
+        update: { password: passwordHash },
+        create: {
+            name: "Mobile Test",
+            email: "m@aau.edu.et",
+            password: passwordHash,
+            role: "STUDENT",
+        },
+    });
+
+    const aauStudent = await prisma.user.upsert({
+        where: { email: "student@aau.edu.et" },
+        update: { password: passwordHash },
+        create: {
+            name: "AAU Student",
+            email: "student@aau.edu.et",
+            password: passwordHash,
+            role: "STUDENT",
+        },
+    });
+
     const instructor1 = await prisma.user.upsert({
         where: { email: "Ins@uni.test" },
         update: { password: passwordHash },
@@ -115,6 +137,28 @@ async function main() {
         create: {
             id: student3.id,
             studnetId: "UGR/1102/17",
+            departmentId: deptCS.id,
+            acadamicYear: 1,
+        },
+    });
+
+    await prisma.studentProfile.upsert({
+        where: { id: mobileStudent.id },
+        update: { departmentId: deptCS.id },
+        create: {
+            id: mobileStudent.id,
+            studnetId: "UGR/MOBILE01",
+            departmentId: deptCS.id,
+            acadamicYear: 2,
+        },
+    });
+
+    await prisma.studentProfile.upsert({
+        where: { id: aauStudent.id },
+        update: { departmentId: deptCS.id },
+        create: {
+            id: aauStudent.id,
+            studnetId: "UGR/MOBILE02",
             departmentId: deptCS.id,
             acadamicYear: 1,
         },
@@ -480,10 +524,13 @@ async function main() {
 
     console.log("\n======== UniLearn seed complete ========");
     console.log(`All demo accounts use password: ${DEMO_PASSWORD}`);
-    console.log("Students:");
+    console.log("Students (@uni.test):");
     console.log(`  - ${student1.email} (${student1.name})`);
     console.log(`  - ${student2.email} (${student2.name})`);
     console.log(`  - ${student3.email} (${student3.name})`);
+    console.log("Students (@aau.edu.et — mobile dev):");
+    console.log(`  - ${mobileStudent.email} (${mobileStudent.name})`);
+    console.log(`  - ${aauStudent.email} (${aauStudent.name})`);
     console.log("Instructors:");
     console.log(`  - ${instructor1.email} (${instructor1.name})`);
     console.log(`  - ${instructor2.email} (${instructor2.name})`);
