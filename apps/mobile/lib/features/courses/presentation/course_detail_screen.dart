@@ -84,30 +84,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-
-    // sample/trash materials for now (ignore fetched materials)
-    final materials = widget.materials.isEmpty
-        ? <LectureMaterial>[
-            const LectureMaterial(
-              id: 'm1',
-              title: 'Lecture 1 — Introduction to CNNs',
-              pdfUrl:
-                  'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-            ),
-            const LectureMaterial(
-              id: 'm2',
-              title: 'Week 1 Slides',
-              pdfUrl:
-                  'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-            ),
-            const LectureMaterial(
-              id: 'm3',
-              title: 'Lab 1 — Build a small CNN',
-              pdfUrl:
-                  'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-            ),
-          ]
-        : widget.materials;
+    final materials = widget.materials;
 
     return Scaffold(
       backgroundColor: ColorTokens.background,
@@ -212,7 +189,12 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                             icon: Icons.play_arrow_rounded,
                             label: 'Continue',
                             isPrimary: true,
-                            onPressed: () {},
+                            onPressed: materials.isEmpty
+                                ? () {}
+                                : () => context.push(
+                                    AppRoutes.pdfViewer,
+                                    extra: materials.first,
+                                  ),
                           ),
                         ),
                         const SizedBox(width: 12),

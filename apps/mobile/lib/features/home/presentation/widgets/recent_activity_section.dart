@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:mobile/core/routing/app_navigation.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
+import 'package:mobile/features/home/domain/home_models.dart';
 
 class RecentActivitySection extends StatelessWidget {
   const RecentActivitySection({super.key, required this.items});
@@ -35,6 +35,18 @@ class RecentActivitySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          'No recent activity yet.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
 
     return Column(
       children: [

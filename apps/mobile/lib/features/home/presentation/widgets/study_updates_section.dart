@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:mobile/core/routing/app_navigation.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
+import 'package:mobile/features/home/domain/home_models.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
 import 'package:mobile/theme/app_typography.dart';
@@ -26,6 +26,18 @@ class StudyUpdatesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          'No study updates yet.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
 
     return Column(
       children: [

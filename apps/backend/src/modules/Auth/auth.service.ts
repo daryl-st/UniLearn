@@ -186,4 +186,54 @@ export class AuthService {
 
         return this.userRepository.createInstructorProfile(data, existing.id, department);
     }
+
+    async getMe(userId: string) {
+        const user = await this.userRepository.findUserById(userId);
+        if (!user) throw new Error("User not found!");
+
+        const studentProfile = await prisma.studentProfile.findUnique({
+            where: { id: userId },
+            select: {
+                studnetId: true,
+                acadamicYear: true,
+                departmentId: true,
+            },
+        });
+
+        const progressRows = studentProfile
+            ? await prisma.progress.findMany({
+                  where: { studnetId: userId },
+                  include: {
+                      course: {
+                          select: {
+                              name: true,
+                              code: true,
+                              acadamicYear: true,
+                          },
+                      },
+                  },
+              })
+            : [];
+
+        return {
+            user,
+            studentProfile: studentProfile
+                ? {
+                      studnetId: studentProfile.studnetId,
+                      acadamicYear: studentProfile.acadamicYear,
+                      departmentId: studentProfile.departmentId,
+                  }
+                : null,
+            courseProgress: progressRows.map((row) => ({
+                courseId: row.courseId,
+                resourceViewed: row.resourceViewed,
+                averageScore: row.averageScore,
+                course: {
+                    name: row.course.name,
+                    code: row.course.code,
+                    acadamicYear: row.course.acadamicYear,
+                },
+            })),
+        };
+    }
 }

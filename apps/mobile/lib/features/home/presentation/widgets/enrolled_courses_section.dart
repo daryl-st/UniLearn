@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:mobile/core/routing/app_navigation.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/core/widgets/uni_card.dart';
+import 'package:mobile/features/home/domain/home_models.dart';
 
 class EnrolledCoursesSection extends StatelessWidget {
   const EnrolledCoursesSection({super.key, required this.summaries});
@@ -13,6 +13,16 @@ class EnrolledCoursesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    if (summaries.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          'No courses available yet.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+
     return SizedBox(
       height: 168,
       child: ListView.separated(
@@ -21,8 +31,7 @@ class EnrolledCoursesSection extends StatelessWidget {
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final s = summaries[i];
-          final course = MockCatalog.courseById(s.courseId);
-          final title = course?.name ?? 'Course';
+          final title = s.title ?? 'Course';
           return SizedBox(
             width: 220,
             child: Material(
@@ -72,7 +81,7 @@ class EnrolledCoursesSection extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${s.modulesDone}/${s.modulesTotal} modules',
+                        '${s.resourcesViewed}/${s.resourcesTotal} viewed',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

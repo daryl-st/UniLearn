@@ -42,8 +42,8 @@ class AuthSessionNotifier extends Notifier<AuthSessionState> {
     state = AuthSessionState(accessToken: token, user: user);
 
     try {
-      final freshUser = await _authApi.me();
-      await _persistSession(token: token, user: freshUser);
+      final me = await _authApi.fetchMe();
+      await _persistSession(token: token, user: me.user);
     } on ApiException catch (e) {
       if (e.statusCode == 401) {
         await _clearLocalSession();

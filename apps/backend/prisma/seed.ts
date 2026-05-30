@@ -277,6 +277,58 @@ async function main() {
     const dsaCourse = courses.find((x) => x.code === "COSC2210")!;
     const webCourse = courses.find((x) => x.code === "SENG3102")!;
 
+    /** Resource-view progress for mobile dev account (before heavy seed steps). */
+    await prisma.progress.upsert({
+        where: {
+            studnetId_courseId: {
+                studnetId: mobileStudent.id,
+                courseId: aiCourse.id,
+            },
+        },
+        update: { resourceViewed: 3, averageScore: 78 },
+        create: {
+            id: "00000000-0000-4000-8000-000000000008",
+            resourceViewed: 3,
+            averageScore: 78,
+            studnetId: mobileStudent.id,
+            courseId: aiCourse.id,
+        },
+    });
+
+    await prisma.progress.upsert({
+        where: {
+            studnetId_courseId: {
+                studnetId: mobileStudent.id,
+                courseId: dsaCourse.id,
+            },
+        },
+        update: { resourceViewed: 1, averageScore: 68 },
+        create: {
+            id: "00000000-0000-4000-8000-000000000009",
+            resourceViewed: 1,
+            averageScore: 68,
+            studnetId: mobileStudent.id,
+            courseId: dsaCourse.id,
+        },
+    });
+
+    await prisma.progress.upsert({
+        where: {
+            studnetId_courseId: {
+                studnetId: mobileStudent.id,
+                courseId: webCourse.id,
+            },
+        },
+        update: { resourceViewed: 2, averageScore: 81 },
+        create: {
+            id: "00000000-0000-4000-8000-000000000010",
+            resourceViewed: 2,
+            averageScore: 81,
+            studnetId: mobileStudent.id,
+            courseId: webCourse.id,
+        },
+    });
+
     type ResSeed = {
         fileUrl: string;
         title: string;

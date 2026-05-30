@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/core/providers/course_providers.dart';
 import 'package:mobile/core/routing/app_navigation.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/core/widgets/uni_card.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
@@ -19,10 +19,11 @@ class CoursesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final selectedYear = ref.watch(selectedCourseYearProvider);
+    final catalogAsync = ref.watch(courseCatalogProvider);
+    final dashboardAsync = ref.watch(studentDashboardProvider);
 
     final years = [1, 2, 3, 4];
     final List<int?> tags = [null, ...years];
-    final filtered = MockCatalog.coursesForYear(selectedYear);
 
     return ColoredBox(
       color: ColorTokens.background,
@@ -59,103 +60,133 @@ class CoursesScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: filtered.isEmpty
-                ? _EmptyYearState(selectedYear: selectedYear)
-                : ListView.separated(
-              padding: const EdgeInsets.all(AppSpacing.containerPadding),
-              itemCount: filtered.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final c = filtered[i];
-                final summary = MockCatalog.enrolledSummaries
-                    .where((item) => item.courseId == c.id)
-                    .firstOrNull;
-                final progressPercent = summary?.progressPercent ?? 0;
+            child: catalogAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.containerPadding),
+                  child: Text(error.toString()),
+                ),
+              ),
+              data: (courses) {
+                final filtered = coursesForYear(courses, selectedYear);
+                final progressMap = dashboardAsync.maybeWhen(
+                  data: (dashboard) => dashboard.progressByCourseId,
+                  orElse: () => const {},
+                );
 
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(AppRadii.lg),
-                    onTap: () => context.openCourseDetail(c.id),
-                    child: UniCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                if (filtered.isEmpty) {
+                  return _EmptyYearState(selectedYear: selectedYear);
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(AppSpacing.containerPadding),
+                  itemCount: filtered.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final c = filtered[i];
+                    final summary = progressMap[c.id];
+                    final progressPercent = summary?.progressPercent ?? 0;
+
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
+                        onTap: () => context.openCourseDetail(c.id),
+                        child: UniCard(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: scheme.surfaceContainerHigh,
-                                        borderRadius: BorderRadius.circular(
-                                          AppRadii.sm,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: scheme.surfaceContainerHigh,
+                                            borderRadius: BorderRadius.circular(
+                                              AppRadii.sm,
+                                            ),
+                                            border: Border.all(
+                                              color: scheme.outlineVariant,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            c.code,
+                                            style: AppTypography.eyebrow(
+                                              scheme,
+                                              opacity: 0.9,
+                                            ),
+                                          ),
                                         ),
-                                        border: Border.all(
-                                          color: scheme.outlineVariant,
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          c.name,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
                                         ),
-                                      ),
-                                      child: Text(
-                                        c.code,
-                                        style: AppTypography.eyebrow(
-                                          scheme,
-                                          opacity: 0.9,
-                                        ),
-                                      ),
+                                        if (c.instructorName != null) ...[
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            c.instructorName!,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                        ],
+                                      ],
                                     ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      c.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                  ],
+                                  ),
+                                  Icon(
+                                    Icons.menu_book_outlined,
+                                    color: scheme.onSurfaceVariant,
+                                    size: 22,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                '${progressPercent.toStringAsFixed(0)}% complete',
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadii.full,
+                                ),
+                                child: LinearProgressIndicator(
+                                  value: progressPercent / 100,
+                                  minHeight: 4,
+                                  backgroundColor: scheme.surfaceContainerHigh,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    scheme.primary,
+                                  ),
                                 ),
                               ),
-                              Icon(
-                                Icons.menu_book_outlined,
-                                color: scheme.onSurfaceVariant,
-                                size: 22,
+                              const SizedBox(height: 8),
+                              Text(
+                                '${summary?.resourcesViewed ?? 0}/${summary?.resourcesTotal ?? 0} viewed',
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '${progressPercent.toStringAsFixed(0)}% complete',
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(AppRadii.full),
-                            child: LinearProgressIndicator(
-                              value: progressPercent / 100,
-                              minHeight: 4,
-                              backgroundColor: scheme.surfaceContainerHigh,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                scheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${summary?.modulesDone ?? 0}/${summary?.modulesTotal ?? 0} modules',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
               },
             ),

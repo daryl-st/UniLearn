@@ -48,7 +48,7 @@ class PdfViewerScreen extends ConsumerWidget {
 
     showResourceChatSheet(
       context,
-      chatKey: (materialId: materialId, materialTitle: materialTitle),
+      chatKey: (resourceId: materialId, materialTitle: materialTitle),
       title: 'Study assistant',
       subtitle: materialTitle,
     );

@@ -36,6 +36,9 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    final chatState = ref.read(resourceChatProvider(widget.chatKey));
+    if (chatState.isLoading) return;
+
     ref.read(resourceChatProvider(widget.chatKey).notifier).send(text);
     _messageController.clear();
 
@@ -53,7 +56,9 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final messages = ref.watch(resourceChatProvider(widget.chatKey));
+    final chatState = ref.watch(resourceChatProvider(widget.chatKey));
+    final messages = chatState.messages;
+    final isLoading = chatState.isLoading;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,8 +156,17 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    onPressed: _sendMessage,
-                    icon: const Icon(Icons.send, size: 20),
+                    onPressed: isLoading ? null : _sendMessage,
+                    icon: isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: scheme.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.send, size: 20),
                   ),
                 ],
               ),

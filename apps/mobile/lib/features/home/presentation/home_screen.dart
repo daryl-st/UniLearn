@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/core/providers/auth_session_provider.dart';
+import 'package:mobile/core/providers/course_providers.dart';
 import 'package:mobile/core/routing/app_navigation.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
 import 'package:mobile/core/widgets/widgets.dart';
 import 'package:mobile/features/home/presentation/widgets/enrolled_courses_section.dart';
 import 'package:mobile/features/home/presentation/widgets/quick_actions_grid.dart';
@@ -18,6 +19,19 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final userName = ref.watch(authSessionProvider).user?.name ?? 'Student';
+    final firstName = userName.split(' ').first;
+    final dashboardAsync = ref.watch(studentDashboardProvider);
+    final catalogAsync = ref.watch(courseCatalogProvider);
+
+    final primaryCourseId = dashboardAsync.maybeWhen(
+      data: (dashboard) => dashboard.primaryCourseId,
+      orElse: () => null,
+    ) ??
+        catalogAsync.maybeWhen(
+          data: (courses) => courses.isNotEmpty ? courses.first.id : null,
+          orElse: () => null,
+        );
 
     return ColoredBox(
       color: ColorTokens.background,
@@ -32,25 +46,43 @@ class HomeScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _StreakHeroCard(days: MockCatalog.streakDays),
+                  Text(
+                    'Good morning, $firstName',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sectionGap),
+                  const _StreakHeroCard(days: 7),
                   const SizedBox(height: AppSpacing.sectionGap),
                   SectionHeader(
-                    title: 'Enrolled courses',
+                    title: 'Courses',
                     actionLabel: 'View all',
                     onAction: () => context.goToCoursesTab(),
                   ),
-                  EnrolledCoursesSection(
-                    summaries: MockCatalog.enrolledSummaries,
+                  dashboardAsync.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, _) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(error.toString()),
+                    ),
+                    data: (dashboard) => EnrolledCoursesSection(
+                      summaries: dashboard.courseSummaries,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sectionGap),
                   const SectionHeader(title: 'Learning progress'),
+                  const _DemoLabel(label: 'Sample data'),
                   _LearningProgressChart(scheme: scheme),
                   const SizedBox(height: AppSpacing.sectionGap),
                   const SectionHeader(title: 'Recent activity'),
-                  RecentActivitySection(items: MockCatalog.recentActivity),
+                  const RecentActivitySection(items: []),
                   const SizedBox(height: AppSpacing.sectionGap),
                   const SectionHeader(title: 'Study updates'),
-                  StudyUpdatesSection(items: MockCatalog.studyUpdates),
+                  const StudyUpdatesSection(items: []),
                   const SizedBox(height: AppSpacing.sectionGap),
                   const SectionHeader(title: 'Quick actions'),
                   QuickActionsGrid(
@@ -60,24 +92,24 @@ class HomeScreen extends ConsumerWidget {
                         label: 'Browse courses',
                         onTap: () => context.goToCoursesTab(),
                       ),
-                      QuickAction(
-                        icon: Icons.folder_open_outlined,
-                        label: 'Study resources',
-                        onTap: () => context.openCourseDetail(
-                          MockCatalog.primaryEnrolledCourseId,
+                      if (primaryCourseId != null) ...[
+                        QuickAction(
+                          icon: Icons.folder_open_outlined,
+                          label: 'Study resources',
+                          onTap: () =>
+                              context.openCourseDetail(primaryCourseId),
                         ),
-                      ),
+                        QuickAction(
+                          icon: Icons.auto_awesome_outlined,
+                          label: 'Resource Q&A',
+                          onTap: () =>
+                              context.openCourseDetail(primaryCourseId),
+                        ),
+                      ],
                       QuickAction(
                         icon: Icons.insights_outlined,
                         label: 'Learning stats',
                         onTap: () => context.goToStatsTab(),
-                      ),
-                      QuickAction(
-                        icon: Icons.auto_awesome_outlined,
-                        label: 'Resource Q&A',
-                        onTap: () => context.openCourseDetail(
-                          MockCatalog.primaryEnrolledCourseId,
-                        ),
                       ),
                     ],
                   ),
@@ -87,6 +119,25 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DemoLabel extends StatelessWidget {
+  const _DemoLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -105,9 +156,18 @@ class _StreakHeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'STUDY STREAK',
-            style: AppTypography.eyebrow(scheme),
+          Row(
+            children: [
+              Text(
+                'STUDY STREAK',
+                style: AppTypography.eyebrow(scheme),
+              ),
+              const Spacer(),
+              Text(
+                'Sample',
+                style: AppTypography.eyebrow(scheme, opacity: 0.6),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Row(

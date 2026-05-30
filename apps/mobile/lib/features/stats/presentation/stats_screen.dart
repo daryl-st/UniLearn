@@ -1,43 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/core/testing/mock_catalog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/core/providers/course_providers.dart';
 import 'package:mobile/core/widgets/uni_card.dart';
+import 'package:mobile/features/home/domain/home_models.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
 import 'package:mobile/theme/app_typography.dart';
 import 'package:mobile/theme/color_tokens.dart';
 
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final summaries = MockCatalog.enrolledSummaries;
+    final dashboardAsync = ref.watch(studentDashboardProvider);
+    final summaries = dashboardAsync.maybeWhen(
+      data: (dashboard) => dashboard.courseSummaries,
+      orElse: () => const <CourseResourceSummary>[],
+    );
     final totalProgress = summaries.isEmpty
         ? 0
-        : (summaries.fold<int>(0, (sum, item) => sum + item.progressPercent) /
-                  summaries.length)
-              .round();
+        : (summaries.fold<double>(
+                0,
+                (sum, item) => sum + item.progressPercent,
+              ) /
+              summaries.length)
+            .round();
     final totalModulesDone = summaries.fold<int>(
       0,
-      (sum, item) => sum + item.modulesDone,
+      (sum, item) => sum + item.resourcesViewed,
     );
     final totalModules = summaries.fold<int>(
       0,
-      (sum, item) => sum + item.modulesTotal,
+      (sum, item) => sum + item.resourcesTotal,
     );
     final remainingModules = totalModules - totalModulesDone;
     const totalStudyHours = 18.6;
     final weeklyMinutes = <double>[32, 46, 28, 58, 64, 40, 52];
 
     final courseRows = summaries.map((summary) {
-      final course = MockCatalog.courseById(summary.courseId);
       return _CourseMomentumRow(
-        title: course?.name ?? 'Course ${summary.courseId}',
-        code: course?.code ?? 'N/A',
+        title: summary.title ?? 'Course ${summary.courseId}',
+        code: summary.code ?? 'N/A',
         progress: summary.progressPercent / 100,
-        modulesDone: summary.modulesDone,
-        modulesTotal: summary.modulesTotal,
+        modulesDone: summary.resourcesViewed,
+        modulesTotal: summary.resourcesTotal,
         accent: scheme.primary,
       );
     }).toList();
@@ -54,9 +62,6 @@ class StatsScreen extends StatelessWidget {
             (a, b) => a.progressPercent >= b.progressPercent ? a : b,
           )
         : null;
-    final topCourseModel = topCourse == null
-        ? null
-        : MockCatalog.courseById(topCourse.courseId);
 
     return ColoredBox(
       color: ColorTokens.background,
@@ -71,13 +76,27 @@ class StatsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      border: Border.all(color: scheme.outlineVariant),
+                    ),
+                    child: Text(
+                      'Sample analytics — detailed stats coming soon.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.stackGap),
                   _StatsHeroCard(
                     totalProgress: totalProgress,
-                    streakDays: MockCatalog.streakDays,
+                    streakDays: 7,
                     activeCourses: summaries.length,
                     totalStudyHours: totalStudyHours,
                     topCourseTitle:
-                        topCourseModel?.name ?? 'No course spotlight',
+                        topCourse?.title ?? 'No course spotlight',
                     topCourseProgress: topCourse?.progressPercent ?? 0,
                   ),
                   const SizedBox(height: AppSpacing.stackGap),
@@ -92,11 +111,17 @@ class StatsScreen extends StatelessWidget {
                     subtitle: 'Completion and module progress.',
                     child: Column(
                       children: [
-                        for (var i = 0; i < courseRows.length; i++) ...[
-                          courseRows[i],
-                          if (i != courseRows.length - 1)
-                            const SizedBox(height: 12),
-                        ],
+                        if (courseRows.isEmpty)
+                          Text(
+                            'No course progress yet.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          )
+                        else
+                          for (var i = 0; i < courseRows.length; i++) ...[
+                            courseRows[i],
+                            if (i != courseRows.length - 1)
+                              const SizedBox(height: 12),
+                          ],
                       ],
                     ),
                   ),
@@ -443,7 +468,7 @@ class _CourseMomentumRow extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '$modulesDone of $modulesTotal modules · ${(progress * 100).round()}%',
+            '$modulesDone of $modulesTotal viewed · ${(progress * 100).round()}%',
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ],

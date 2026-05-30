@@ -73,12 +73,15 @@ export class AuthController {
         if (!req.user) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const userId = req.user.userId;
-        const user = await userRepository.findUserById(userId);
-        if (!user) throw new Error("User not found!");
+
+        const { user, studentProfile, courseProgress } = await authService.getMe(
+            req.user.userId,
+        );
 
         return res.json({
             user: user.toJson(),
+            studentProfile,
+            courseProgress,
         });
     }
 }

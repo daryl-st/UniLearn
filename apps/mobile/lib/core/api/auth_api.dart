@@ -51,17 +51,23 @@ class AuthApi {
     }
   }
 
-  Future<AuthUser> me() async {
+  Future<MeResponse> fetchMe() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>('auth/me');
-      final user = response.data?['user'];
-      if (user is! Map<String, dynamic>) {
+      final data = response.data;
+      if (data == null) {
         throw ApiException('Invalid session response from server.');
       }
-      return AuthUser.fromJson(user);
+      return MeResponse.fromJson(data);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
+  }
+
+  @Deprecated('Use fetchMe()')
+  Future<AuthUser> me() async {
+    final response = await fetchMe();
+    return response.user;
   }
 
   Future<void> logout() async {
