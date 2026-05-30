@@ -26,7 +26,10 @@ class QuickActionsGrid extends StatelessWidget {
       children: _actions.map((a) {
         return Material(
           color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            side: BorderSide(color: scheme.outlineVariant),
+          ),
           child: InkWell(
             onTap: () {},
             borderRadius: BorderRadius.circular(AppRadii.lg),

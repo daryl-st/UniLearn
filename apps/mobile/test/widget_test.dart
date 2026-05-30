@@ -20,7 +20,7 @@ void main() {
     );
 
     expect(find.textContaining('UniLearn'), findsWidgets);
-    expect(find.textContaining('Initializing'), findsOneWidget);
+    expect(find.textContaining('INITIALIZING'), findsOneWidget);
 
     final ctx = tester.element(find.byType(Scaffold));
     expect(Theme.of(ctx).colorScheme.primary, ColorTokens.primary);

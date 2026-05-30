@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/theme/app_radii.dart';
-import 'package:mobile/theme/color_tokens.dart';
+import 'package:mobile/theme/app_typography.dart';
+import 'package:mobile/theme/uni_learn_theme_extension.dart';
 
-/// Shared labeled field. Use from any feature.
+/// Shared labeled field (web AuthInput style).
 class LabeledTextField extends StatelessWidget {
   const LabeledTextField({
     super.key,
@@ -26,44 +27,53 @@ class LabeledTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final labelStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
-          letterSpacing: 1.2,
-          color: scheme.onSurfaceVariant,
-        );
+    final extras = context.uniLearnExtras;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(label.toUpperCase(), style: labelStyle),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            label.toUpperCase(),
+            style: AppTypography.eyebrow(scheme),
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
-          style: Theme.of(context).textTheme.bodyLarge,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurface,
+          ),
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: scheme.onSurfaceVariant)
+                ? Icon(
+                    prefixIcon,
+                    size: 18,
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  )
                 : null,
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: ColorTokens.surfaceContainer,
+            fillColor: scheme.surfaceContainerHigh,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadii.md),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
               borderSide: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
+                color: scheme.onSurface.withValues(alpha: 0.05),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadii.md),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
               borderSide: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
+                color: scheme.onSurface.withValues(alpha: 0.05),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadii.md),
-              borderSide: const BorderSide(color: ColorTokens.primary, width: 1.5),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              borderSide: BorderSide(color: extras.focusRingColor, width: 1),
             ),
           ),
         ),

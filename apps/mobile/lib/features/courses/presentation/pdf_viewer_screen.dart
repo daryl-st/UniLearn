@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/core/widgets/uni_card.dart';
 import 'package:mobile/features/courses/presentation/course_detail_screen.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
+import 'package:mobile/theme/app_typography.dart';
+import 'package:mobile/theme/color_tokens.dart';
+import 'package:mobile/theme/uni_learn_theme_extension.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 final pdfChatMessagesProvider =
@@ -60,9 +64,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     final messages = ref.watch(pdfChatMessagesProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: ColorTokens.background,
       appBar: AppBar(
-        backgroundColor: scheme.surfaceVariant,
+        backgroundColor: ColorTokens.surfaceContainerLow,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: scheme.onSurface),
@@ -73,122 +77,70 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
           style: Theme.of(context).textTheme.titleSmall,
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              scheme.surface.withValues(alpha: 0.98),
-              scheme.surfaceContainerLow.withValues(alpha: 0.96),
-              scheme.surface.withValues(alpha: 0.98),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.containerPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.stackGap),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadii.xl),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        scheme.surfaceContainerHighest.withValues(alpha: 0.96),
-                        scheme.surfaceContainerHigh.withValues(alpha: 0.92),
-                      ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.containerPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              UniCard(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                        border: Border.all(color: scheme.outlineVariant),
+                      ),
+                      child: Icon(
+                        Icons.picture_as_pdf_rounded,
+                        color: scheme.primary,
+                        size: 22,
+                      ),
                     ),
-                    border: Border.all(
-                      color: scheme.outline.withValues(alpha: 0.08),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: scheme.shadow.withValues(alpha: 0.08),
-                        blurRadius: 18,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: scheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.picture_as_pdf_rounded,
-                          color: scheme.primary,
-                          size: 26,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              materialData?.title ?? 'Lecture PDF',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Open the document below to review the lecture material.',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.download_outlined,
-                              color: scheme.onSurface,
-                            ),
-                            tooltip: 'Download',
+                          Text(
+                            materialData?.title ?? 'Lecture PDF',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.share_outlined,
-                              color: scheme.onSurface,
-                            ),
-                            tooltip: 'Share',
+                          const SizedBox(height: 4),
+                          Text(
+                            'Review the lecture material below.',
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  flex: 6,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest.withValues(
-                        alpha: 0.8,
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadii.xl),
-                      border: Border.all(
-                        color: scheme.outline.withValues(alpha: 0.08),
-                      ),
                     ),
-                    clipBehavior: Clip.antiAlias,
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.download_outlined, color: scheme.onSurface),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.share_outlined, color: scheme.onSurface),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                flex: 6,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(AppRadii.lg),
+                    border: Border.all(color: scheme.outlineVariant),
+                  ),
+                  clipBehavior: Clip.antiAlias,
                     child: materialData == null || materialData.pdfUrl.isEmpty
                         ? Center(
                             child: Padding(
@@ -212,67 +164,25 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 const SizedBox(height: 16),
                 Expanded(
                   flex: 4,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpacing.stackGap),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadii.xl),
-                      color: scheme.primaryContainer.withValues(alpha: 0.14),
-                      border: Border.all(
-                        color: scheme.primary.withValues(alpha: 0.16),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: scheme.shadow.withValues(alpha: 0.05),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
+                  child: DecoratedBox(
+                    decoration: context.uniLearnExtras.cardDecoration(
+                      color: context.uniLearnExtras.aiAccentTint,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: scheme.primary.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Icon(
-                                Icons.smart_toy_outlined,
-                                color: scheme.primary,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'AI Study Assistant',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(fontWeight: FontWeight.w800),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Ask for summaries, definitions, or quick notes.',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.stackGap),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'AI STUDY ASSISTANT',
+                            style: AppTypography.eyebrow(scheme),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ask for summaries, definitions, or quick notes.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 10),
                         Row(
                           children: [
                             Expanded(
@@ -419,8 +329,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:mobile/core/testing/mock_catalog.dart';
-import 'package:mobile/theme/app_radii.dart';
+import 'package:mobile/core/widgets/uni_card.dart';
 
 class EnrolledCoursesSection extends StatelessWidget {
   const EnrolledCoursesSection({super.key, required this.summaries});
@@ -22,26 +22,23 @@ class EnrolledCoursesSection extends StatelessWidget {
           final s = summaries[i];
           final course = MockCatalog.courseById(s.courseId);
           final title = course?.name ?? 'Course';
-          final subtitle = course?.code ?? 'Course code';
           return SizedBox(
             width: 220,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-                border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
-              ),
+            child: UniCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.school_outlined, color: scheme.secondary, size: 22),
+                      Icon(
+                        Icons.school_outlined,
+                        color: scheme.secondary,
+                        size: 20,
+                      ),
                       const Spacer(),
                       SizedBox(
-                        width: 44,
-                        height: 44,
+                        width: 40,
+                        height: 40,
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
@@ -61,7 +58,11 @@ class EnrolledCoursesSection extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
-                  Text(title, style: Theme.of(context).textTheme.titleSmall, maxLines: 2),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall,
+                    maxLines: 2,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     '${s.modulesDone}/${s.modulesTotal} modules',

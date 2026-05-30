@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile/theme/app_spacing.dart';
+import 'package:mobile/theme/color_tokens.dart';
 
 class AppHeader extends StatelessWidget {
   const AppHeader({super.key});
@@ -8,50 +10,49 @@ class AppHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    final gradient = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [scheme.primary, scheme.secondary],
-    );
-
-    Widget gradientText(String text, TextStyle? style) {
-      return ShaderMask(
-        shaderCallback: (bounds) =>
-            gradient.createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
-        blendMode: BlendMode.srcIn,
-        child: Text(text, style: style?.copyWith(color: Colors.white)),
-      );
-    }
-
     return SafeArea(
       bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.containerPadding,
-          12,
-          AppSpacing.containerPadding,
-          12,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: ColorTokens.background,
+          border: Border(
+            bottom: BorderSide(color: scheme.outlineVariant),
+          ),
         ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 20,
-              child: Icon(Icons.school, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: gradientText(
-                'UniLearn',
-                Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.containerPadding,
+            12,
+            AppSpacing.containerPadding,
+            12,
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: scheme.surfaceContainerHigh,
+                child: Icon(Icons.school, size: 18, color: scheme.primary),
               ),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.notifications_none_rounded),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'UniLearn',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.notifications_none_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

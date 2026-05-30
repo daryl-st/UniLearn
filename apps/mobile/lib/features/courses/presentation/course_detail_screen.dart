@@ -1,10 +1,11 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/routing/app_routes.dart';
+import 'package:mobile/core/widgets/uni_card.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
+import 'package:mobile/theme/app_typography.dart';
+import 'package:mobile/theme/color_tokens.dart';
 
 // Model definitions
 class Course {
@@ -70,9 +71,6 @@ class CourseDetailsScreen extends StatefulWidget {
 }
 
 class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
-  static const _bottomBackgroundImageUrl =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB8eEmwxGtwcZGuL78pXL9F0XDxuX3q6KfZUCJdg2R2Z4DGNAfqI5P0o3JMNlGcjljZX0xrScWv5bE_7oSNOfmsnqzY6kQSF71qfYoSJUT-MfRlBxz9b-K1-IV8CSZLu1eCgE2h4mnFS7-HppKZ_NvF6UAjj4Gcop51PKeZI1aY-scIILL8smc6-Ywq8H1hcYh2twu2x6Tv3RPGTYDSd0PVGuX4exp7hPoc6C5wAE9aPYqHSwvBdBWIVXsYNWq3-pm0Zup2Oo577RJm';
-
   @override
   void initState() {
     super.initState();
@@ -112,9 +110,9 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
         : widget.materials;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: ColorTokens.background,
       appBar: AppBar(
-        backgroundColor: scheme.surfaceVariant,
+        backgroundColor: ColorTokens.surfaceContainerLow,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: scheme.onSurface),
@@ -126,105 +124,31 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
         ),
         centerTitle: false,
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: IgnorePointer(
-              child: SizedBox(
-                width: double.infinity,
-                height: 320,
-                child: Stack(
-                  fit: StackFit.expand,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.containerPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              UniCard(
+                padding: const EdgeInsets.all(AppSpacing.stackGap),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ClipRect(
-                      child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Image.network(
-                          _bottomBackgroundImageUrl,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.bottomCenter,
-                          filterQuality: FilterQuality.low,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ),
-                    ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            scheme.surface.withValues(alpha: 0.00),
-                            scheme.surface.withValues(alpha: 0.52),
-                            scheme.surface.withValues(alpha: 0.88),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.containerPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Hero Progress banner
-                  Container(
-                    constraints: const BoxConstraints(minHeight: 252),
-                    padding: const EdgeInsets.all(AppSpacing.stackGap),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          scheme.surfaceContainerHighest.withOpacity(0.92),
-                          scheme.surfaceContainerHigh.withOpacity(0.72),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadii.xl),
-                      border: Border.all(
-                        color: scheme.primary.withOpacity(0.10),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: scheme.shadow.withOpacity(0.08),
-                          blurRadius: 24,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Row(
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Stack(
                           alignment: Alignment.center,
                           children: [
-                            Container(
-                              width: 108,
-                              height: 108,
-                              decoration: BoxDecoration(
-                                color: scheme.primary.withOpacity(0.08),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
                             SizedBox(
-                              width: 96,
-                              height: 96,
+                              width: 80,
+                              height: 80,
                               child: CircularProgressIndicator(
                                 value: widget.course.progressPercentage / 100.0,
-                                strokeWidth: 6.5,
+                                strokeWidth: 5,
                                 strokeCap: StrokeCap.round,
-                                backgroundColor: scheme.surface.withOpacity(
-                                  0.22,
-                                ),
+                                backgroundColor: scheme.surfaceContainerHigh,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   scheme.primary,
                                 ),
@@ -235,99 +159,78 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                               children: [
                                 Text(
                                   '${widget.course.progressPercentage}%',
-                                  style: Theme.of(context).textTheme.titleMedium
+                                  style: Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(
                                         color: scheme.primary,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                 ),
                                 Text(
-                                  'COMPLETE',
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                        fontSize: 10,
-                                      ),
+                                  'DONE',
+                                  style: AppTypography.eyebrow(
+                                    scheme,
+                                    opacity: 0.7,
+                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                        const SizedBox(width: 22),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: scheme.primary.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadii.full,
-                                  ),
-                                  border: Border.all(
-                                    color: scheme.primary.withOpacity(0.18),
-                                  ),
-                                ),
-                                child: Text(
-                                  'MODULE ${widget.course.modulesCompleted.toString().padLeft(2, '0')}',
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: scheme.primary,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 10,
-                                      ),
-                                ),
+                              Text(
+                                'MODULE ${widget.course.modulesCompleted.toString().padLeft(2, '0')}',
+                                style: AppTypography.eyebrow(scheme),
                               ),
-                              const SizedBox(height: 9),
+                              const SizedBox(height: 8),
                               Text(
                                 widget.course.title,
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(
-                                      color: scheme.onSurface,
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Advanced Neural Networks and Deep Learning architectures for real-world predictive modeling.',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: scheme.onSurfaceVariant),
-                              ),
-                              const SizedBox(height: 18),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildHeroActionButton(
-                                      context,
-                                      icon: Icons.play_arrow_rounded,
-                                      label: 'Continue learning',
-                                      isPrimary: true,
-                                      onPressed: () {},
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildHeroActionButton(
-                                      context,
-                                      icon: Icons.menu_book_outlined,
-                                      label: 'Syllabus',
-                                      isPrimary: false,
-                                      onPressed: () {},
-                                    ),
-                                  ),
-                                ],
+                                widget.course.code,
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.stackGap),
+                    const Divider(height: 1),
+                    const SizedBox(height: AppSpacing.stackGap),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildHeroActionButton(
+                            context,
+                            icon: Icons.play_arrow_rounded,
+                            label: 'Continue',
+                            isPrimary: true,
+                            onPressed: () {},
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildHeroActionButton(
+                            context,
+                            icon: Icons.menu_book_outlined,
+                            label: 'Syllabus',
+                            isPrimary: false,
+                            onPressed: () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
                   // Activity metrics
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.stackGap),
@@ -509,31 +412,15 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                 ],
               ),
             ),
-          ),
-        ],
       ),
     );
   }
 
   BoxDecoration _cardDecoration(ColorScheme scheme) {
     return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          scheme.surfaceContainer.withOpacity(0.88),
-          scheme.surfaceContainerLow.withOpacity(0.72),
-        ],
-      ),
-      borderRadius: BorderRadius.circular(AppRadii.xl),
-      border: Border.all(color: scheme.outline.withOpacity(0.08)),
-      boxShadow: [
-        BoxShadow(
-          color: scheme.shadow.withOpacity(0.06),
-          blurRadius: 18,
-          offset: const Offset(0, 8),
-        ),
-      ],
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(AppRadii.lg),
+      border: Border.all(color: scheme.outlineVariant),
     );
   }
 
@@ -550,7 +437,7 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
       minimumSize: const Size.fromHeight(48),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.md),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
       textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
         fontWeight: FontWeight.w700,

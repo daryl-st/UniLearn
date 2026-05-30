@@ -2,76 +2,63 @@ import 'package:flutter/material.dart';
 
 import 'color_tokens.dart';
 
-/// Effects and tokens beyond [ColorScheme] ([docs/DESIGN.md] gradients, glow, glass).
+/// shadcn-style helpers beyond [ColorScheme] ([docs/DESIGN.md]).
 @immutable
 class UniLearnThemeExtension extends ThemeExtension<UniLearnThemeExtension> {
   const UniLearnThemeExtension({
-    required this.primaryGradient,
-    required this.primaryButtonGlow,
-    required this.aiInputGlow,
-    required this.glassFill,
-    required this.glassBorder,
-    required this.glassBlurSigma,
+    required this.cardBorderColor,
+    required this.focusRingColor,
+    required this.ambientShadow,
+    required this.aiAccentTint,
   });
 
-  final LinearGradient primaryGradient;
-  final List<BoxShadow> primaryButtonGlow;
-  final List<BoxShadow> aiInputGlow;
-  final Color glassFill;
-  final Color glassBorder;
-  final double glassBlurSigma;
+  final Color cardBorderColor;
+  final Color focusRingColor;
+  final List<BoxShadow> ambientShadow;
+  final Color aiAccentTint;
 
   static final UniLearnThemeExtension dark = UniLearnThemeExtension(
-    primaryGradient: const LinearGradient(
-      colors: [ColorTokens.primary, ColorTokens.secondary],
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
-    ),
-    primaryButtonGlow: [
+    cardBorderColor: ColorTokens.outlineVariant,
+    focusRingColor: ColorTokens.primary.withValues(alpha: 0.5),
+    ambientShadow: const [
       BoxShadow(
-        color: ColorTokens.primary.withValues(alpha: 0.35),
-        blurRadius: 24,
-        spreadRadius: 0,
-      ),
-      BoxShadow(
-        color: ColorTokens.secondary.withValues(alpha: 0.22),
-        blurRadius: 32,
-        spreadRadius: 2,
+        color: Color(0xA6000000),
+        blurRadius: 40,
+        offset: Offset(0, 20),
       ),
     ],
-    aiInputGlow: [
-      BoxShadow(
-        color: ColorTokens.secondary.withValues(alpha: 0.28),
-        blurRadius: 14,
-        spreadRadius: 0,
-      ),
-    ],
-    glassFill: const Color(0x14FFFFFF),
-    glassBorder: const Color(0x1FFFFFFF),
-    glassBlurSigma: 28,
+    aiAccentTint: ColorTokens.primary.withValues(alpha: 0.1),
   );
 
-  @override
-  UniLearnThemeExtension copyWith({
-    LinearGradient? primaryGradient,
-    List<BoxShadow>? primaryButtonGlow,
-    List<BoxShadow>? aiInputGlow,
-    Color? glassFill,
-    Color? glassBorder,
-    double? glassBlurSigma,
-  }) {
-    return UniLearnThemeExtension(
-      primaryGradient: primaryGradient ?? this.primaryGradient,
-      primaryButtonGlow: primaryButtonGlow ?? this.primaryButtonGlow,
-      aiInputGlow: aiInputGlow ?? this.aiInputGlow,
-      glassFill: glassFill ?? this.glassFill,
-      glassBorder: glassBorder ?? this.glassBorder,
-      glassBlurSigma: glassBlurSigma ?? this.glassBlurSigma,
+  /// Flat card decoration (web `bg-card` + border).
+  BoxDecoration cardDecoration({Color? color, double radius = 12}) {
+    return BoxDecoration(
+      color: color ?? ColorTokens.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: cardBorderColor),
     );
   }
 
   @override
-  UniLearnThemeExtension lerp(ThemeExtension<UniLearnThemeExtension>? other, double t) {
+  UniLearnThemeExtension copyWith({
+    Color? cardBorderColor,
+    Color? focusRingColor,
+    List<BoxShadow>? ambientShadow,
+    Color? aiAccentTint,
+  }) {
+    return UniLearnThemeExtension(
+      cardBorderColor: cardBorderColor ?? this.cardBorderColor,
+      focusRingColor: focusRingColor ?? this.focusRingColor,
+      ambientShadow: ambientShadow ?? this.ambientShadow,
+      aiAccentTint: aiAccentTint ?? this.aiAccentTint,
+    );
+  }
+
+  @override
+  UniLearnThemeExtension lerp(
+    ThemeExtension<UniLearnThemeExtension>? other,
+    double t,
+  ) {
     if (other is! UniLearnThemeExtension) return this;
     if (t <= 0) return this;
     if (t >= 1) return other;
