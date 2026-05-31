@@ -165,6 +165,7 @@ model Question {
 model QuizAttempt {
   id        String         @id @default(uuid())
   score     Int
+  results   Json?
   quizId    String
   studnetId String
   createdAt DateTime       @default(now())

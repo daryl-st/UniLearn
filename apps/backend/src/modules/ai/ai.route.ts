@@ -4,7 +4,9 @@ import multer from "multer";
 import { validateBody } from "../../middlewares/validate.js";
 import {
     askResourceSchema,
+    generateQuizSchema,
     ingestResourceSchema,
+    submitQuizSchema,
     summarizeResourceSchema,
 } from "../../schemas/index.js";
 import { authorize, requireAuth } from "../../middlewares/auth.js";
@@ -49,6 +51,26 @@ router.post(
 );
 
 router.get("/summaries", ...studentOnly, controller.listSummaries);
+
+router.post(
+    "/generate-quiz",
+    ...studentOnly,
+    validateBody(generateQuizSchema),
+    controller.generateQuiz,
+);
+
+router.get("/quizzes", ...studentOnly, controller.listQuizzes);
+
+router.get("/quizzes/:quizId", ...studentOnly, controller.getQuiz);
+
+router.post(
+    "/quizzes/:quizId/submit",
+    ...studentOnly,
+    validateBody(submitQuizSchema),
+    controller.submitQuiz,
+);
+
+router.get("/quiz-attempts/:attemptId", ...studentOnly, controller.getQuizAttempt);
 
 router.post(
     "/ask",

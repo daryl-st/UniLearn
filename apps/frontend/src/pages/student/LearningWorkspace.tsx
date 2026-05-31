@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, ExternalLink } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { LearningQuizPanel } from '@/components/features/learning/LearningQuizPanel';
 import { LearningSummaryPanel } from '@/components/features/learning/LearningSummaryPanel';
 import type { Resource } from '@unilearn/shared-types';
 import { CourseAPI, type CourseWithInstructor } from '@/api/course';
@@ -12,9 +13,12 @@ export default function Learning() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { courseId, resourceId } = useParams<{ courseId: string; resourceId: string }>();
-  const [sidePanel, setSidePanel] = useState<'chat' | 'summary'>(() =>
-    searchParams.get('panel') === 'summary' ? 'summary' : 'chat',
-  );
+  const [sidePanel, setSidePanel] = useState<'chat' | 'summary' | 'quiz'>(() => {
+    const panel = searchParams.get('panel');
+    if (panel === 'summary') return 'summary';
+    if (panel === 'quiz') return 'quiz';
+    return 'chat';
+  });
 
   const [course, setCourse] = useState<CourseWithInstructor | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
@@ -223,6 +227,17 @@ export default function Learning() {
           >
             Summary
           </button>
+          <button
+            type="button"
+            onClick={() => setSidePanel('quiz')}
+            className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+              sidePanel === 'quiz'
+                ? 'bg-surface-high text-primary'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Quiz
+          </button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col">
           {sidePanel === 'chat' ? (
@@ -236,8 +251,10 @@ export default function Learning() {
               isTyping={isTyping}
               canSend={canSend}
             />
-          ) : resourceId ? (
+          ) : sidePanel === 'summary' && resourceId ? (
             <LearningSummaryPanel resourceId={resourceId} resourceTitle={resourceTitle} />
+          ) : sidePanel === 'quiz' && resourceId ? (
+            <LearningQuizPanel resourceId={resourceId} resourceTitle={resourceTitle} />
           ) : null}
         </div>
       </div>

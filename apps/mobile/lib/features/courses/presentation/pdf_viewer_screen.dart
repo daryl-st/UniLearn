@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/features/ai/presentation/widgets/chat_bottom_sheet.dart';
+import 'package:mobile/features/ai/presentation/widgets/quiz_bottom_sheet.dart';
 import 'package:mobile/features/ai/presentation/widgets/summary_bottom_sheet.dart';
+import 'package:mobile/features/ai/providers/resource_quiz_provider.dart';
 import 'package:mobile/features/courses/presentation/course_detail_screen.dart';
 import 'package:mobile/theme/color_tokens.dart';
 import 'package:share_plus/share_plus.dart';
@@ -55,6 +57,18 @@ class PdfViewerScreen extends ConsumerWidget {
     );
   }
 
+  void _openQuizSheet(BuildContext context) {
+    final materialData = material;
+    final materialId = materialData?.id ?? 'unknown';
+    final materialTitle = materialData?.title ?? 'Resource';
+
+    showResourceQuizSheet(
+      context,
+      quizKey: (resourceId: materialId, materialTitle: materialTitle),
+      title: materialTitle,
+    );
+  }
+
   void _openSummarySheet(BuildContext context) {
     final materialData = material;
     final materialId = materialData?.id ?? 'unknown';
@@ -86,6 +100,12 @@ class PdfViewerScreen extends ConsumerWidget {
                     heroTag: 'summary',
                     onPressed: () => _openSummarySheet(context),
                     child: const Icon(Icons.summarize_outlined),
+                  ),
+                  const SizedBox(height: 10),
+                  FloatingActionButton.small(
+                    heroTag: 'quiz',
+                    onPressed: () => _openQuizSheet(context),
+                    child: const Icon(Icons.quiz_outlined),
                   ),
                   const SizedBox(height: 10),
                   FloatingActionButton(

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/routing/app_routes.dart';
+import 'package:mobile/features/ai/presentation/widgets/quiz_bottom_sheet.dart';
 import 'package:mobile/features/ai/presentation/widgets/summary_bottom_sheet.dart';
+import 'package:mobile/features/ai/providers/resource_quiz_provider.dart';
 import 'package:mobile/features/ai/providers/resource_summary_provider.dart';
 import 'package:mobile/core/widgets/uni_card.dart';
 import 'package:mobile/theme/app_radii.dart';
@@ -394,6 +396,33 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                                         size: 16,
                                       ),
                                       label: const Text('Summary'),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        showResourceQuizSheet(
+                                          context,
+                                          quizKey: (
+                                            resourceId: mat.id,
+                                            materialTitle: mat.title,
+                                          ),
+                                          title: mat.title,
+                                        );
+                                      },
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: scheme.tertiary,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 8,
+                                        ),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.quiz_outlined,
+                                        size: 16,
+                                      ),
+                                      label: const Text('Quiz'),
                                     ),
                                     TextButton.icon(
                                       onPressed: () => context.push(

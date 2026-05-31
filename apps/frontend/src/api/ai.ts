@@ -1,6 +1,12 @@
 import type {
     CreateSummaryResponse,
+    Difficulty,
+    GenerateQuizResponse,
+    GetQuizAttemptResponse,
+    GetQuizResponse,
+    ListQuizzesResponse,
     ListSummariesResponse,
+    SubmitQuizResponse,
     SummaryRecord,
 } from '@unilearn/shared-types';
 import { api, ApiError } from './client';
@@ -98,6 +104,63 @@ export const AiAPI = {
         } catch (err) {
             if (err instanceof ApiError) throw err;
             throw new Error('Failed to load summaries');
+        }
+    },
+
+    generateQuiz: async (body: {
+        resourceId: string;
+        difficulty: Difficulty;
+        title?: string;
+        maxChunks?: number;
+        questionCount?: number;
+    }) => {
+        try {
+            return await api.post<GenerateQuizResponse>('ai/generate-quiz', body, {
+                timeout: 120_000,
+            });
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Quiz generation failed');
+        }
+    },
+
+    listQuizzes: async (resourceId: string) => {
+        try {
+            return await api.get<ListQuizzesResponse>('ai/quizzes', {
+                params: { resourceId },
+            });
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Failed to load quizzes');
+        }
+    },
+
+    getQuiz: async (quizId: string) => {
+        try {
+            return await api.get<GetQuizResponse>(`ai/quizzes/${quizId}`);
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Failed to load quiz');
+        }
+    },
+
+    submitQuiz: async (quizId: string, answers: Array<{ questionId: string; answer: string }>) => {
+        try {
+            return await api.post<SubmitQuizResponse>(`ai/quizzes/${quizId}/submit`, {
+                answers,
+            });
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Failed to submit quiz');
+        }
+    },
+
+    getQuizAttempt: async (attemptId: string) => {
+        try {
+            return await api.get<GetQuizAttemptResponse>(`ai/quiz-attempts/${attemptId}`);
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Failed to load quiz attempt');
         }
     },
 };
