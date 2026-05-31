@@ -161,6 +161,18 @@ export class ResourceRepository {
             ),
         );
     }
+
+    async countAll(): Promise<number> {
+        return prisma.resource.count({
+            where: { isDeleted: false },
+        });
+    }
+
+    async countByInstructor(instructorId: string): Promise<number> {
+        return prisma.resource.count({
+            where: { instructorId, isDeleted: false },
+        });
+    }
 }
 
 export class CourseRepository {
@@ -173,7 +185,7 @@ export class CourseRepository {
                     name: u.name,
                     code: u.code,
                     acadamicYear: u.acadamicYear,
-                    instructorId: u.instructorId,
+                    instructorId: u.instructorId ?? "",
                     departmentId: u.departmentId,
                 }),
         );
@@ -187,7 +199,7 @@ export class CourseRepository {
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
+            instructorId: course.instructorId ?? "",
             departmentId: course.departmentId,
         });
     }
@@ -200,7 +212,7 @@ export class CourseRepository {
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
+            instructorId: course.instructorId ?? "",
             departmentId: course.departmentId,
         });
     }
@@ -218,7 +230,7 @@ export class CourseRepository {
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
+            instructorId: course.instructorId ?? "",
             departmentId: course.departmentId,
         });
     }
@@ -226,6 +238,40 @@ export class CourseRepository {
     async delete(data: { id: string }): Promise<Course | null> {
         const course = await prisma.course.delete({ where: { id: data.id } });
         if (!course) return null;
-        return course;
+        return new Course({
+            id: course.id,
+            name: course.name,
+            code: course.code,
+            acadamicYear: course.acadamicYear,
+            instructorId: course.instructorId ?? "",
+            departmentId: course.departmentId,
+        });
+    }
+
+    async countAll(): Promise<number> {
+        return prisma.course.count();
+    }
+
+    async countByInstructor(instructorId: string): Promise<number> {
+        return prisma.course.count({
+            where: { instructorId },
+        });
+    }
+
+    async findByInstructor(instructorId: string): Promise<Course[]> {
+        const courses = await prisma.course.findMany({
+            where: { instructorId },
+        });
+        return courses.map(
+            (u) =>
+                new Course({
+                    id: u.id,
+                    name: u.name,
+                    code: u.code,
+                    acadamicYear: u.acadamicYear,
+                    instructorId: u.instructorId ?? "",
+                    departmentId: u.departmentId,
+                }),
+        );
     }
 }

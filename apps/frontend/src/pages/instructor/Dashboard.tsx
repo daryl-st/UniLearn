@@ -28,12 +28,8 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 
-const stats = [
-  { label: 'Managed Courses', value: '03', change: '+1 this term', trend: 'up', icon: Users },
-  { label: 'Total Resources', value: '24', change: 'Updated today', trend: 'up', icon: CheckCircle2 },
-  { label: 'Recent Quiz Attempts', value: '47', subValue: '/7d', change: '+8.5%', trend: 'up', icon: Zap },
-  { label: 'Avg. Student Score', value: '81.4%', change: '+2.1%', trend: 'up', icon: Brain },
-];
+import { useEffect, useState } from 'react';
+import { DashboardAPI, type InstructorCourse } from '@/api/dashboard';
 
 const chartData = [
   { name: 'W1', value: 42 },
@@ -53,29 +49,47 @@ const activities = [
   { id: '4', user: 'System', action: 'recorded', target: 'new student quiz attempts', time: '2h ago', status: 'Updated', type: 'warning', icon: AlertTriangle },
 ];
 
-const courses = [
-  { 
-    id: '1', 
-    title: 'Artificial Intelligence (CoSc4411)', 
-    description: 'Core lectures, resources, and revision quizzes.', 
-    progress: 64, 
-    enrolled: '124', 
-    tag: 'YEAR 4',
-    image: 'https://picsum.photos/seed/neural/800/400'
-  },
-  { 
-    id: '2', 
-    title: 'Database Systems (CoSc3312)', 
-    description: 'Course materials, summaries, and assessment prep.', 
-    progress: 32, 
-    enrolled: '98', 
-    tag: 'YEAR 3',
-    image: 'https://picsum.photos/seed/bio/800/400'
-  },
-];
-
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [coursesList, setCoursesList] = useState<InstructorCourse[]>([]);
+  const [statsData, setStatsData] = useState({
+    assignedCoursesCount: 0,
+    uploadedResourcesCount: 0,
+    recentQuizAttemptsCount: 0,
+    avgStudentScore: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    DashboardAPI.getInstructorStats()
+      .then((data) => {
+        if (active) {
+          setStatsData({
+            assignedCoursesCount: data.assignedCoursesCount,
+            uploadedResourcesCount: data.uploadedResourcesCount,
+            recentQuizAttemptsCount: data.recentQuizAttemptsCount,
+            avgStudentScore: data.avgStudentScore
+          });
+          setCoursesList(data.courses);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load instructor stats:", err);
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const stats = [
+    { label: 'Managed Courses', value: isLoading ? '...' : String(statsData.assignedCoursesCount).padStart(2, '0'), change: '+1 this term', trend: 'up', icon: Users },
+    { label: 'Total Resources', value: isLoading ? '...' : String(statsData.uploadedResourcesCount), change: 'Updated today', trend: 'up', icon: CheckCircle2 },
+    { label: 'Recent Quiz Attempts', value: isLoading ? '...' : String(statsData.recentQuizAttemptsCount), subValue: '/7d', change: '+8.5%', trend: 'up', icon: Zap },
+    { label: 'Avg. Student Score', value: isLoading ? '...' : `${statsData.avgStudentScore}%`, change: '+2.1%', trend: 'up', icon: Brain },
+  ];
 
   return (
     <motion.div 
@@ -195,7 +209,7 @@ export const Dashboard: React.FC = () => {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {courses.map((course) => (
+              {coursesList.map((course) => (
                 <button
                   key={course.id}
                   type="button"

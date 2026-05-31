@@ -119,4 +119,16 @@ export class UserRepository {
 
         return existingUser.name; // return null if not found
     }
+
+    async countAllUsers(): Promise<number> {
+        return prisma.user.count();
+    }
+
+    async countStudents(): Promise<number> {
+        return prisma.studentProfile.count();
+    }
+
+    async countInstructors(): Promise<number> {
+        return prisma.instructorProfile.count();
+    }
 }

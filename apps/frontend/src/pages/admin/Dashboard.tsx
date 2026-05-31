@@ -1,14 +1,41 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Download, Plus, Users, Layers, Database, Activity, Shield, FileCheck, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import { StatCard } from '@/components/StatCard';
+import { DashboardAPI, type AdminStats } from '@/api/dashboard';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState<AdminStats>({
+    totalUsers: 0,
+    totalStudents: 0,
+    totalInstructors: 0,
+    totalCourses: 0,
+    totalResources: 0,
+    totalQuizAttempts: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    DashboardAPI.getAdminStats()
+      .then((data) => {
+        if (active) {
+          setStats(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load admin dashboard stats:", err);
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleExportReport = () => {
     const blob = new Blob([
-      'section,value\nTotal Users,842\nTotal Courses,73\nTotal Resources,1190\nDaily Quiz Attempts,286\n'
+      `section,value\nTotal Users,${stats.totalUsers}\nTotal Courses,${stats.totalCourses}\nTotal Resources,${stats.totalResources}\nDaily Quiz Attempts,${stats.totalQuizAttempts}\n`
     ], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -49,7 +76,7 @@ export const Dashboard: React.FC = () => {
               <Users className="text-primary w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-on-surface">842</span>
+              <span className="text-3xl font-bold text-on-surface">{isLoading ? "..." : stats.totalUsers.toLocaleString()}</span>
               <span className="text-secondary text-xs font-bold mt-1">+24 in the last 7 days</span>
             </div>
           </div>
@@ -60,7 +87,7 @@ export const Dashboard: React.FC = () => {
               <Layers className="text-primary w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-on-surface">73</span>
+              <span className="text-3xl font-bold text-on-surface">{isLoading ? "..." : stats.totalCourses.toLocaleString()}</span>
               <span className="text-secondary text-xs font-bold mt-1">+3 this semester</span>
             </div>
           </div>
@@ -71,7 +98,7 @@ export const Dashboard: React.FC = () => {
               <Database className="text-primary w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-on-surface">1,190</span>
+              <span className="text-3xl font-bold text-on-surface">{isLoading ? "..." : stats.totalResources.toLocaleString()}</span>
               <span className="text-on-surface-variant text-xs font-medium mt-1">Files across all managed courses</span>
             </div>
           </div>
@@ -82,7 +109,7 @@ export const Dashboard: React.FC = () => {
               <Activity className="text-secondary w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-on-surface">286</span>
+              <span className="text-3xl font-bold text-on-surface">{isLoading ? "..." : stats.totalQuizAttempts.toLocaleString()}</span>
               <div className="mt-1 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
                 <span className="text-[10px] font-bold text-secondary uppercase tracking-wider">Updated in real time</span>

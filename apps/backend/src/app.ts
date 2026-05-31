@@ -3,6 +3,7 @@ import userRoute from "./modules/user/user.route.js";
 import authRouter from "./modules/Auth/auth.route.js";
 import resourceRouter from "./modules/resource/resource.route.js";
 import aiRouter from "./modules/ai/ai.route.js";
+import dashboardRouter from "./modules/dashboard/dashboard.route.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -38,6 +39,7 @@ app.use("/users", userRoute);
 app.use("/auth", authRouter);
 app.use("/course", resourceRouter);
 app.use("/ai", aiRouter);
+app.use("/dashboard", dashboardRouter);
 
 app.use(errorHandler);
 

@@ -6,6 +6,203 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id                 String             @id @default(uuid())
+  username           String?            @unique
+  email              String             @unique
+  role               Role
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  name               String
+  password           String
+  mustChangePassword Boolean            @default(false)
+  instructorProfile  InstructorProfile?
+  quizes             Quiz[]
+  refreshTokens      RefreshToken[]
+  resources          Resource[]
+  studentProfile     StudentProfile?
+
+  @@index([email])
+}
+
+model StudentProfile {
+  id           String        @id
+  studnetId    String        @unique
+  acadamicYear Int
+  departmentId String
+  progress     Progress[]
+  quizzes      Quiz[]
+  attempts     QuizAttempt[]
+  department   Department    @relation(fields: [departmentId], references: [id])
+  student      User          @relation(fields: [id], references: [id], onDelete: Cascade)
+  summaries    Summary[]
+}
+
+model InstructorProfile {
+  id           String     @id
+  instructorId String     @unique
+  departmentId String
+  courses      Course[]
+  department   Department @relation(fields: [departmentId], references: [id])
+  instructor   User       @relation(fields: [id], references: [id], onDelete: Cascade)
+  resources    Resource[]
+}
+
+model Department {
+  id         String              @id @default(uuid())
+  name       String
+  code       String              @unique
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  courses    Course[]
+  instructor InstructorProfile[]
+  students   StudentProfile[]
+}
+
+model Course {
+  id           String             @id @default(uuid())
+  name         String
+  code         String             @unique
+  acadamicYear Int
+  departmentId String
+  instructorId String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  department   Department         @relation(fields: [departmentId], references: [id])
+  instructor   InstructorProfile? @relation(fields: [instructorId], references: [id])
+  progress     Progress[]
+  resources    Resource[]
+
+  @@index([instructorId])
+}
+
+model Resource {
+  id                  String             @id @default(uuid())
+  title               String
+  type                FileType
+  fileUrl             String             @unique
+  courseId            String
+  instructorId        String
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  instructorProfileId String?
+  isDeleted           Boolean            @default(false)
+  version             Float
+  status              ResourceStatus     @default(QUEUED)
+  cloudinaryPublicId  String?            @unique
+  quiz                Quiz[]
+  course              Course             @relation(fields: [courseId], references: [id])
+  instructor          User               @relation(fields: [instructorId], references: [id])
+  instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
+  chunks              ResourceChunk[]
+  summaries           Summary[]
+
+  @@index([courseId])
+  @@index([instructorId])
+}
+
+model ResourceChunk {
+  id         String   @id @default(uuid())
+  resourceId String
+  chunkIndex Int
+  pageNumber Int
+  content    String
+  tokenCount Int
+  embedding  Float[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, chunkIndex])
+  @@index([resourceId])
+}
+
+model Summary {
+  id         String         @id @default(uuid())
+  content    String
+  resourceId String
+  studnetId  String
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  resource   Resource       @relation(fields: [resourceId], references: [id])
+  student    StudentProfile @relation(fields: [studnetId], references: [id])
+
+  @@index([resourceId])
+  @@index([studnetId])
+}
+
+model Quiz {
+  id         String         @id @default(uuid())
+  difficulty Difficulty
+  title      String
+  resourceId String
+  studnetId  String
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  userId     String?
+  questions  Question[]
+  resource   Resource       @relation(fields: [resourceId], references: [id])
+  student    StudentProfile @relation(fields: [studnetId], references: [id])
+  user       User?          @relation(fields: [userId], references: [id])
+  attempts   QuizAttempt[]
+
+  @@index([resourceId])
+}
+
+model Question {
+  id         String   @id @default(uuid())
+  content    String
+  options    Json?
+  correctAns String
+  quizId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  quiz       Quiz     @relation(fields: [quizId], references: [id])
+
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id        String         @id @default(uuid())
+  score     Int
+  quizId    String
+  studnetId String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  quiz      Quiz           @relation(fields: [quizId], references: [id])
+  student   StudentProfile @relation(fields: [studnetId], references: [id])
+
+  @@index([quizId])
+  @@index([studnetId])
+}
+
+model Progress {
+  id             String         @id @default(uuid())
+  resourceViewed Int
+  averageScore   Float
+  studnetId      String
+  courseId       String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  course         Course         @relation(fields: [courseId], references: [id])
+  student        StudentProfile @relation(fields: [studnetId], references: [id])
+
+  @@unique([studnetId, courseId])
+  @@index([studnetId])
+  @@index([courseId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiredAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 enum Role {
   STUDENT
   INSTRUCTOR
@@ -29,228 +226,4 @@ enum ResourceStatus {
   PROCESSING
   READY
   FAILED
-}
-
-model User {
-  id           String   @id @default(uuid())
-  username     String?  @unique
-  email        String   @unique
-  password     String
-  role         Role
-  name         String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // A user can be Studnet, Instructor, or Admin
-  studentProfile    StudentProfile?
-  instructorProfile InstructorProfile?
-
-  quizes    Quiz[]
-  resources Resource[]
-  refreshTokens RefreshToken[]
-
-  @@index([email])
-}
-
-model StudentProfile {
-  id           String @id 
-  studnetId    String @unique
-  acadamicYear Int
-  departmentId String
-
-  student    User       @relation(fields: [id], references: [id], onDelete: Cascade)
-  department Department @relation(fields: [departmentId], references: [id])
-
-  summaries Summary[]
-  attempts  QuizAttempt[]
-  progress  Progress[]
-  quizzes   Quiz[]
-}
-
-model InstructorProfile {
-  id           String @id
-  instructorId String @unique
-  departmentId String
-
-  instructor User       @relation(fields: [id], references: [id], onDelete: Cascade)
-  department Department @relation(fields: [departmentId], references: [id])
-
-  courses   Course[]
-  resources Resource[]
-}
-
-model Department {
-  id   String @id @default(uuid())
-  name String
-  code String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  students   StudentProfile[]
-  instructor InstructorProfile[]
-  courses    Course[]
-}
-
-model Course {
-  id           String @id @default(uuid())
-  name         String
-  code         String @unique
-  acadamicYear Int
-  departmentId String
-  instructorId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  department Department        @relation(fields: [departmentId], references: [id])
-  instructor InstructorProfile @relation(fields: [instructorId], references: [id])
-
-  resources Resource[]
-  progress  Progress[]
-
-  @@index([instructorId])
-}
-
-model Resource {
-  id                 String   @id @default(uuid())
-  title              String
-  type               FileType
-  fileUrl            String   @unique
-  cloudinaryPublicId String?  @unique
-  status             ResourceStatus @default(QUEUED)
-  courseId           String
-  instructorId       String
-  version            Float
-  isDeleted          Boolean  @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  instructor User   @relation(fields: [instructorId], references: [id])
-  course     Course @relation(fields: [courseId], references: [id])
-
-  summaries           Summary[]
-  quiz                Quiz[]
-  chunks              ResourceChunk[]
-  instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
-  instructorProfileId String?
-
-  @@index([courseId])
-  @@index([instructorId])
-}
-
-model ResourceChunk {
-  id         String   @id @default(uuid())
-  resourceId String
-  chunkIndex Int
-  pageNumber Int
-  content    String   @db.Text
-  tokenCount Int
-  embedding  Float[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-
-  @@index([resourceId])
-  @@unique([resourceId, chunkIndex])
-}
-
-model Summary {
-  id         String @id @default(uuid())
-  content    String @db.Text
-  resourceId String
-  studnetId  String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  resource Resource       @relation(fields: [resourceId], references: [id])
-  student  StudentProfile @relation(fields: [studnetId], references: [id])
-
-  @@index([resourceId])
-  @@index([studnetId])
-}
-
-model Quiz {
-  id         String        @id @default(uuid())
-  difficulty Difficulty
-  title      String
-  resourceId String
-  studnetId  String
-  questions  Question[]
-  attempts   QuizAttempt[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  resource Resource       @relation(fields: [resourceId], references: [id])
-  student  StudentProfile @relation(fields: [studnetId], references: [id])
-  user     User?          @relation(fields: [userId], references: [id])
-  userId   String?
-
-  @@index([resourceId])
-}
-
-model Question {
-  id         String @id @default(uuid())
-  content    String @db.Text
-  options    Json?
-  correctAns String
-  quizId     String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  quiz Quiz @relation(fields: [quizId], references: [id])
-
-  @@index([quizId])
-}
-
-model QuizAttempt {
-  id        String @id @default(uuid())
-  score     Int
-  quizId    String
-  studnetId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  quiz    Quiz           @relation(fields: [quizId], references: [id])
-  student StudentProfile @relation(fields: [studnetId], references: [id])
-
-  @@index([quizId])
-  @@index([studnetId])
-}
-
-model Progress {
-  id             String @id @default(uuid())
-  resourceViewed Int
-  averageScore   Float
-  studnetId      String
-  courseId       String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  student StudentProfile @relation(fields: [studnetId], references: [id])
-  course  Course         @relation(fields: [courseId], references: [id])
-
-  @@unique([studnetId, courseId])
-  @@index([studnetId])
-  @@index([courseId])
-}
-
-model RefreshToken {
-  id        String  @id @default(uuid())
-  tokenHash String  @unique
-  userId    String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  expiredAt DateTime
-  revoked   Boolean  @default(false)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

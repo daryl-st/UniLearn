@@ -3,40 +3,48 @@ import { motion } from 'motion/react';
 import { Verified, Clock, Rocket, PlayCircle, Share2, ChevronLeft, ChevronRight, CheckCircle2, MessageSquare, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCourseStore } from '@/stores/courseStrore';
-import { CourseAPI } from '@/api/course';
 import { courseThumbUrl } from '@/lib/coursePlaceholders';
+import { DashboardAPI } from '@/api/dashboard';
+
+interface StatItem {
+  label: string;
+  value: string;
+  detail?: string;
+  status?: string;
+  change?: string;
+  trend?: string;
+  icon: React.ComponentType<any>;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { courses, fetchCourses, isLoading } = useCourseStore();
-  const [materialCount, setMaterialCount] = useState<number | null>(null);
+  const [studentStats, setStudentStats] = useState({
+    enrolledCoursesCount: 0,
+    avgQuizScore: null as number | null,
+    quizAttemptsCount: 0,
+    learningMaterialsCount: 0
+  });
 
   useEffect(() => {
     void fetchCourses();
   }, [fetchCourses]);
 
   useEffect(() => {
-    if (courses.length === 0) {
-      setMaterialCount(0);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        const counts = await Promise.all(
-          courses.map((c) =>
-            CourseAPI.getResourcesByCourseId(c.id).then((r) => (Array.isArray(r) ? r.length : 0)),
-          ),
-        );
-        if (!cancelled) setMaterialCount(counts.reduce((a, b) => a + b, 0));
-      } catch {
-        if (!cancelled) setMaterialCount(null);
-      }
-    })();
+    let active = true;
+    DashboardAPI.getStudentStats()
+      .then((data) => {
+        if (active) {
+          setStudentStats(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load student stats:", err);
+      });
     return () => {
-      cancelled = true;
+      active = false;
     };
-  }, [courses]);
+  }, []);
 
   const openCourseDetails = (courseId: string) => {
     navigate(`/dashboard/courses/${courseId}`);
@@ -70,23 +78,23 @@ export default function Dashboard() {
     },
   ] as const;
 
-  const stats = [
+  const stats: StatItem[] = [
     {
-      label: 'Courses in catalog',
-      value: isLoading ? '…' : String(courses.length).padStart(2, '0'),
-      detail: 'From GET /course (not enrollment)',
+      label: 'Enrolled courses',
+      value: isLoading ? '…' : String(studentStats.enrolledCoursesCount).padStart(2, '0'),
+      detail: 'Courses you are currently studying',
       icon: Rocket,
     },
     {
       label: 'Average quiz score',
-      value: '—',
-      status: 'Requires quiz / attempt APIs',
+      value: studentStats.avgQuizScore !== null ? `${studentStats.avgQuizScore}%` : '—',
+      status: studentStats.quizAttemptsCount > 0 ? `${studentStats.quizAttemptsCount} attempts recorded` : 'No attempts recorded',
       icon: Verified,
     },
     {
       label: 'Learning materials',
-      value: materialCount === null ? '…' : String(materialCount),
-      status: 'Resources across catalog',
+      value: isLoading ? '…' : String(studentStats.learningMaterialsCount),
+      status: 'Resources in enrolled courses',
       icon: Clock,
     },
   ];
