@@ -470,7 +470,7 @@ async function main() {
             pageNumber: 1,
             content: "Artificial Intelligence introduces systems that reason and learn from data.",
             tokenCount: 13,
-            embedding: [0.01, 0.02, 0.03],
+            embedding: [],
         },
         create: {
             resourceId: firstResource.id,
@@ -478,7 +478,7 @@ async function main() {
             pageNumber: 1,
             content: "Artificial Intelligence introduces systems that reason and learn from data.",
             tokenCount: 13,
-            embedding: [0.01, 0.02, 0.03],
+            embedding: [],
         },
     });
 
@@ -610,6 +610,9 @@ async function main() {
 
     console.log(
         `\nCounts: ${await prisma.department.count()} department (CS only), ${await prisma.user.count()} users, ${await prisma.course.count()} courses, ${await prisma.resource.count()} resources, ${await prisma.resourceChunk.count()} chunks.`
+    );
+    console.log(
+        "AI (ask / summary / quiz): run ingest on a PDF resource so chunks get 768-dim embeddings and embedding_vec."
     );
     console.log("========================================\n");
 }

@@ -1,2 +1,2 @@
--- AlterTable
-ALTER TABLE "QuizAttempt" ADD COLUMN "results" JSONB;
+-- AlterTable (idempotent for databases synced via db push)
+ALTER TABLE "QuizAttempt" ADD COLUMN IF NOT EXISTS "results" JSONB;

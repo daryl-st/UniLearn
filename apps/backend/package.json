@@ -8,7 +8,10 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "tsx --test src/modules/resource/cloudinary.utils.test.ts"
+    "test": "tsx --test src/modules/resource/cloudinary.utils.test.ts",
+    "db:reset": "prisma migrate reset",
+    "db:deploy": "prisma migrate deploy",
+    "db:pgvector": "tsx scripts/run-ensure-pgvector.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

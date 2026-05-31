@@ -93,10 +93,10 @@ API: **http://127.0.0.1:4000**
 
 ```bash
 cd apps/backend
-DATABASE_URL="postgresql://postgres:password@localhost:5433/unilearn?schema=public" npx prisma migrate deploy
+cp .env.example .env
+pnpm db:deploy
+pnpm db:seed
 ```
-
-Optional seed: `npx prisma db seed`
 
 ### Option B — Local API, Docker Postgres
 
@@ -106,12 +106,49 @@ docker compose up db -d
 
 cd apps/backend
 cp .env.example .env
-# DATABASE_URL in .env.example already uses localhost:5433
-npx prisma migrate dev
+# DATABASE_URL in .env.example uses localhost:5433
+pnpm db:deploy   # prefer deploy over migrate dev (no shadow DB)
+pnpm db:seed
 pnpm dev
 ```
 
 API: **http://127.0.0.1:4000** (`pnpm dev` → `tsx watch src/server.ts`).
+
+### Database targets and AI (pgvector)
+
+| Target | `DATABASE_URL` | Notes |
+|--------|----------------|-------|
+| Docker (recommended) | `localhost:5433` | [`pgvector/pgvector`](docker-compose.yml) image; extension included |
+| Native Postgres | `localhost:5432` | Install `pgvector`; avoid `migrate dev` if shadow DB / collation errors (use `pnpm db:deploy`) |
+
+**Clean local database** (wipes data):
+
+```bash
+cd apps/backend
+pnpm db:reset
+```
+
+**Recovery after `prisma db push`** (schema exists but AI fails with “not indexed”):
+
+```bash
+cd apps/backend
+pnpm db:pgvector   # uses DATABASE_URL from apps/backend/.env (not your shell default)
+npx prisma migrate resolve --applied 20260527120000_create_resource_chunk
+npx prisma migrate resolve --applied 20260528110000_pgvector_resource_chunks
+pnpm db:deploy
+```
+
+**If `db:deploy` failed with “column already exists”** (failed row in `_prisma_migrations`):
+
+```bash
+cd apps/backend
+npx prisma migrate resolve --rolled-back 20260530120000_add_cloudinary_public_id
+pnpm db:deploy
+```
+
+If deploy still reports the column exists but migration is pending, use `--applied` for that migration name instead, then `pnpm db:deploy` again.
+
+Then ingest a PDF resource (upload or `POST /ai/ingest/resource`) so chunks get embeddings. Seed creates a text-only chunk without vectors by design.
 
 ## Run the Flutter app
 
