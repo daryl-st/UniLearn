@@ -19,5 +19,9 @@ export function RequireAuth() {
         return <Navigate to={ROUTES.LOGIN} replace state={{ from: location }} />;
     }
 
+    if (user.mustChangePassword && location.pathname !== ROUTES.CHANGE_PASSWORD) {
+        return <Navigate to={ROUTES.CHANGE_PASSWORD} replace />;
+    }
+
     return <Outlet />;
 }

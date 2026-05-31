@@ -14,6 +14,8 @@ import { NotificationSection } from '@/components/features/student/settings/Noti
 import { ApiKeysSection } from '@/components/features/student/settings/ApiKeysSection';
 import { UsageStatsSection } from '@/components/features/student/settings/UsageStatsSection';
 
+
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const user = useAuthStore((s) => s.user);

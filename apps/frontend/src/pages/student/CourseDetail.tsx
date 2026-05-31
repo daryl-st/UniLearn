@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ChevronLeft,
   Clock,
@@ -14,15 +14,11 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy } from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { Resource } from '@unilearn/shared-types';
 import { CourseAPI, type CourseWithInstructor } from '@/api/course';
 import { courseThumbUrl } from '@/lib/coursePlaceholders';
 import { isPdfPreviewPending, shouldAttemptPdfPreview } from '@/lib/resourceStatus';
-import { PDFJS_DOCUMENT_OPTIONS, resolveCloudinaryViewerUrl } from '@/lib/cloudinaryViewer';
-
-GlobalWorkerOptions.workerSrc = pdfjsWorker;
+import { ResourcePdfViewer } from '@/components/features/learning/ResourcePdfViewer';
 
 export default function CourseDetail() {
   const navigate = useNavigate();
@@ -32,12 +28,6 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeResource, setActiveResource] = useState<Resource | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
-  const [pdfPageNumber, setPdfPageNumber] = useState(1);
-  const [pdfPageCount, setPdfPageCount] = useState(0);
-  const [pdfError, setPdfError] = useState<string | null>(null);
-  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     if (!courseId) return;
@@ -63,73 +53,6 @@ export default function CourseDetail() {
       cancelled = true;
     };
   }, [courseId]);
-
-  useEffect(() => {
-    if (!activeResource || !shouldAttemptPdfPreview(activeResource)) {
-      return undefined;
-    }
-
-    let cancelled = false;
-    const viewerUrl = resolveCloudinaryViewerUrl(
-      String(activeResource.fileUrl),
-      activeResource.type,
-    );
-    let loadingTask = getDocument({
-      url: viewerUrl,
-      ...PDFJS_DOCUMENT_OPTIONS,
-    });
-
-    setPdfLoading(true);
-    setPdfError(null);
-    setPdfPageCount(0);
-    setPdfPageNumber(1);
-
-    loadingTask.promise
-      .then((doc: PDFDocumentProxy) => {
-        if (cancelled) return;
-        setPdfDocument(doc);
-        setPdfPageCount(doc.numPages);
-        setPdfPageNumber(1);
-        setPdfLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setPdfError(err instanceof Error ? err.message : 'Failed to load PDF');
-        setPdfLoading(false);
-        setPdfDocument(null);
-      });
-
-    return () => {
-      cancelled = true;
-      if (loadingTask) {
-        loadingTask.destroy();
-      }
-    };
-  }, [activeResource]);
-
-  useEffect(() => {
-    const renderPdfPage = async () => {
-      if (!pdfDocument || !canvasRef.current) return;
-
-      try {
-        const page = await pdfDocument.getPage(pdfPageNumber);
-        const viewport = page.getViewport({ scale: 1.5 });
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-        if (!context) return;
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        const renderTask = (page as any).render({ canvasContext: context, viewport });
-        await renderTask.promise;
-      } catch (err) {
-        setPdfError(err instanceof Error ? err.message : 'Failed to render PDF page');
-      }
-    };
-
-    renderPdfPage();
-  }, [pdfDocument, pdfPageNumber]);
 
   const handleBack = () => {
     navigate('/dashboard/courses');
@@ -273,65 +196,32 @@ export default function CourseDetail() {
 
               {activeResource ? (
                 <div className="mt-4 p-4 bg-surface-low rounded-sm border border-outline-variant/10">
-                  {isPdfPreviewPending(activeResource) ? (
-                    <div className="w-full h-[640px] bg-black/5 rounded border border-outline-variant/10 flex items-center justify-center">
+                  {shouldAttemptPdfPreview(activeResource) ? (
+                    <ResourcePdfViewer
+                      resourceId={activeResource.id}
+                      fileUrl={String(activeResource.fileUrl)}
+                      title={activeResource.title}
+                      type={activeResource.type}
+                      status={activeResource.status}
+                    />
+                  ) : isPdfPreviewPending(activeResource) ? (
+                    <div className="w-full min-h-[20rem] bg-black/5 rounded border border-outline-variant/10 flex items-center justify-center">
                       <p className="text-on-surface-variant text-sm">Converting to PDF… This may take a minute.</p>
-                    </div>
-                  ) : shouldAttemptPdfPreview(activeResource) ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-3 text-sm text-on-surface-variant">
-                        <span>
-                          Page {pdfPageNumber} of {pdfPageCount}
-                          {activeResource.type !== 'PDF' ? (
-                            <span className="ml-2 text-[10px] font-mono uppercase">PDF preview</span>
-                          ) : null}
-                        </span>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setPdfPageNumber((page) => Math.max(page - 1, 1))}
-                            disabled={pdfPageNumber <= 1 || pdfLoading}
-                            className="px-3 py-2 bg-surface-high text-on-surface rounded disabled:opacity-50"
-                          >
-                            Previous
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setPdfPageNumber((page) => Math.min(page + 1, pdfPageCount))}
-                            disabled={pdfPageNumber >= pdfPageCount || pdfLoading}
-                            className="px-3 py-2 bg-surface-high text-on-surface rounded disabled:opacity-50"
-                          >
-                            Next
-                          </button>
-                        </div>
-                      </div>
-                      <div className="w-full h-[640px] bg-black/5 rounded border border-outline-variant/10 overflow-auto flex items-center justify-center">
-                        {pdfLoading ? (
-                          <div className="text-on-surface-variant">Loading PDF…</div>
-                        ) : pdfError ? (
-                          <div className="text-error text-sm">{pdfError}</div>
-                        ) : (
-                          <canvas ref={canvasRef} className="w-full" />
-                        )}
-                      </div>
-                      <div className="flex justify-end">
-                        <a href={String(activeResource.fileUrl)} className="px-4 py-2 bg-primary text-on-primary rounded" download>
-                          Download PDF
-                        </a>
-                      </div>
                     </div>
                   ) : activeResource.type === 'PPT' || activeResource.type === 'DOC' ? (
                     <div className="space-y-3">
-                      <div className="w-full h-[640px] bg-black/5 rounded border border-outline-variant/10">
-                        <iframe
-                          src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(String(activeResource.fileUrl))}`}
-                          title={activeResource.title}
-                          className="w-full h-full"
-                        />
-                      </div>
+                      <p className="text-sm text-on-surface-variant">
+                        This file is stored on Cloudinary. Open or download it below.
+                      </p>
                       <div className="flex justify-end">
-                        <a href={String(activeResource.fileUrl)} className="px-4 py-2 bg-primary text-on-primary rounded" download>
-                          Download file
+                        <a
+                          href={String(activeResource.fileUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-primary text-on-primary rounded inline-flex items-center gap-2"
+                        >
+                          Open from Cloudinary
+                          <ExternalLink className="w-4 h-4" />
                         </a>
                       </div>
                     </div>
@@ -347,13 +237,7 @@ export default function CourseDetail() {
                   )}
                   <button
                     type="button"
-                    onClick={() => {
-                      setActiveResource(null);
-                      setPdfDocument(null);
-                      setPdfPageCount(0);
-                      setPdfPageNumber(1);
-                      setPdfError(null);
-                    }}
+                    onClick={() => setActiveResource(null)}
                     className="w-full mt-3 px-4 py-2 bg-surface-high text-on-surface rounded text-sm"
                   >
                     Close Viewer

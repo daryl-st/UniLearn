@@ -24,7 +24,8 @@ function isDashboardShell(pathname: string) {
 function isAuthShell(pathname: string) {
   return (
     pathname === "/login" ||
-    pathname === "/register"
+    pathname === "/register" ||
+    pathname === "/change-password"
   )
 }
 

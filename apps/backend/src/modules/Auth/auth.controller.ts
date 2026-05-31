@@ -84,4 +84,38 @@ export class AuthController {
             courseProgress,
         });
     }
+
+    async changePassword(req: Request, res: Response) {
+        try {
+            const authReq = req as AuthRequest;
+            const { password } = req.body;
+            if (!authReq.user) {
+                return res.status(401).json({ error: "Unauthorized" });
+            }
+            if (!password || password.length < 8) {
+                return res.status(400).json({ error: "Password must be at least 8 characters long." });
+            }
+
+            const bcrypt = await import("bcrypt");
+            const hashedPassword = await bcrypt.default.hash(password, 10);
+
+            // Import db config dynamically to avoid top level imports if preferred, or use prisma directly.
+            // Let's use the local db import. We can import it at the top or dynamically import it.
+            const dbModule = await import("../../config/db.js");
+            const db = dbModule.default;
+
+            await db.user.update({
+                where: { id: authReq.user.userId },
+                data: {
+                    password: hashedPassword,
+                    mustChangePassword: false,
+                },
+            });
+
+            return res.status(200).json({ message: "Password updated successfully" });
+        } catch (error: any) {
+            console.error("Error changing password:", error);
+            return res.status(500).json({ error: "Failed to change password" });
+        }
+    }
 }

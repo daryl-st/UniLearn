@@ -10,13 +10,19 @@ export class User implements UserType {
     password: string;
     role: Role;
     username?: string; // it's optional.
+    mustChangePassword?: boolean;
+    updatedAt?: Date | string;
 
-    constructor(data: UserType) {
+    constructor(data: UserType & { updatedAt?: Date | string }) {
         this.id = data.id;
         this.email = data.email;
         this.password = data.password;
         this.name = data.name
         this.role = data.role;
+        this.mustChangePassword = data.mustChangePassword ?? false;
+        if (data.updatedAt) {
+            this.updatedAt = data.updatedAt;
+        }
         if (data.username) {
             this.username = data.username;
         }
@@ -43,6 +49,8 @@ export class User implements UserType {
             email: this.email,
             username: this.username,
             role: this.role,
+            mustChangePassword: this.mustChangePassword,
+            updatedAt: this.updatedAt instanceof Date ? this.updatedAt.toISOString() : this.updatedAt,
         }
     }
 }

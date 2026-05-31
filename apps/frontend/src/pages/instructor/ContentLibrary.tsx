@@ -15,9 +15,11 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCourseStore } from '@/stores/courseStrore';
+import { useAuthStore } from '@/stores/authStore';
 import { CourseAPI } from '@/api/course';
 import type { FileType, Resource } from '@unilearn/shared-types';
 import { resourceStatusClass, resourceStatusLabel } from '@/lib/resourceStatus';
+import { courseThumbUrl } from '@/lib/coursePlaceholders';
 
 const iconForType = (t: FileType) => {
   if (t === 'PPT') return Video;
@@ -67,12 +69,12 @@ export const ContentLibrary: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const { courses, fetchCourses } = useCourseStore();
+  const authUser = useAuthStore((s) => s.user);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formTitle, setFormTitle] = useState('');
-  const [formUrl, setFormUrl] = useState('');
   const [formType, setFormType] = useState<FileType>('PDF');
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
@@ -137,60 +139,40 @@ export const ContentLibrary: React.FC = () => {
   const handleSubmitMetadata = async () => {
     if (!selectedCourseId || !selectedCourse) return;
     const title = formTitle.trim();
-    const fileUrl = formUrl.trim();
     if (!title) return;
+    if (!selectedFile) {
+      alert('Select a PDF, PowerPoint, or Word file to upload to Cloudinary.');
+      return;
+    }
     setSubmitting(true);
     setUploadSuccess(null);
     try {
-      if (selectedFile) {
-        const duplicateFile = resources.some(
-          (resource) =>
-            resource.courseId === selectedCourseId &&
-            resource.title === title,
-        );
-        if (duplicateFile) {
-          alert('A resource with this title already exists for this course.');
-          return;
-        }
-
-        const fd = new FormData();
-        fd.append('file', selectedFile);
-        fd.append('title', title);
-        fd.append('type', inferFileType(selectedFile));
-        fd.append('courseId', selectedCourseId);
-        fd.append('instructorId', selectedCourse.instructorId);
-
-        const response = await CourseAPI.uploadResource(fd as any);
-        const ingestNote =
-          response.ingestStatus === 'pending'
-            ? ' Indexing for AI may take a moment.'
-            : '';
-        setUploadSuccess(`Uploaded "${response.resource.title}".${ingestNote}`);
-      } else {
-        if (!fileUrl) return;
-        const duplicateUrl = resources.some(
-          (resource) =>
-            resource.courseId === selectedCourseId &&
-            resource.fileUrl === fileUrl,
-        );
-        if (duplicateUrl) {
-          alert('This resource URL already exists for this course.');
-          return;
-        }
-
-        await CourseAPI.uploadResource({
-          title,
-          type: formType,
-          fileUrl,
-          courseId: selectedCourseId,
-          instructorId: selectedCourse.instructorId,
-        });
-        setUploadSuccess(`Saved "${title}" from URL.`);
+      const duplicateFile = resources.some(
+        (resource) =>
+          resource.courseId === selectedCourseId &&
+          resource.title === title,
+      );
+      if (duplicateFile) {
+        alert('A resource with this title already exists for this course.');
+        return;
       }
+
+      const fd = new FormData();
+      fd.append('file', selectedFile);
+      fd.append('title', title);
+      fd.append('type', inferFileType(selectedFile));
+      fd.append('courseId', selectedCourseId);
+      fd.append('instructorId', authUser?.id ?? selectedCourse.instructorId);
+
+      const response = await CourseAPI.uploadResource(fd);
+      const ingestNote =
+        response.ingestStatus === 'pending'
+          ? ' Indexing for AI may take a moment.'
+          : '';
+      setUploadSuccess(`Uploaded "${response.resource.title}" to Cloudinary.${ingestNote}`);
 
       const r = await CourseAPI.getResourcesByCourseId(selectedCourseId);
       setResources(Array.isArray(r) ? r : []);
-      setFormUrl('');
       setFormTitle('');
       setSelectedFileName('No file selected');
       setSelectedFile(null);
@@ -214,8 +196,8 @@ export const ContentLibrary: React.FC = () => {
         <div>
           <h1 className="text-4xl font-headline font-bold tracking-tight">Content upload</h1>
           <p className="text-outline max-w-xl mt-2">
-            Upload PDF, PowerPoint, or Word files to Cloudinary. Office files are converted to PDF automatically.
-            You can also paste a public URL for externally hosted materials.
+            Upload PDF, PowerPoint, or Word files directly to Cloudinary for your assigned courses.
+            Students access materials from Cloudinary only.
           </p>
           {uploadSuccess ? (
             <p className="text-sm text-secondary mt-2">{uploadSuccess}</p>
@@ -266,20 +248,15 @@ export const ContentLibrary: React.FC = () => {
             <option value="DOC">DOC</option>
           </select>
         </div>
-        <input
-          value={formUrl}
-          onChange={(e) => setFormUrl(e.target.value)}
-          placeholder="Public file URL (optional when uploading a file)"
-          className="w-full bg-surface-high border border-outline-variant/20 rounded-lg px-3 py-2 text-sm text-on-surface"
-        />
+        <p className="text-xs text-outline font-mono">{selectedFileName}</p>
         <button
           type="button"
-          disabled={submitting || !selectedCourseId}
+          disabled={submitting || !selectedCourseId || !selectedFile}
           onClick={() => void handleSubmitMetadata()}
           className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:brightness-110 disabled:opacity-50"
         >
           <Upload size={20} />
-          {submitting ? 'Saving…' : 'Save resource'}
+          {submitting ? 'Uploading…' : 'Upload to Cloudinary'}
         </button>
       </div>
 
@@ -410,7 +387,7 @@ export const ContentLibrary: React.FC = () => {
                 <PlayCircle size={48} className="text-white" />
               </div>
               <img
-                src="https://picsum.photos/seed/preview/400/225"
+                src={courseThumbUrl(selectedCourse?.code ?? 'course')}
                 alt=""
                 className="w-full h-full object-cover opacity-60"
                 referrerPolicy="no-referrer"
@@ -437,7 +414,7 @@ export const ContentLibrary: React.FC = () => {
                       </a>
                     </>
                   ) : (
-                    <span className="text-outline">Add a resource using the form above</span>
+                    <span className="text-outline">Upload a file using the form above</span>
                   )}
                 </div>
               </div>

@@ -26,6 +26,13 @@ export function asBackendRole(r: string | undefined): BackendRole {
     return "STUDENT";
 }
 
+/** Where to send a signed-in user after login or password change. */
+export function postAuthRedirectPath(user: { role: string; mustChangePassword?: boolean } | null | undefined): string {
+    if (!user) return ROUTES.LOGIN;
+    if (user.mustChangePassword) return ROUTES.CHANGE_PASSWORD;
+    return dashboardPathForBackendRole(asBackendRole(user.role));
+}
+
 export function roleLabelForBackendRole(role: string | undefined): string {
     const r = (role ?? "STUDENT").toUpperCase();
     if (r === "ADMIN") return "Administrator";

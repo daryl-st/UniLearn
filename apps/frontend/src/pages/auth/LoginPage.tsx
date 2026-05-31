@@ -4,7 +4,7 @@ import { SiGooglechrome, SiApple } from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { asBackendRole, dashboardPathForBackendRole } from '@/utils/auth';
+import { postAuthRedirectPath } from '@/utils/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function LoginPage() {
     try {
       await login(formData.email, formData.password);
       const u = useAuthStore.getState().user;
-      navigate(dashboardPathForBackendRole(asBackendRole(u?.role)), { replace: true });
+      navigate(postAuthRedirectPath(u), { replace: true });
     } catch (err) {
       // Error already in store, no need to handle here
       console.log('Login failed');

@@ -1,4 +1,5 @@
 import type { ResourceStatus } from '@unilearn/shared-types';
+import { isCloudinaryDeliveryUrl } from '@/lib/cloudinaryViewer';
 
 export function resourceStatusLabel(status?: ResourceStatus): string {
   switch (status) {
@@ -33,13 +34,33 @@ export function isPdfPreviewPending(resource: { type: string; status?: ResourceS
   return resource.status === 'PROCESSING' && resource.type !== 'PDF';
 }
 
-export function shouldAttemptPdfPreview(resource: { type: string; status?: ResourceStatus; fileUrl?: string }): boolean {
+export function shouldAttemptPdfPreview(resource: {
+  type: string;
+  status?: ResourceStatus;
+  fileUrl?: string;
+}): boolean {
   if (isPdfPreviewPending(resource)) return false;
-  if (resource.status === 'FAILED' && resource.type !== 'PDF') {
-    const url = resource.fileUrl ?? '';
-    const isCloudinaryPdf =
-      url.includes('/raw/upload/') || url.includes('/image/upload/');
-    if (!isCloudinaryPdf) return false;
+  if (resource.status === 'FAILED') return false;
+
+  const url = resource.fileUrl ?? '';
+
+  if (resource.type === 'PDF') {
+    return isCloudinaryDeliveryUrl(url);
   }
-  return true;
+
+  // Converted Office files (Aspose) are delivered as image/pdf URLs.
+  return isCloudinaryDeliveryUrl(url) && url.includes('/image/upload/');
+}
+
+export function isDownloadOnlyResource(resource: {
+  type: string;
+  fileUrl?: string;
+}): boolean {
+  if (resource.type === 'PDF') return false;
+  return isCloudinaryDeliveryUrl(resource.fileUrl ?? '');
+}
+
+export function isUnavailableResource(resource: { fileUrl?: string }): boolean {
+  const url = resource.fileUrl ?? '';
+  return !url || (!isCloudinaryDeliveryUrl(url) && !url.startsWith('local://'));
 }

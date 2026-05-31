@@ -2,7 +2,7 @@ import type { FileType, ResourceStatus } from "@prisma/client";
 import prisma from "../../config/db.js";
 import { Course, Resource } from "./resource.entity.js";
 import type { IngestChunk } from "../ai/ai.service.js";
-import { resolveCloudinaryViewerUrl } from "./cloudinary.utils.js";
+import { resolveCloudinaryViewerUrl, isCloudinaryDeliveryUrl } from "./cloudinary.utils.js";
 
 function toResource(row: {
     id: string;
@@ -57,7 +57,11 @@ export class ResourceRepository {
 
     async findAll(courseId: string): Promise<Resource[]> {
         const resources = await prisma.resource.findMany({
-            where: { courseId: courseId },
+            where: {
+                courseId,
+                isDeleted: false,
+                fileUrl: { contains: "res.cloudinary.com" },
+            },
         });
 
         return resources.map((u) => toResource(u));
@@ -67,7 +71,7 @@ export class ResourceRepository {
         const resource = await prisma.resource.findUnique({
             where: { id: data.id },
         });
-        if (!resource) return null;
+        if (!resource || resource.isDeleted || !isCloudinaryDeliveryUrl(resource.fileUrl)) return null;
 
         return toResource(resource);
     }
@@ -82,7 +86,11 @@ export class ResourceRepository {
 
     async findByCourseId(data: { id: string }): Promise<Resource[] | null> {
         const resources = await prisma.resource.findMany({
-            where: { courseId: data.id },
+            where: {
+                courseId: data.id,
+                isDeleted: false,
+                fileUrl: { contains: "res.cloudinary.com" },
+            },
         });
         if (!resources) return null;
         return resources.map((u) => toResource(u));
@@ -108,6 +116,10 @@ export class ResourceRepository {
             },
         });
         if (existingResourceByTitle) return null;
+
+        if (!isCloudinaryDeliveryUrl(data.fileUrl)) {
+            return null;
+        }
 
         const resource = await prisma.resource.create({ data });
         return toResource(resource);
@@ -164,13 +176,13 @@ export class ResourceRepository {
 
     async countAll(): Promise<number> {
         return prisma.resource.count({
-            where: { isDeleted: false },
+            where: { isDeleted: false, fileUrl: { contains: "res.cloudinary.com" } },
         });
     }
 
     async countByInstructor(instructorId: string): Promise<number> {
         return prisma.resource.count({
-            where: { instructorId, isDeleted: false },
+            where: { instructorId, isDeleted: false, fileUrl: { contains: "res.cloudinary.com" } },
         });
     }
 

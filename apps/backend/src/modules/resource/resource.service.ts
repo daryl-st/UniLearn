@@ -123,7 +123,7 @@ export class CourseService {
         private userRepository: UserRepository,
     ) {}
 
-    async getCourses(): Promise<
+    async getCourses(instructorId?: string): Promise<
         Array<{
             id: string;
             name: string;
@@ -134,7 +134,9 @@ export class CourseService {
             instructorName: string;
         }>
     > {
-        const response = await this.courseRepository.findAll();
+        const response = instructorId
+            ? await this.courseRepository.findByInstructor(instructorId)
+            : await this.courseRepository.findAll();
         const instructorIds = response.map((course) => course.instructorId);
 
         const instructorNames = await Promise.all(

@@ -43,7 +43,6 @@ export type createCourseBody = z.infer<typeof createCourseSchema>
 export const uploadResourceSchema = z.object({
     title: name,
     type: z.enum(["PDF", "PPT", "DOC"]),
-    fileUrl: z.string().min(1).max(2048).optional(),
     courseId: z.string().uuid(),
     instructorId: z.string().uuid(),
 });
@@ -106,3 +105,8 @@ export const deleteResourceBodySchema = z.object({
     instructorId: z.string().uuid(),
 });
 export type deleteResourceBody = z.infer<typeof deleteResourceBodySchema>
+
+export const changePasswordSchema = z.object({
+    password: z.string().min(8).max(128),
+});
+export type ChangePasswordBody = z.infer<typeof changePasswordSchema>

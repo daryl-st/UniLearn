@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import prisma from "../src/config/db";
+import { parsePublicIdFromCloudinaryUrl } from "../src/modules/resource/cloudinary.utils.js";
 
 const DEMO_PASSWORD = "12345678";
 const BCRYPT_ROUNDS = 10;
@@ -277,7 +278,64 @@ async function main() {
     const dsaCourse = courses.find((x) => x.code === "COSC2210")!;
     const webCourse = courses.find((x) => x.code === "SENG3102")!;
 
-    /** Resource-view progress for mobile dev account (before heavy seed steps). */
+    /** Remove stale resources not in the demo seed list (keeps Cloudinary uploads). */
+    const demoFileUrls = [
+        "https://www.w3.org/WAI/WCAG21/working-examples/pdf-img/dummy.pdf",
+        "https://arxiv.org/pdf/1706.03762.pdf",
+        "https://unilearn-seed.local/resources/cosc4411/lecture02-search.pdf",
+        "https://unilearn-seed.local/resources/cosc3312/normalization-slides.pptx",
+        "https://unilearn-seed.local/resources/cosc3312/sql-lab.docx",
+        "https://unilearn-seed.local/resources/cosc2210/big-o-handout.pdf",
+        "https://unilearn-seed.local/resources/cosc2210/trees-avl.pptx",
+        "https://unilearn-seed.local/resources/seng3102/rest-api-notes.pdf",
+        "https://unilearn-seed.local/resources/seng3102/react-intro.pptx",
+        "https://unilearn-seed.local/resources/seng3102/deployment.docx",
+    ];
+    const staleResources = await prisma.resource.findMany({
+        where: {
+            fileUrl: { notIn: demoFileUrls },
+            NOT: { fileUrl: { contains: "res.cloudinary.com" } },
+        },
+        select: { id: true },
+    });
+    const staleResourceIds = staleResources.map((r) => r.id);
+    if (staleResourceIds.length > 0) {
+        await prisma.quizAttempt.deleteMany({
+            where: { quiz: { resourceId: { in: staleResourceIds } } },
+        });
+        await prisma.question.deleteMany({
+            where: { quiz: { resourceId: { in: staleResourceIds } } },
+        });
+        await prisma.quiz.deleteMany({ where: { resourceId: { in: staleResourceIds } } });
+        await prisma.summary.deleteMany({ where: { resourceId: { in: staleResourceIds } } });
+        await prisma.resourceChunk.deleteMany({ where: { resourceId: { in: staleResourceIds } } });
+        await prisma.resource.deleteMany({ where: { id: { in: staleResourceIds } } });
+        console.log(`Removed ${staleResourceIds.length} stale non-demo resource(s).`);
+    }
+
+    /** Backfill Cloudinary public IDs for existing delivery URLs. */
+    const missingPublicId = await prisma.resource.findMany({
+        where: {
+            fileUrl: { contains: "res.cloudinary.com" },
+            cloudinaryPublicId: null,
+        },
+    });
+    for (const row of missingPublicId) {
+        const publicId = parsePublicIdFromCloudinaryUrl(row.fileUrl);
+        if (!publicId) continue;
+        await prisma.resource.update({
+            where: { id: row.id },
+            data: {
+                cloudinaryPublicId: publicId,
+                ...(row.type === "PDF" && row.status === "QUEUED" ? { status: "READY" } : {}),
+            },
+        });
+    }
+    if (missingPublicId.length > 0) {
+        console.log(`Backfilled Cloudinary public IDs for ${missingPublicId.length} resource(s).`);
+    }
+
+    /** Resource-view progress for mobile dev account (before demo materials). */
     await prisma.progress.upsert({
         where: {
             studnetId_courseId: {

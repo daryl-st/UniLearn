@@ -14,6 +14,7 @@ export class ApiError extends Error {
 interface RequestConfig extends RequestInit {
     params?: Record<string, string>;
     timeout?: number;
+    responseType?: 'json' | 'text' | 'arrayBuffer';
     // When true, a 401 will not trigger auth/refresh + retry (avoids loops).
     skipAuthRefresh?: boolean;
 }
@@ -84,7 +85,7 @@ class APIClient {
     }
 
     private async request<T>(endpoint: string, config: RequestConfig = {}): Promise<T> {
-        const { params, timeout, skipAuthRefresh, ...restInit } = config;
+        const { params, timeout, skipAuthRefresh, responseType, ...restInit } = config;
         const url = new URL(`${this.baseUrl}${endpoint}`);
 
         if (params) {
@@ -145,6 +146,19 @@ class APIClient {
             let data: unknown;
             if (response.status === 204) {
                 data = undefined;
+            } else if (responseType === 'arrayBuffer') {
+                if (!response.ok) {
+                    let errorMessage = response.statusText;
+                    try {
+                        const errText = await response.text();
+                        const parsed = JSON.parse(errText) as { error?: string; message?: string };
+                        errorMessage = parsed.error ?? parsed.message ?? errorMessage;
+                    } catch {
+                        // keep statusText
+                    }
+                    throw new ApiError(response.status, errorMessage);
+                }
+                data = await response.arrayBuffer();
             } else {
                 const contentType = response.headers.get('content-type');
                 if (contentType?.includes('application/json')) {
