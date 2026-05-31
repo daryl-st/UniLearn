@@ -57,7 +57,7 @@ export class ResourceRepository {
 
     async findAll(courseId: string): Promise<Resource[]> {
         const resources = await prisma.resource.findMany({
-            where: { courseId: courseId },
+            where: { courseId: courseId, isDeleted: false },
         });
 
         return resources.map((u) => toResource(u));

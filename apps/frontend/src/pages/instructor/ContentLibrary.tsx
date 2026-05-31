@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCourseStore } from '@/stores/courseStrore';
+import { useAuthStore } from '@/stores/authStore';
 import { CourseAPI } from '@/api/course';
 import type { FileType, Resource } from '@unilearn/shared-types';
 import { resourceStatusClass, resourceStatusLabel } from '@/lib/resourceStatus';
@@ -67,6 +68,7 @@ export const ContentLibrary: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const { courses, fetchCourses } = useCourseStore();
+  const authUser = useAuthStore((s) => s.user);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,7 +160,7 @@ export const ContentLibrary: React.FC = () => {
         fd.append('title', title);
         fd.append('type', inferFileType(selectedFile));
         fd.append('courseId', selectedCourseId);
-        fd.append('instructorId', selectedCourse.instructorId);
+        fd.append('instructorId', authUser?.id ?? selectedCourse.instructorId);
 
         const response = await CourseAPI.uploadResource(fd as any);
         const ingestNote =
@@ -183,7 +185,7 @@ export const ContentLibrary: React.FC = () => {
           type: formType,
           fileUrl,
           courseId: selectedCourseId,
-          instructorId: selectedCourse.instructorId,
+          instructorId: authUser?.id ?? selectedCourse.instructorId,
         });
         setUploadSuccess(`Saved "${title}" from URL.`);
       }

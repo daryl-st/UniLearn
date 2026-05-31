@@ -89,6 +89,32 @@ export function getNotificationUrl(): string | undefined {
     return `${base}/course/cloudinary/notification`;
 }
 
+/** When true, Office uploads request Aspose PDF conversion (requires Cloudinary add-on). */
+export function isAsposeConversionEnabled(): boolean {
+    return process.env.CLOUDINARY_ASPOSE_ENABLED === "true";
+}
+
+type CloudinaryLikeError = {
+    http_code?: number;
+    message?: string;
+    name?: string;
+};
+
+export function isAsposeSubscriptionError(err: unknown): boolean {
+    if (!err || typeof err !== "object") return false;
+    const e = err as CloudinaryLikeError;
+    if (e.http_code === 420) return true;
+    const msg = (e.message ?? "").toLowerCase();
+    return msg.includes("aspose") || msg.includes("subscription");
+}
+
+export function cloudinaryErrorMessage(err: unknown): string {
+    if (!err || typeof err !== "object") return "Failed to upload file to storage.";
+    const e = err as CloudinaryLikeError;
+    if (typeof e.message === "string" && e.message.trim()) return e.message;
+    return "Failed to upload file to storage.";
+}
+
 export function verifyNotificationSignature(
     rawBody: string,
     timestamp: string | undefined,

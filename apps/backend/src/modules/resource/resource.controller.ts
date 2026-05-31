@@ -6,6 +6,7 @@ import { CourseService, ResourceService } from "./resource.service.js";
 import type { createCourseBody, deleteResourceBody, uploadResourceBody } from "../../schemas/index.js";
 import { UserRepository } from "../user/user.repository.js";
 import { cloudinaryService, CloudinaryNotConfiguredError } from "./cloudinary.service.js";
+import { cloudinaryErrorMessage } from "./cloudinary.utils.js";
 
 function paramId(value: string | string[] | undefined): string | undefined {
     if (value === undefined) return undefined;
@@ -127,7 +128,7 @@ export class ResourceController {
                     return res.status(503).json({ error: err.message });
                 }
                 console.error("Cloudinary upload failed:", err);
-                return res.status(502).json({ error: "Failed to upload file to storage." });
+                return res.status(502).json({ error: cloudinaryErrorMessage(err) });
             }
         } else if (!resourceDetails.fileUrl?.trim()) {
             return res.status(400).json({ error: "Provide a file upload or a public fileUrl." });

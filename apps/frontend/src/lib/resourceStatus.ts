@@ -35,11 +35,17 @@ export function isPdfPreviewPending(resource: { type: string; status?: ResourceS
 
 export function shouldAttemptPdfPreview(resource: { type: string; status?: ResourceStatus; fileUrl?: string }): boolean {
   if (isPdfPreviewPending(resource)) return false;
-  if (resource.status === 'FAILED' && resource.type !== 'PDF') {
-    const url = resource.fileUrl ?? '';
-    const isCloudinaryPdf =
-      url.includes('/raw/upload/') || url.includes('/image/upload/');
-    if (!isCloudinaryPdf) return false;
+  if (resource.status === 'FAILED') return false;
+
+  const url = resource.fileUrl ?? '';
+  const isCloudinaryAsset =
+    url.includes('res.cloudinary.com') &&
+    (url.includes('/raw/upload/') || url.includes('/image/upload/'));
+
+  if (resource.type === 'PDF') {
+    return isCloudinaryAsset || url.toLowerCase().includes('.pdf');
   }
-  return true;
+
+  // PPT/DOC only preview when Aspose conversion produced a PDF delivery URL.
+  return isCloudinaryAsset && url.includes('/image/upload/');
 }

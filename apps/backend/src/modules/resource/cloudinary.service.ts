@@ -3,7 +3,10 @@ import streamifier from "streamifier";
 import {
     buildPdfDeliveryUrl,
     buildResourcePublicId,
+    cloudinaryErrorMessage,
     getNotificationUrl,
+    isAsposeConversionEnabled,
+    isAsposeSubscriptionError,
     isOfficeFile,
     isPdfFile,
 } from "./cloudinary.utils.js";
@@ -89,48 +92,91 @@ export class CloudinaryService {
             throw new CloudinaryNotConfiguredError();
         }
 
-        const publicId = buildResourcePublicId(originalname, {
-            omitPdfExtension: isPdfFile(originalname, mimeType),
-        });
-        const needsConversion = isOfficeFile(originalname, mimeType);
-        const uploadAsPdf = isPdfFile(originalname, mimeType);
-        const notificationUrl = needsConversion ? getNotificationUrl() : undefined;
+        const officeFile = isOfficeFile(originalname, mimeType);
 
-        const opts: Record<string, unknown> = {
+        if (officeFile && isAsposeConversionEnabled()) {
+            try {
+                return await this.uploadWithAsposeConversion(buffer, originalname);
+            } catch (err) {
+                if (isAsposeSubscriptionError(err)) {
+                    console.warn(
+                        "Cloudinary Aspose conversion unavailable; storing original office file:",
+                        cloudinaryErrorMessage(err),
+                    );
+                    return this.uploadRawFile(buffer, originalname, mimeType, { officeFile: true });
+                }
+                throw err;
+            }
+        }
+
+        return this.uploadRawFile(buffer, originalname, mimeType, { officeFile });
+    }
+
+    private async uploadRawFile(
+        buffer: Buffer,
+        originalname: string,
+        mimeType: string | undefined,
+        opts: { officeFile: boolean },
+    ): Promise<CloudinaryUploadResult> {
+        const uploadAsPdf = isPdfFile(originalname, mimeType);
+        const publicId = buildResourcePublicId(originalname, {
+            omitPdfExtension: uploadAsPdf,
+        });
+
+        const result = await this.uploadStream(buffer, {
             public_id: publicId,
             use_filename: false,
             unique_filename: false,
             overwrite: false,
-            // Native PDFs as raw — many Cloudinary accounts block image PDF CDN delivery.
             resource_type: "raw",
-        };
+        });
 
-        if (needsConversion) {
-            opts.raw_convert = "aspose";
-            if (notificationUrl) {
-                opts.notification_url = notificationUrl;
-            }
-        }
-
-        const result = await this.uploadStream(buffer, opts);
         const originalUrl = result.secure_url ?? result.url ?? "";
-
-        if (needsConversion) {
-            return {
-                publicId,
-                originalUrl,
-                pdfUrl: this.buildPdfUrl(publicId),
-                needsConversion: true,
-            };
+        if (!originalUrl) {
+            throw new Error("Cloudinary upload returned no delivery URL.");
         }
 
-        const pdfUrl = uploadAsPdf ? originalUrl : this.buildPdfUrl(publicId);
+        // Office files without Aspose stay as the uploaded original; PDFs use the raw URL directly.
+        const pdfUrl = uploadAsPdf || opts.officeFile ? originalUrl : this.buildPdfUrl(publicId);
 
         return {
             publicId,
             originalUrl,
             pdfUrl,
             needsConversion: false,
+        };
+    }
+
+    private async uploadWithAsposeConversion(
+        buffer: Buffer,
+        originalname: string,
+    ): Promise<CloudinaryUploadResult> {
+        const publicId = buildResourcePublicId(originalname);
+        const notificationUrl = getNotificationUrl();
+
+        const uploadOpts: Record<string, unknown> = {
+            public_id: publicId,
+            use_filename: false,
+            unique_filename: false,
+            overwrite: false,
+            resource_type: "raw",
+            raw_convert: "aspose",
+        };
+        if (notificationUrl) {
+            uploadOpts.notification_url = notificationUrl;
+        }
+
+        const result = await this.uploadStream(buffer, uploadOpts);
+        const originalUrl = result.secure_url ?? result.url ?? "";
+        if (!originalUrl) {
+            throw new Error("Cloudinary upload returned no delivery URL.");
+        }
+
+        return {
+            publicId,
+            originalUrl,
+            pdfUrl: this.buildPdfUrl(publicId),
+            needsConversion: true,
         };
     }
 
