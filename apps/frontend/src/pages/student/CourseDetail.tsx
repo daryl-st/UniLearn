@@ -135,8 +135,10 @@ export default function CourseDetail() {
     navigate('/dashboard/courses');
   };
 
-  const openInWorkspace = (resourceId: string) => {
-    if (courseId) navigate(`/dashboard/learning/${courseId}/${resourceId}`);
+  const openInWorkspace = (resourceId: string, panel?: 'chat' | 'summary') => {
+    if (!courseId) return;
+    const suffix = panel === 'summary' ? '?panel=summary' : '';
+    navigate(`/dashboard/learning/${courseId}/${resourceId}${suffix}`);
   };
 
   const scrollToMaterials = () => {
@@ -376,8 +378,13 @@ export default function CourseDetail() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  className="py-3 bg-surface-high text-on-surface-variant hover:text-white rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest opacity-50 cursor-not-allowed"
-                  disabled
+                  disabled={!activeResource}
+                  onClick={() => activeResource && openInWorkspace(activeResource.id, 'summary')}
+                  className={`py-3 rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest ${
+                    activeResource
+                      ? 'bg-surface-high text-on-surface-variant hover:text-white'
+                      : 'bg-surface-high text-on-surface-variant opacity-50 cursor-not-allowed'
+                  }`}
                 >
                   <Bookmark className="w-3.5 h-3.5" />
                   Summary
@@ -413,9 +420,13 @@ export default function CourseDetail() {
                     <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
                     <span>Use the arrow on a resource to open the learning workspace with AI chat.</span>
                   </li>
+                  <li className="flex items-center gap-3 text-[13px] text-on-surface-variant">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span>Select a resource, then open Summary for AI revision notes (or use the learning workspace).</span>
+                  </li>
                   <li className="flex items-center gap-3 text-[13px] text-on-surface-variant opacity-60">
                     <CheckCircle2 className="w-4 h-4 text-on-surface-variant shrink-0" />
-                    <span>AI summary and quiz generation are coming soon.</span>
+                    <span>Practice quiz generation is coming soon.</span>
                   </li>
                 </ul>
               </div>

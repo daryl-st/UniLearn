@@ -36,6 +36,29 @@ final class AskResourceResponse {
   }
 }
 
+final class SummaryRecord {
+  const SummaryRecord({
+    required this.id,
+    required this.resourceId,
+    required this.content,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String resourceId;
+  final String content;
+  final String createdAt;
+
+  factory SummaryRecord.fromJson(Map<String, dynamic> json) {
+    return SummaryRecord(
+      id: json['id'] as String,
+      resourceId: json['resourceId'] as String,
+      content: json['content'] as String,
+      createdAt: json['createdAt'] as String,
+    );
+  }
+}
+
 final class AskCitation {
   const AskCitation({
     required this.chunkIndex,
@@ -60,6 +83,47 @@ class AiApi {
   AiApi(this._dio);
 
   final Dio _dio;
+
+  Future<SummaryRecord> generateSummary({required String resourceId}) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        'ai/summarize',
+        data: {'resourceId': resourceId},
+        options: Options(
+          receiveTimeout: const Duration(seconds: 120),
+          sendTimeout: const Duration(seconds: 120),
+        ),
+      );
+      final data = response.data;
+      final summary = data?['summary'];
+      if (summary is! Map<String, dynamic>) {
+        throw ApiException('Invalid summary response.');
+      }
+      return SummaryRecord.fromJson(summary);
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  Future<List<SummaryRecord>> listSummaries(String resourceId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        'ai/summaries',
+        queryParameters: {'resourceId': resourceId},
+      );
+      final data = response.data;
+      final list = data?['summaries'];
+      if (list is! List) {
+        throw ApiException('Invalid summaries response.');
+      }
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map(SummaryRecord.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
 
   Future<AskResourceResponse> askResource({
     required String resourceId,
@@ -90,16 +154,17 @@ class AiApi {
   }
 }
 
-String askResourceErrorMessage(Object error) {
+String aiResourceErrorMessage(Object error) {
   if (error is ApiException) {
     final message = error.message.toLowerCase();
     if (error.statusCode == 400 &&
         (message.contains('not indexed') ||
-            message.contains('no vectorized chunks'))) {
+            message.contains('no vectorized chunks') ||
+            message.contains('no chunks found'))) {
       return 'This material is still being processed. Try again after upload finishes.';
     }
     if (error.statusCode == 408) {
-      return 'Request timed out — try a shorter question.';
+      return 'Request timed out — try again later.';
     }
     if (error.statusCode == 502 || error.statusCode == 503) {
       return 'AI service is unavailable right now. Please try again later.';
@@ -109,3 +174,5 @@ String askResourceErrorMessage(Object error) {
   if (error is Exception) return error.toString();
   return 'Something went wrong. Please try again.';
 }
+
+String askResourceErrorMessage(Object error) => aiResourceErrorMessage(error);

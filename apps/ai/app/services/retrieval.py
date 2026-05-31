@@ -13,6 +13,12 @@ class RetrievedChunk(TypedDict):
     score: float
 
 
+class OrderedChunk(TypedDict):
+    chunkIndex: int
+    pageNumber: int
+    content: str
+
+
 _pool: asyncpg.Pool | None = None
 
 
@@ -63,6 +69,30 @@ async def retrieve_top_chunks(
             "pageNumber": int(r["pageNumber"]),
             "content": str(r["content"]),
             "score": float(r["score"]),
+        }
+        for r in rows
+    ]
+
+
+async def retrieve_chunks_ordered(resource_id: str, limit: int) -> list[OrderedChunk]:
+    pool = await _get_pool()
+    query = """
+        SELECT
+            "chunkIndex",
+            "pageNumber",
+            content
+        FROM "ResourceChunk"
+        WHERE "resourceId" = $1
+        ORDER BY "chunkIndex" ASC
+        LIMIT $2
+    """
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(query, resource_id, limit)
+    return [
+        {
+            "chunkIndex": int(r["chunkIndex"]),
+            "pageNumber": int(r["pageNumber"]),
+            "content": str(r["content"]),
         }
         for r in rows
     ]

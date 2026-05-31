@@ -1,4 +1,11 @@
+import type {
+    CreateSummaryResponse,
+    ListSummariesResponse,
+    SummaryRecord,
+} from '@unilearn/shared-types';
 import { api, ApiError } from './client';
+
+export type { SummaryRecord };
 
 export type AskResourceResponse = {
     resourceId: string;
@@ -35,16 +42,21 @@ function messageFromApiData(data: unknown): string | null {
     return null;
 }
 
-export function askResourceErrorMessage(err: unknown): string {
+export function aiResourceErrorMessage(err: unknown): string {
     if (err instanceof ApiError) {
         const fromBody = messageFromApiData(err.data);
         const lower = (fromBody ?? '').toLowerCase();
 
-        if (err.status === 400 && (lower.includes('not indexed') || lower.includes('no vectorized chunks'))) {
+        if (
+            err.status === 400 &&
+            (lower.includes('not indexed') ||
+                lower.includes('no vectorized chunks') ||
+                lower.includes('no chunks found'))
+        ) {
             return 'This material is still being processed. Try again after upload finishes.';
         }
         if (err.status === 408) {
-            return 'Request timed out — try a shorter question.';
+            return 'Request timed out — try again with a shorter request.';
         }
         if (err.status === 502 || err.status === 503) {
             return 'AI service is unavailable right now. Please try again later.';
@@ -56,6 +68,9 @@ export function askResourceErrorMessage(err: unknown): string {
     return 'Something went wrong. Please try again.';
 }
 
+/** @deprecated Use aiResourceErrorMessage */
+export const askResourceErrorMessage = aiResourceErrorMessage;
+
 export const AiAPI = {
     askResource: async (body: { resourceId: string; question: string; topK?: number }) => {
         try {
@@ -63,6 +78,26 @@ export const AiAPI = {
         } catch (err) {
             if (err instanceof ApiError) throw err;
             throw new Error('AI request failed');
+        }
+    },
+
+    generateSummary: async (body: { resourceId: string; maxChunks?: number }) => {
+        try {
+            return await api.post<CreateSummaryResponse>('ai/summarize', body, { timeout: 120_000 });
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Summary generation failed');
+        }
+    },
+
+    listSummaries: async (resourceId: string) => {
+        try {
+            return await api.get<ListSummariesResponse>('ai/summaries', {
+                params: { resourceId },
+            });
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Failed to load summaries');
         }
     },
 };

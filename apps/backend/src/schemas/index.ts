@@ -62,6 +62,17 @@ export const askResourceSchema = z.object({
 });
 export type askResourceBody = z.infer<typeof askResourceSchema>
 
+export const summarizeResourceSchema = z.object({
+    resourceId: z.string().uuid(),
+    maxChunks: z.number().int().min(1).max(30).optional(),
+});
+export type summarizeResourceBody = z.infer<typeof summarizeResourceSchema>;
+
+export const listSummariesQuerySchema = z.object({
+    resourceId: z.string().uuid(),
+});
+export type listSummariesQuery = z.infer<typeof listSummariesQuerySchema>;
+
 /** Body for DELETE /course/resource/:id — resource id is in the URL. */
 export const deleteResourceBodySchema = z.object({
     instructorId: z.string().uuid(),

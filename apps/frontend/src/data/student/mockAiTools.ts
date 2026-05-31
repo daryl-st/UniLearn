@@ -30,8 +30,9 @@ export const mockAiTools: AiToolItem[] = [
     description:
       'Generate concise summaries from selected lecture notes and readings to speed up revision.',
     icon: FileText,
-    status: 'coming_soon',
-    ctaLabel: 'Coming soon',
+    status: 'live',
+    href: '/dashboard/courses',
+    ctaLabel: 'Open courses',
   },
   {
     id: 'quiz',

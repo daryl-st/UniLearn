@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, ExternalLink } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { LearningSummaryPanel } from '@/components/features/learning/LearningSummaryPanel';
 import type { Resource } from '@unilearn/shared-types';
 import { CourseAPI, type CourseWithInstructor } from '@/api/course';
 import { AiAPI, askResourceErrorMessage } from '@/api/ai';
@@ -9,7 +10,11 @@ import { LearningChatPanel } from '@/components/features/learning/LearningChatPa
 
 export default function Learning() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { courseId, resourceId } = useParams<{ courseId: string; resourceId: string }>();
+  const [sidePanel, setSidePanel] = useState<'chat' | 'summary'>(() =>
+    searchParams.get('panel') === 'summary' ? 'summary' : 'chat',
+  );
 
   const [course, setCourse] = useState<CourseWithInstructor | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
@@ -194,16 +199,48 @@ export default function Learning() {
         </div>
       </section>
 
-      <LearningChatPanel
-        courseCode={course.code}
-        resourceTitle={resourceTitle}
-        messages={messages}
-        input={input}
-        onInputChange={setInput}
-        onSend={() => void handleSend()}
-        isTyping={isTyping}
-        canSend={canSend}
-      />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col border-t border-outline-variant/10 lg:border-t-0 lg:max-w-[26rem]">
+        <div className="flex shrink-0 border-b border-outline-variant/10">
+          <button
+            type="button"
+            onClick={() => setSidePanel('chat')}
+            className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+              sidePanel === 'chat'
+                ? 'bg-surface-high text-primary'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Chat
+          </button>
+          <button
+            type="button"
+            onClick={() => setSidePanel('summary')}
+            className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+              sidePanel === 'summary'
+                ? 'bg-surface-high text-primary'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Summary
+          </button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          {sidePanel === 'chat' ? (
+            <LearningChatPanel
+              courseCode={course.code}
+              resourceTitle={resourceTitle}
+              messages={messages}
+              input={input}
+              onInputChange={setInput}
+              onSend={() => void handleSend()}
+              isTyping={isTyping}
+              canSend={canSend}
+            />
+          ) : resourceId ? (
+            <LearningSummaryPanel resourceId={resourceId} resourceTitle={resourceTitle} />
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
