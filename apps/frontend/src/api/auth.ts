@@ -12,6 +12,7 @@ export interface AuthUser {
     email: string;
     name: string;
     role: AuthUserRole;
+    mustChangePassword?: boolean;
 }
 
 interface LoginAuthResponse {
@@ -77,6 +78,17 @@ export const authAPI = {
 
     getCurrentUser: async () => {
         return api.get<{ user: AuthUser }>("auth/me");
+    },
+
+    changePassword: async (password: string): Promise<{ message: string }> => {
+        try {
+            return await api.post<{ message: string }>("auth/change-password", { password });
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw err;
+            }
+            throw new Error("Failed to change password");
+        }
     },
 };
 

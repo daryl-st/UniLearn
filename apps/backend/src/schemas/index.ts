@@ -67,3 +67,8 @@ export const deleteResourceBodySchema = z.object({
     instructorId: z.string().uuid(),
 });
 export type deleteResourceBody = z.infer<typeof deleteResourceBodySchema>
+
+export const changePasswordSchema = z.object({
+    password: z.string().min(8).max(128),
+});
+export type ChangePasswordBody = z.infer<typeof changePasswordSchema>

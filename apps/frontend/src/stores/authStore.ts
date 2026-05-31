@@ -8,6 +8,7 @@ export interface AuthStoreUser {
     email: string;
     name: string;
     role: AuthUserRole;
+    mustChangePassword?: boolean;
 }
 
 function normalizeRole(r: string | undefined): AuthUserRole {
@@ -16,12 +17,13 @@ function normalizeRole(r: string | undefined): AuthUserRole {
     return "STUDENT";
 }
 
-function userFromAuthResponse(u: { id: string; email: string; name: string; role: string }): AuthStoreUser {
+function userFromAuthResponse(u: { id: string; email: string; name: string; role: string; mustChangePassword?: boolean }): AuthStoreUser {
     return {
         id: u.id,
         email: u.email,
         name: u.name,
         role: normalizeRole(u.role),
+        mustChangePassword: u.mustChangePassword,
     };
 }
 
@@ -35,6 +37,7 @@ interface AuthState {
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     clearError: () => void;
+    changePassword: (password: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>() (
@@ -97,6 +100,23 @@ export const useAuthStore = create<AuthState>() (
                 }
             },
             clearError: () => set({ error: null }),
+            changePassword: async (password: string) => {
+                set({ isLoading: true, error: null });
+                try {
+                    await authAPI.changePassword(password);
+                    const response = await authAPI.getCurrentUser();
+                    set({
+                        user: userFromAuthResponse(response.user),
+                        isLoading: false,
+                    });
+                } catch (err: any) {
+                    set({
+                        error: err.message || 'Failed to change password!',
+                        isLoading: false,
+                    });
+                    throw err;
+                }
+            },
         }),
         {
             name: 'auth-storage',

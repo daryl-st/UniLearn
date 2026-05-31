@@ -1,12 +1,14 @@
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useAuthStore } from "@/stores/authStore";
-import { asBackendRole, dashboardPathForBackendRole } from "@/utils/auth";
+import { postAuthRedirectPath } from "@/utils/auth";
+import { ROUTES } from "@/lib/route-paths";
 import { RoleGate } from "@/components/guards/RoleGate";
 
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const ChangePasswordPage = lazy(() => import('@/pages/auth/ChangePasswordPage'));
 
 // shared page
 const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
@@ -29,6 +31,16 @@ const StudentAiToolsPage = lazy(() => import('@/pages/student/AiTools'));
 const StudentSettingsPage = lazy(() => import('@/pages/student/Settings'));
 
 // needs better implementation
+function ChangePasswordRoute() {
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!user) return <Navigate to={ROUTES.LOGIN} replace />;
+
+  return <ChangePasswordPage />;
+}
+
 function LearningCourseRedirect() {
   const { courseId } = useParams<{ courseId: string }>();
   if (!courseId) return <Navigate to="/dashboard/courses" replace />;
@@ -75,7 +87,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return <div>Loading...</div>;
 
-  if (user) return <Navigate to={dashboardPathForBackendRole(asBackendRole(user.role))} replace />;
+  if (user) return <Navigate to={postAuthRedirectPath(user)} replace />;
 
   return children;
 }
@@ -105,6 +117,10 @@ const publicRoutes: RouteEntry[] = [
         <RegisterPage />
       </PublicRoute>
     ),
+  },
+  {
+    path: ROUTES.CHANGE_PASSWORD,
+    element: <ChangePasswordRoute />,
   },
 ];
 

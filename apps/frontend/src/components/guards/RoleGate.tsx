@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/lib/route-paths";
-import { asBackendRole, dashboardPathForBackendRole, type BackendRole } from "@/utils/auth";
+import { asBackendRole, postAuthRedirectPath, type BackendRole } from "@/utils/auth";
 
 type RoleGateProps = {
     allowed: readonly BackendRole[];
@@ -26,9 +26,13 @@ export function RoleGate({ allowed, children }: RoleGateProps) {
         return <Navigate to={ROUTES.LOGIN} replace />;
     }
 
+    if (user.mustChangePassword) {
+        return <Navigate to={ROUTES.CHANGE_PASSWORD} replace />;
+    }
+
     const role = asBackendRole(user.role);
     if (!allowed.includes(role)) {
-        return <Navigate to={dashboardPathForBackendRole(role)} replace />;
+        return <Navigate to={postAuthRedirectPath(user)} replace />;
     }
 
     return <>{children}</>;

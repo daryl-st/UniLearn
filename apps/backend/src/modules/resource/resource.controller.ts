@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { AuthRequest } from "../../middlewares/auth.js";
 import { z } from "zod";
 import { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { CourseService, ResourceService } from "./resource.service.js";
@@ -29,12 +30,35 @@ export class ResourceController {
                 error: "Invalid or missing courseId query parameter.",
             });
         }
+
+        const authReq = req as AuthRequest;
+        if (authReq.user?.role === "INSTRUCTOR") {
+            const course = await courseRepo.findOne({ id: parsed.data.courseId });
+            if (!course || course.instructorId !== authReq.user.userId) {
+                return res.status(403).json({ error: "Forbidden: Instructor not assigned to this course" });
+            }
+        }
+
         const resources = await resourceService.getResources(parsed.data.courseId);
         return res.status(200).json(resources);
     }
 
-    async getCourses(_req: Request, res: Response) {
-        const courses = await courseService.getCourses();
+    async getCourses(req: Request, res: Response) {
+        const authHeader = req.headers.authorization;
+        let instructorId: string | undefined;
+
+        if (authHeader?.startsWith("Bearer ")) {
+            const token = authHeader.split(" ")[1];
+            try {
+                const jwtModule = await import("jsonwebtoken");
+                const decoded = jwtModule.default.verify(token!, process.env.ACCESS_TOKEN_SECRET!) as any;
+                if (decoded.role === "INSTRUCTOR" && decoded.sub) {
+                    instructorId = decoded.sub;
+                }
+            } catch {}
+        }
+
+        const courses = await courseService.getCourses(instructorId);
         return res.status(200).json(courses);
     }
 
@@ -64,6 +88,15 @@ export class ResourceController {
 
     async uploadResource(req: Request, res: Response) {
         const resourceDetails = req.body as uploadResourceBody;
+
+        const authReq = req as AuthRequest;
+        if (authReq.user?.role === "INSTRUCTOR") {
+            resourceDetails.instructorId = authReq.user.userId;
+            const course = await courseRepo.findOne({ id: resourceDetails.courseId });
+            if (!course || course.instructorId !== authReq.user.userId) {
+                return res.status(403).json({ error: "Instructor is not assigned to this course." });
+            }
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const maybeFile = (req as any).file as

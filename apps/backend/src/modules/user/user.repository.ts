@@ -9,13 +9,13 @@ import type { Department } from "@prisma/client";
 export class UserRepository {
     async findAll(): Promise<User[]> {
         const users = await prisma.user.findMany();
-        return users.map(u => new User({id: u.id, name: u.name, email: u.email, password: u.password, role: u.role})); // username is not included
+        return users.map(u => new User({id: u.id, name: u.name, email: u.email, password: u.password, role: u.role, mustChangePassword: u.mustChangePassword, updatedAt: u.updatedAt})); // username is not included
     }
 
     async create(data: {email: string, name: string, password: string, role: Role}): Promise<User> {
         const user = await prisma.user.create({ data }); // we need to trim and toLowerCase when storing data
         // we might need to have a discussion about returning the password or not, but for now let's return it as it is.
-        return new User({id: user.id, name: user.name, email: user.email, password: user.password, role: user.role});
+        return new User({id: user.id, name: user.name, email: user.email, password: user.password, role: user.role, mustChangePassword: user.mustChangePassword});
     }
 
     // create refresh token 
@@ -90,7 +90,8 @@ export class UserRepository {
             name: existingUser.name, 
             email: existingUser.email, 
             password: existingUser.password, 
-            role: existingUser.role
+            role: existingUser.role,
+            mustChangePassword: existingUser.mustChangePassword
         }); // return null if not found
     }
 
@@ -106,7 +107,8 @@ export class UserRepository {
             name: existingUser.name,
             email: existingUser.email,
             password: existingUser.password,
-            role: existingUser.role
+            role: existingUser.role,
+            mustChangePassword: existingUser.mustChangePassword
         }); // return null if not found
     }
 

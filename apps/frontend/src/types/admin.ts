@@ -8,8 +8,8 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'Instructor' | 'Student';
-  status: 'Synchronized' | 'Suspended';
+  role: 'Instructor' | 'Student' | 'Admin';
+  status: 'Synchronized' | 'Suspended' | 'Pending password';
   lastAccess: string;
   avatar?: string;
 };

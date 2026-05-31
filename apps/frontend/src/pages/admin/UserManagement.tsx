@@ -1,21 +1,87 @@
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Filter, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/features/admin/StatCard';
 import { DataTable } from '@/components/features/admin/DataTable';
 import { AIInsightCard } from '@/components/features/admin/AlInsightsCard';
+import { CreateUserForm } from '@/components/features/admin/CreateUserForm';
 import type { User } from '@/types/admin';
+import { UsersAPI, type SafeUserRow } from '@/api/users';
+import { DashboardAPI } from '@/api/dashboard';
 
-const mockUsers: User[] = [
-  { id: '1', name: 'Helen Kassa', email: 'h.kassa@university.edu', role: 'Instructor', status: 'Synchronized', lastAccess: '2m ago', avatar: 'https://picsum.photos/seed/aria/100/100' },
-  { id: '2', name: 'Ruth Teklu', email: 'r.tekulu@university.edu', role: 'Student', status: 'Synchronized', lastAccess: '14m ago', avatar: 'https://picsum.photos/seed/elias/100/100' },
-  { id: '3', name: 'Marcus Bekele', email: 'm.bekele@university.edu', role: 'Student', status: 'Suspended', lastAccess: '4d ago' },
-  { id: '4', name: 'Sasha Grey', email: 's.grey@university.edu', role: 'Student', status: 'Synchronized', lastAccess: '1h ago', avatar: 'https://picsum.photos/seed/sasha/100/100' },
-  { id: '5', name: 'Julian Thorne', email: 'j.thorne@university.edu', role: 'Instructor', status: 'Synchronized', lastAccess: 'Now', avatar: 'https://picsum.photos/seed/julian/100/100' },
-];
+function formatRole(role: string): User['role'] {
+  const r = role.toUpperCase();
+  if (r === 'INSTRUCTOR') return 'Instructor';
+  if (r === 'ADMIN') return 'Admin';
+  return 'Student';
+}
+
+function formatLastAccess(updatedAt?: string): string {
+  if (!updatedAt) return '—';
+  const diffMs = Date.now() - new Date(updatedAt).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function toTableUser(u: SafeUserRow): User {
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: formatRole(u.role),
+    status: u.mustChangePassword ? 'Pending password' : 'Synchronized',
+    lastAccess: formatLastAccess(u.updatedAt),
+  };
+}
 
 export const UserManagement: React.FC = () => {
   const navigate = useNavigate();
+  const [users, setUsers] = useState<SafeUserRow[]>([]);
+  const [stats, setStats] = useState<{
+    totalUsers: number;
+    totalInstructors: number;
+    totalResources: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [userRows, adminStats] = await Promise.all([
+        UsersAPI.list(),
+        DashboardAPI.getAdminStats(),
+      ]);
+      setUsers(userRows);
+      setStats({
+        totalUsers: adminStats.totalUsers,
+        totalInstructors: adminStats.totalInstructors,
+        totalResources: adminStats.totalResources,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load users');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  const tableUsers = useMemo(() => users.map(toTableUser), [users]);
+  const pendingReview = useMemo(
+    () => users.filter((u) => u.mustChangePassword).length,
+    [users],
+  );
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -34,7 +100,7 @@ export const UserManagement: React.FC = () => {
           </button>
           <button
             className="bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20"
-            onClick={() => navigate('/admin/users')}
+            onClick={() => setShowForm((v) => !v)}
           >
             <UserPlus className="w-4 h-4" />
             Add User
@@ -43,13 +109,36 @@ export const UserManagement: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-6 mb-10">
-        <StatCard label="Total users" value="842" change="2.1%" trend="up" color="secondary" />
-        <StatCard label="Instructors" value="73" status="Active accounts" color="primary" />
-        <StatCard label="Pending review" value="18" color="destructive" />
-        <StatCard label="Account uptime" value="99.9%" color="secondary" />
+        <StatCard label="Total users" value={loading ? '…' : String(stats?.totalUsers ?? 0)} color="secondary" />
+        <StatCard label="Instructors" value={loading ? '…' : String(stats?.totalInstructors ?? 0)} status="Active accounts" color="primary" />
+        <StatCard label="Pending review" value={loading ? '…' : String(pendingReview)} color="destructive" />
+        <StatCard
+          label="Account uptime"
+          value={loading ? '…' : String(stats?.totalResources ?? 0)}
+          status="Database resources"
+          color="secondary"
+        />
       </div>
 
-      <DataTable type="users" data={mockUsers} />
+      {error && (
+        <p className="text-sm text-destructive font-medium mb-6" role="alert">
+          {error}
+        </p>
+      )}
+
+      {showForm && (
+        <CreateUserForm
+          onCreated={() => {
+            void loadData();
+          }}
+        />
+      )}
+
+      {loading ? (
+        <p className="text-sm text-on-surface-variant font-medium mb-6">Loading users…</p>
+      ) : null}
+
+      <DataTable type="users" data={tableUsers} />
       
       <AIInsightCard />
     </div>

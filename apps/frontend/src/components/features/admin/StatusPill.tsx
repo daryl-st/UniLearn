@@ -10,7 +10,7 @@ type StatusPillProps = {
 export const StatusPill: React.FC<StatusPillProps> = ({ status }) => {
     const isSynchronized = status === 'Synchronized' || status === 'Published';
     const isSuspended = status === 'Suspended' || status === 'Archived';
-    const isDraft = status === 'Draft';
+    const isDraft = status === 'Draft' || status === 'Pending password';
 
     return (
         <div className="flex items-center gap-2">
