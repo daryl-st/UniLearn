@@ -4,11 +4,13 @@ import {
     buildPdfDeliveryUrl,
     buildResourcePublicId,
     cloudinaryErrorMessage,
+    CloudinaryDownloadError,
     getNotificationUrl,
     isAsposeConversionEnabled,
     isAsposeSubscriptionError,
     isOfficeFile,
     isPdfFile,
+    parsePublicIdFromCloudinaryUrl,
 } from "./cloudinary.utils.js";
 
 export type CloudinaryUploadResult = {
@@ -178,6 +180,69 @@ export class CloudinaryService {
             pdfUrl: this.buildPdfUrl(publicId),
             needsConversion: true,
         };
+    }
+
+    /** Download bytes from Cloudinary using signed URLs when needed. */
+    async downloadResourceBuffer(
+        fileUrl: string,
+        publicId?: string | null,
+        type?: "PDF" | "PPT" | "DOC",
+    ): Promise<{ buffer: Buffer; contentType: string }> {
+        if (!this.configured) {
+            throw new CloudinaryNotConfiguredError();
+        }
+
+        const pid = publicId ?? parsePublicIdFromCloudinaryUrl(fileUrl);
+        const candidates: string[] = [];
+
+        if (pid) {
+            candidates.push(
+                cloudinary.url(pid, {
+                    resource_type: "raw",
+                    sign_url: true,
+                    secure: true,
+                }),
+            );
+            candidates.push(
+                cloudinary.utils.private_download_url(pid, type === "PDF" ? "pdf" : "", {
+                    resource_type: "raw",
+                    type: "upload",
+                }),
+            );
+        }
+        candidates.push(fileUrl);
+
+        let lastStatus = 0;
+        for (const url of candidates) {
+            const res = await fetch(url);
+            lastStatus = res.status;
+            if (!res.ok) continue;
+
+            const contentType =
+                res.headers.get("content-type") ??
+                (type === "PDF" ? "application/pdf" : "application/octet-stream");
+            const buffer = Buffer.from(await res.arrayBuffer());
+
+            if (type === "PDF" && buffer.length >= 4) {
+                const magic = buffer.subarray(0, 4).toString("utf8");
+                if (magic !== "%PDF") {
+                    continue;
+                }
+            }
+
+            return { buffer, contentType };
+        }
+
+        if (lastStatus === 404) {
+            throw new CloudinaryDownloadError("Resource file not found in Cloudinary.", "NOT_FOUND");
+        }
+
+        throw new CloudinaryDownloadError(
+            type === "PDF"
+                ? "Could not load this PDF from Cloudinary. Re-upload it from Content Library, or enable “Allow delivery of PDF and ZIP files” in Cloudinary Security settings."
+                : `Failed to download file from Cloudinary (HTTP ${lastStatus || "error"}).`,
+            "FETCH_FAILED",
+        );
     }
 
     private uploadStream(

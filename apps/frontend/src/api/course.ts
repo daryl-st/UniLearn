@@ -63,6 +63,18 @@ export const CourseAPI = {
         }
     },
 
+    /** Fetch resource bytes via API proxy (avoids Cloudinary CORS limits in PDF.js). */
+    fetchResourceFile: async (resourceId: string): Promise<ArrayBuffer> => {
+        try {
+            return await api.get<ArrayBuffer>(`course/resources/${encodeURIComponent(resourceId)}/file`, {
+                responseType: 'arrayBuffer',
+            });
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error("Fetching resource file failed!");
+        }
+    },
+
     createCourse: async (courseData: CreateCourseInput) => {
         try {
             return await api.post<Course>("course", courseData);
@@ -87,13 +99,7 @@ export const CourseAPI = {
         }
     },
 
-    uploadResource: async (body: {
-        title: string;
-        type: "PDF" | "PPT" | "DOC";
-        fileUrl?: string;
-        courseId: string;
-        instructorId: string;
-    } | FormData) => {
+    uploadResource: async (body: FormData) => {
         try {
             return await api.post<UploadResourceResponse>("course/resource", body as any);
         } catch (err) {

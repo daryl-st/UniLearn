@@ -5,10 +5,12 @@ import {
     buildPdfDeliveryUrl,
     buildResourcePublicId,
     extensionOf,
+    isCloudinaryDeliveryUrl,
     isOfficeFile,
     isPdfFile,
     isConversionComplete,
     isConversionFailure,
+    parsePublicIdFromCloudinaryUrl,
     sanitizeFilename,
     resolveCloudinaryViewerUrl,
     verifyNotificationSignature,
@@ -51,6 +53,31 @@ describe("cloudinary.utils", () => {
         const id = buildResourcePublicId("Motivation.pdf", { omitPdfExtension: true });
         assert.match(id, /\/Motivation$/);
         assert.doesNotMatch(id, /\.pdf$/);
+    });
+
+    it("parsePublicIdFromCloudinaryUrl extracts public_id", () => {
+        assert.equal(
+            parsePublicIdFromCloudinaryUrl(
+                "https://res.cloudinary.com/demo/raw/upload/v1780253358/unilearn/resources/id/test-viewer",
+            ),
+            "unilearn/resources/id/test-viewer",
+        );
+        assert.equal(
+            parsePublicIdFromCloudinaryUrl(
+                "https://res.cloudinary.com/demo/raw/upload/v1780032060/Chapter_3-_Decidability_.pdf",
+            ),
+            "Chapter_3-_Decidability_.pdf",
+        );
+    });
+
+    it("isCloudinaryDeliveryUrl detects Cloudinary hosts", () => {
+        assert.equal(
+            isCloudinaryDeliveryUrl(
+                "https://res.cloudinary.com/demo/raw/upload/v1/unilearn/resources/id/notes.pdf",
+            ),
+            true,
+        );
+        assert.equal(isCloudinaryDeliveryUrl("https://www.w3.org/test.pdf"), false);
     });
 
     it("verifyNotificationSignature validates sha1 payload", () => {

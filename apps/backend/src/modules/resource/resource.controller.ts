@@ -6,7 +6,12 @@ import { CourseService, ResourceService } from "./resource.service.js";
 import type { createCourseBody, deleteResourceBody, uploadResourceBody } from "../../schemas/index.js";
 import { UserRepository } from "../user/user.repository.js";
 import { cloudinaryService, CloudinaryNotConfiguredError } from "./cloudinary.service.js";
-import { cloudinaryErrorMessage } from "./cloudinary.utils.js";
+import {
+    cloudinaryErrorMessage,
+    CloudinaryDownloadError,
+    isCloudinaryDeliveryUrl,
+} from "./cloudinary.utils.js";
+import prisma from "../../config/db.js";
 
 function paramId(value: string | string[] | undefined): string | undefined {
     if (value === undefined) return undefined;
@@ -22,6 +27,30 @@ const courseService = new CourseService(courseRepo, userRepository);
 const courseIdQuerySchema = z.object({
     courseId: z.string().uuid(),
 });
+
+function serializeResource(resource: {
+    id: string;
+    title: string;
+    type: string;
+    fileUrl: string;
+    version: number;
+    instructorId?: string;
+    courseId: string;
+    isDeleted: boolean;
+    status?: string;
+}) {
+    return {
+        id: resource.id,
+        title: resource.title,
+        type: resource.type,
+        fileUrl: resource.fileUrl,
+        version: resource.version,
+        instructorId: resource.instructorId,
+        courseId: resource.courseId,
+        isDeleted: resource.isDeleted,
+        status: resource.status,
+    };
+}
 
 export class ResourceController {
     async getResources(req: Request, res: Response) {
@@ -41,7 +70,7 @@ export class ResourceController {
         }
 
         const resources = await resourceService.getResources(parsed.data.courseId);
-        return res.status(200).json(resources);
+        return res.status(200).json(resources.map(serializeResource));
     }
 
     async getCourses(req: Request, res: Response) {
@@ -72,7 +101,42 @@ export class ResourceController {
         if (!resource) {
             return res.status(404).json({ error: "Resource not found." });
         }
-        return res.status(200).json(resource);
+        return res.status(200).json(serializeResource(resource));
+    }
+
+    async streamResourceFile(req: Request, res: Response) {
+        const id = paramId(req.params.id);
+        if (!id) {
+            return res.status(400).json({ error: "Missing resource id." });
+        }
+
+        const row = await prisma.resource.findUnique({ where: { id } });
+        if (!row || row.isDeleted || !isCloudinaryDeliveryUrl(row.fileUrl)) {
+            return res.status(404).json({ error: "Resource not found." });
+        }
+
+        try {
+            const { buffer, contentType } = await cloudinaryService.downloadResourceBuffer(
+                row.fileUrl,
+                row.cloudinaryPublicId,
+                row.type,
+            );
+
+            res.setHeader("Content-Type", contentType);
+            res.setHeader("Content-Disposition", "inline");
+            res.setHeader("Cache-Control", "private, max-age=600");
+            return res.status(200).send(buffer);
+        } catch (err) {
+            if (err instanceof CloudinaryDownloadError) {
+                const status = err.code === "NOT_FOUND" ? 404 : 502;
+                return res.status(status).json({ error: err.message });
+            }
+            if (err instanceof CloudinaryNotConfiguredError) {
+                return res.status(503).json({ error: err.message });
+            }
+            console.error("Resource file stream failed:", err);
+            return res.status(502).json({ error: "Failed to load resource file." });
+        }
     }
 
     async getCourseById(req: Request, res: Response) {
@@ -106,38 +170,43 @@ export class ResourceController {
 
         let cloudinaryPublicId: string | undefined;
         let needsConversion = false;
+        let fileUrl = "";
 
-        if (maybeFile?.buffer) {
-            if (!cloudinaryService.isConfigured) {
-                return res.status(503).json({
-                    error: "Cloudinary is not configured. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET.",
-                });
-            }
+        if (!maybeFile?.buffer) {
+            return res.status(400).json({ error: "A file upload is required. Resources must be stored on Cloudinary." });
+        }
 
-            try {
-                const upload = await cloudinaryService.uploadResourceFile(
-                    maybeFile.buffer,
-                    maybeFile.originalname ?? "file",
-                    maybeFile.mimetype,
-                );
-                cloudinaryPublicId = upload.publicId;
-                needsConversion = upload.needsConversion;
-                resourceDetails.fileUrl = needsConversion ? upload.originalUrl : upload.pdfUrl;
-            } catch (err) {
-                if (err instanceof CloudinaryNotConfiguredError) {
-                    return res.status(503).json({ error: err.message });
-                }
-                console.error("Cloudinary upload failed:", err);
-                return res.status(502).json({ error: cloudinaryErrorMessage(err) });
+        if (!cloudinaryService.isConfigured) {
+            return res.status(503).json({
+                error: "Cloudinary is not configured. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET.",
+            });
+        }
+
+        try {
+            const upload = await cloudinaryService.uploadResourceFile(
+                maybeFile.buffer,
+                maybeFile.originalname ?? "file",
+                maybeFile.mimetype,
+            );
+            cloudinaryPublicId = upload.publicId;
+            needsConversion = upload.needsConversion;
+            fileUrl = needsConversion ? upload.originalUrl : upload.pdfUrl;
+        } catch (err) {
+            if (err instanceof CloudinaryNotConfiguredError) {
+                return res.status(503).json({ error: err.message });
             }
-        } else if (!resourceDetails.fileUrl?.trim()) {
-            return res.status(400).json({ error: "Provide a file upload or a public fileUrl." });
+            console.error("Cloudinary upload failed:", err);
+            return res.status(502).json({ error: cloudinaryErrorMessage(err) });
+        }
+
+        if (!fileUrl.trim() || !isCloudinaryDeliveryUrl(fileUrl)) {
+            return res.status(502).json({ error: "Upload did not produce a valid Cloudinary URL." });
         }
 
         const resourceData = {
             title: resourceDetails.title,
             type: resourceDetails.type,
-            fileUrl: resourceDetails.fileUrl!.trim(),
+            fileUrl: fileUrl.trim(),
             courseId: resourceDetails.courseId,
             instructorId: resourceDetails.instructorId,
             version: 1,
@@ -151,7 +220,7 @@ export class ResourceController {
         }
 
         return res.status(201).json({
-            resource: result.resource,
+            resource: serializeResource(result.resource),
             ingestStatus: result.ingestStatus,
         });
     }

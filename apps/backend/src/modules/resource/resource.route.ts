@@ -19,6 +19,7 @@ router.post("/", requireAuth, authorize("ADMIN"), validateBody(createCourseSchem
 router.get("/resource", requireAuth, controller.getResources);
 // Accept multipart/form-data (file field 'file') or JSON body. maybeSingle will only act for multipart requests.
 router.post("/resource", requireAuth, maybeSingle('file'), validateBody(uploadResourceSchema), controller.uploadResource);
+router.get("/resources/:id/file", requireAuth, controller.streamResourceFile);
 router.get("/resources/:id", requireAuth, controller.getResourceById);
 router.delete("/resource/:id", requireAuth, validateBody(deleteResourceBodySchema), controller.deleteResource);
 

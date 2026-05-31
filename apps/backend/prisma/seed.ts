@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import prisma from "../src/config/db";
+import { parsePublicIdFromCloudinaryUrl } from "../src/modules/resource/cloudinary.utils.js";
 
 const DEMO_PASSWORD = "12345678";
 const BCRYPT_ROUNDS = 10;
@@ -273,9 +274,52 @@ async function main() {
     }
 
     const aiCourse = courses.find((x) => x.code === "COSC4411")!;
-    const dbCourse = courses.find((x) => x.code === "COSC3312")!;
     const dsaCourse = courses.find((x) => x.code === "COSC2210")!;
     const webCourse = courses.find((x) => x.code === "SENG3102")!;
+
+    /** Remove legacy seed/mock resources that were not stored on Cloudinary. */
+    const legacyResources = await prisma.resource.findMany({
+        where: { NOT: { fileUrl: { contains: "res.cloudinary.com" } } },
+        select: { id: true },
+    });
+    const legacyResourceIds = legacyResources.map((r) => r.id);
+    if (legacyResourceIds.length > 0) {
+        await prisma.quizAttempt.deleteMany({
+            where: { quiz: { resourceId: { in: legacyResourceIds } } },
+        });
+        await prisma.question.deleteMany({
+            where: { quiz: { resourceId: { in: legacyResourceIds } } },
+        });
+        await prisma.quiz.deleteMany({ where: { resourceId: { in: legacyResourceIds } } });
+        await prisma.summary.deleteMany({ where: { resourceId: { in: legacyResourceIds } } });
+        await prisma.resourceChunk.deleteMany({ where: { resourceId: { in: legacyResourceIds } } });
+        await prisma.resource.deleteMany({ where: { id: { in: legacyResourceIds } } });
+        console.log(`Removed ${legacyResourceIds.length} non-Cloudinary resource(s) from the database.`);
+    }
+
+    /** Backfill Cloudinary public IDs for existing delivery URLs. */
+    const missingPublicId = await prisma.resource.findMany({
+        where: {
+            fileUrl: { contains: "res.cloudinary.com" },
+            cloudinaryPublicId: null,
+        },
+    });
+    for (const row of missingPublicId) {
+        const publicId = parsePublicIdFromCloudinaryUrl(row.fileUrl);
+        if (!publicId) continue;
+        await prisma.resource.update({
+            where: { id: row.id },
+            data: {
+                cloudinaryPublicId: publicId,
+                ...(row.type === "PDF" && row.status === "QUEUED" ? { status: "READY" } : {}),
+            },
+        });
+    }
+    if (missingPublicId.length > 0) {
+        console.log(`Backfilled Cloudinary public IDs for ${missingPublicId.length} resource(s).`);
+    }
+
+    /** Course materials are uploaded by instructors to Cloudinary — none are seeded here. */
 
     /** Resource-view progress for mobile dev account (before heavy seed steps). */
     await prisma.progress.upsert({
@@ -329,217 +373,6 @@ async function main() {
         },
     });
 
-    type ResSeed = {
-        fileUrl: string;
-        title: string;
-        type: "PDF" | "PPT" | "DOC";
-        courseId: string;
-        instructorUserId: string;
-        instructorProfileId: string;
-        version: number;
-    };
-
-    const resourceSeeds: ResSeed[] = [
-        {
-            fileUrl: "https://www.w3.org/WAI/WCAG21/working-examples/pdf-img/dummy.pdf",
-            title: "AI Syllabus and grading rubric",
-            type: "PDF",
-            courseId: aiCourse.id,
-            instructorUserId: instructor1.id,
-            instructorProfileId: profileIns1.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://arxiv.org/pdf/1706.03762.pdf",
-            title: "Attention Is All You Need (reference reading)",
-            type: "PDF",
-            courseId: aiCourse.id,
-            instructorUserId: instructor1.id,
-            instructorProfileId: profileIns1.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/cosc4411/lecture02-search.pdf",
-            title: "Lecture 02 — Search and uninformed strategies",
-            type: "PDF",
-            courseId: aiCourse.id,
-            instructorUserId: instructor1.id,
-            instructorProfileId: profileIns1.id,
-            version: 2,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/cosc3312/normalization-slides.pptx",
-            title: "Week 4 — Normalization (1NF–BCNF)",
-            type: "PPT",
-            courseId: dbCourse.id,
-            instructorUserId: instructor1.id,
-            instructorProfileId: profileIns1.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/cosc3312/sql-lab.docx",
-            title: "SQL practice lab worksheet",
-            type: "DOC",
-            courseId: dbCourse.id,
-            instructorUserId: instructor1.id,
-            instructorProfileId: profileIns1.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/cosc2210/big-o-handout.pdf",
-            title: "Big-O notation cheat sheet",
-            type: "PDF",
-            courseId: dsaCourse.id,
-            instructorUserId: instructor1.id,
-            instructorProfileId: profileIns1.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/cosc2210/trees-avl.pptx",
-            title: "Trees and AVL rotations",
-            type: "PPT",
-            courseId: dsaCourse.id,
-            instructorUserId: instructor1.id,
-            instructorProfileId: profileIns1.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/seng3102/rest-api-notes.pdf",
-            title: "REST API design checklist",
-            type: "PDF",
-            courseId: webCourse.id,
-            instructorUserId: instructor2.id,
-            instructorProfileId: profileIns2.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/seng3102/react-intro.pptx",
-            title: "React components and hooks intro",
-            type: "PPT",
-            courseId: webCourse.id,
-            instructorUserId: instructor2.id,
-            instructorProfileId: profileIns2.id,
-            version: 1,
-        },
-        {
-            fileUrl: "https://unilearn-seed.local/resources/seng3102/deployment.docx",
-            title: "Deployment checklist (staging vs production)",
-            type: "DOC",
-            courseId: webCourse.id,
-            instructorUserId: instructor2.id,
-            instructorProfileId: profileIns2.id,
-            version: 1,
-        },
-    ];
-
-    const resources: Awaited<ReturnType<typeof prisma.resource.upsert>>[] = [];
-    for (const r of resourceSeeds) {
-        const res = await prisma.resource.upsert({
-            where: { fileUrl: r.fileUrl },
-            update: {
-                title: r.title,
-                type: r.type,
-                courseId: r.courseId,
-                instructorId: r.instructorUserId,
-                instructorProfileId: r.instructorProfileId,
-                version: r.version,
-            },
-            create: {
-                title: r.title,
-                type: r.type,
-                fileUrl: r.fileUrl,
-                courseId: r.courseId,
-                instructorId: r.instructorUserId,
-                instructorProfileId: r.instructorProfileId,
-                version: r.version,
-            },
-        });
-        resources.push(res);
-    }
-
-    const firstResource = resources[0]!;
-
-    await prisma.resourceChunk.upsert({
-        where: {
-            resourceId_chunkIndex: {
-                resourceId: firstResource.id,
-                chunkIndex: 0,
-            },
-        },
-        update: {
-            pageNumber: 1,
-            content: "Artificial Intelligence introduces systems that reason and learn from data.",
-            tokenCount: 13,
-            embedding: [0.01, 0.02, 0.03],
-        },
-        create: {
-            resourceId: firstResource.id,
-            chunkIndex: 0,
-            pageNumber: 1,
-            content: "Artificial Intelligence introduces systems that reason and learn from data.",
-            tokenCount: 13,
-            embedding: [0.01, 0.02, 0.03],
-        },
-    });
-
-    await prisma.summary.upsert({
-        where: { id: "00000000-0000-4000-8000-000000000001" },
-        update: { content: "Updated: overview of course policies and grading." },
-        create: {
-            id: "00000000-0000-4000-8000-000000000001",
-            content: "Summary: this course covers search, knowledge representation, and ML basics with weekly labs.",
-            resourceId: firstResource.id,
-            studnetId: student1.id,
-        },
-    });
-
-    const quiz1 = await prisma.quiz.upsert({
-        where: { id: "00000000-0000-4000-8000-000000000002" },
-        update: {},
-        create: {
-            id: "00000000-0000-4000-8000-000000000002",
-            title: "Quiz — Intro to AI",
-            difficulty: "MEDIUM",
-            resourceId: firstResource.id,
-            studnetId: student1.id,
-        },
-    });
-
-    await prisma.question.upsert({
-        where: { id: "00000000-0000-4000-8000-000000000003" },
-        update: {},
-        create: {
-            id: "00000000-0000-4000-8000-000000000003",
-            content: "What is the primary goal of a rational agent?",
-            options: { A: "Maximize performance measure", B: "Minimize lines of code", C: "Avoid all uncertainty", D: "Use only symbolic logic" },
-            correctAns: "A",
-            quizId: quiz1.id,
-        },
-    });
-
-    await prisma.question.upsert({
-        where: { id: "00000000-0000-4000-8000-000000000004" },
-        update: {},
-        create: {
-            id: "00000000-0000-4000-8000-000000000004",
-            content: "Which algorithm is uninformed?",
-            options: { A: "A*", B: "BFS", C: "IDA*", D: "Greedy best-first with heuristic" },
-            correctAns: "B",
-            quizId: quiz1.id,
-        },
-    });
-
-    await prisma.quizAttempt.upsert({
-        where: { id: "00000000-0000-4000-8000-000000000005" },
-        update: { score: 85 },
-        create: {
-            id: "00000000-0000-4000-8000-000000000005",
-            score: 85,
-            quizId: quiz1.id,
-            studnetId: student1.id,
-        },
-    });
-
     await prisma.progress.upsert({
         where: {
             studnetId_courseId: {
@@ -554,23 +387,6 @@ async function main() {
             averageScore: 82.5,
             studnetId: student1.id,
             courseId: aiCourse.id,
-        },
-    });
-
-    await prisma.progress.upsert({
-        where: {
-            studnetId_courseId: {
-                studnetId: student1.id,
-                courseId: dbCourse.id,
-            },
-        },
-        update: { resourceViewed: 2, averageScore: 74 },
-        create: {
-            id: "00000000-0000-4000-8000-000000000007",
-            resourceViewed: 2,
-            averageScore: 74,
-            studnetId: student1.id,
-            courseId: dbCourse.id,
         },
     });
 

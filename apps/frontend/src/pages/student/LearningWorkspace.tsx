@@ -185,6 +185,7 @@ export default function Learning() {
             </div>
 
             <ResourcePdfViewer
+              resourceId={selectedResource.id}
               fileUrl={String(selectedResource.fileUrl)}
               title={selectedResource.title}
               type={selectedResource.type}

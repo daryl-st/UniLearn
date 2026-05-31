@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Document, Page } from 'react-pdf';
 import type { FileType, ResourceStatus } from '@unilearn/shared-types';
 import { ChevronLeft, ChevronRight, ExternalLink, Loader2, Minus, Plus } from 'lucide-react';
-import { isPdfPreviewPending, shouldAttemptPdfPreview } from '@/lib/resourceStatus';
-import { PDFJS_DOCUMENT_OPTIONS, resolveCloudinaryViewerUrl } from '@/lib/cloudinaryViewer';
+import { CourseAPI } from '@/api/course';
+import { isPdfPreviewPending, isDownloadOnlyResource, isUnavailableResource, shouldAttemptPdfPreview } from '@/lib/resourceStatus';
+import { resolveCloudinaryViewerUrl } from '@/lib/cloudinaryViewer';
 
 const ZOOM_LEVELS = [0.75, 1, 1.25, 1.5] as const;
+const DEFAULT_PAGE_WIDTH = 720;
 
 type ResourcePdfViewerProps = {
+  resourceId: string;
   fileUrl: string;
   title: string;
   type: FileType;
@@ -15,7 +18,14 @@ type ResourcePdfViewerProps = {
   initialPage?: number;
 };
 
-export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 1 }: ResourcePdfViewerProps) {
+export function ResourcePdfViewer({
+  resourceId,
+  fileUrl,
+  title,
+  type,
+  status,
+  initialPage = 1,
+}: ResourcePdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [numPages, setNumPages] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
@@ -23,18 +33,50 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
   const [containerWidth, setContainerWidth] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isDocumentLoading, setIsDocumentLoading] = useState(true);
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
 
   const zoom = ZOOM_LEVELS[zoomIndex] ?? 1;
-  const url = resolveCloudinaryViewerUrl(String(fileUrl), type);
+  const externalUrl = resolveCloudinaryViewerUrl(String(fileUrl), type);
   const previewPending = isPdfPreviewPending({ type, status });
-  const canPreview = shouldAttemptPdfPreview({ type, status });
+  const canPreview = shouldAttemptPdfPreview({ type, status, fileUrl });
+  const downloadOnly = isDownloadOnlyResource({ type, fileUrl });
+  const unavailable = isUnavailableResource({ fileUrl });
 
   useEffect(() => {
     setPageNumber(Math.max(1, initialPage));
     setNumPages(0);
     setLoadError(null);
     setIsDocumentLoading(true);
-  }, [url, initialPage]);
+    setPdfData(null);
+  }, [resourceId, initialPage]);
+
+  useEffect(() => {
+    if (!canPreview || previewPending) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const buffer = await CourseAPI.fetchResourceFile(resourceId);
+        if (cancelled) return;
+        setPdfData(new Uint8Array(buffer));
+        setLoadError(null);
+      } catch (err) {
+        if (cancelled) return;
+        setPdfData(null);
+        const message =
+          err instanceof Error && err.message
+            ? err.message
+            : 'Could not load this PDF. Try opening it in a new tab.';
+        setLoadError(message);
+        setIsDocumentLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [resourceId, canPreview, previewPending]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -58,7 +100,7 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
   }, []);
 
   const onDocumentLoadError = useCallback(() => {
-    setLoadError('Could not load this PDF. Try opening it in a new tab.');
+    setLoadError('Could not render this PDF in the app viewer.');
     setIsDocumentLoading(false);
   }, []);
 
@@ -67,9 +109,19 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
     setPageNumber(Math.min(Math.max(1, next), numPages));
   };
 
+  const pageWidth = useMemo(() => {
+    const base = containerWidth > 0 ? containerWidth : DEFAULT_PAGE_WIDTH;
+    return Math.floor(base * zoom);
+  }, [containerWidth, zoom]);
+
+  const documentFile = useMemo(() => {
+    if (!pdfData) return null;
+    return { data: pdfData };
+  }, [pdfData]);
+
   const externalLink = (
     <a
-      href={url}
+      href={externalUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-1 text-primary text-xs font-mono underline hover:opacity-90"
@@ -86,7 +138,7 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
         <p className="text-on-surface-variant text-sm max-w-md leading-relaxed">
           Converting {type} to PDF… This may take a minute.
         </p>
-        {externalLink}
+        {externalUrl && !unavailable ? externalLink : null}
       </div>
     );
   }
@@ -95,14 +147,16 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
     return (
       <div className="flex min-h-[min(70vh,720px)] flex-col items-center justify-center gap-4 rounded-sm border border-outline-variant/10 bg-surface-high p-8 text-center">
         <p className="text-on-surface-variant text-sm max-w-md leading-relaxed">
-          This resource is not ready for in-app PDF viewing yet.
+          {downloadOnly
+            ? `${type} files open in your browser or download app. Use the link below to access this file on Cloudinary.`
+            : unavailable
+              ? 'This file is not stored in Cloudinary yet. Ask your instructor to upload it from Content Library.'
+              : 'This resource is not ready for in-app PDF viewing yet.'}
         </p>
-        {externalLink}
+        {externalUrl && !unavailable ? externalLink : null}
       </div>
     );
   }
-
-  const pageWidth = containerWidth > 0 ? Math.floor(containerWidth * zoom) : undefined;
 
   return (
     <div className="flex min-h-[min(70vh,720px)] flex-col rounded-sm border border-outline-variant/10 bg-surface-high shadow-2xl overflow-hidden">
@@ -176,7 +230,7 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
             </button>
           </div>
 
-          {externalLink}
+          {externalUrl && !unavailable ? externalLink : null}
         </div>
       </div>
 
@@ -184,7 +238,11 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
         {loadError ? (
           <div className="flex h-full min-h-[16rem] flex-col items-center justify-center gap-3 text-center px-6">
             <p className="text-error text-sm">{loadError}</p>
-            {externalLink}
+            {externalUrl && !unavailable ? externalLink : null}
+          </div>
+        ) : !documentFile ? (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface-high/80">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
         ) : (
           <>
@@ -195,22 +253,21 @@ export function ResourcePdfViewer({ fileUrl, title, type, status, initialPage = 
             )}
             <div className="flex justify-center">
               <Document
-                file={url}
+                file={documentFile}
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
                 loading={null}
-                options={PDFJS_DOCUMENT_OPTIONS}
               >
-                {pageWidth != null && pageWidth > 0 && numPages > 0 && (
+                {numPages > 0 ? (
                   <Page
-                    key={`${url}-${pageNumber}-${zoom}`}
+                    key={`${resourceId}-${pageNumber}-${zoom}`}
                     pageNumber={pageNumber}
                     width={pageWidth}
                     renderTextLayer
                     renderAnnotationLayer
                     className="shadow-lg"
                   />
-                )}
+                ) : null}
               </Document>
             </div>
           </>
