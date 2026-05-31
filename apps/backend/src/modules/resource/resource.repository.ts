@@ -173,6 +173,43 @@ export class ResourceRepository {
             where: { instructorId, isDeleted: false },
         });
     }
+
+    async getRecentResources(limit: number = 5): Promise<Resource[]> {
+        const resources = await prisma.resource.findMany({
+            where: { isDeleted: false },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+        return resources.map((u) => toResource(u));
+    }
+
+    async getResourceAnalytics(): Promise<{
+        byStatus: Record<string, number>;
+        byType: Record<string, number>;
+    }> {
+        const statusGroups = await prisma.resource.groupBy({
+            by: ["status"],
+            where: { isDeleted: false },
+            _count: { _all: true }
+        });
+        const typeGroups = await prisma.resource.groupBy({
+            by: ["type"],
+            where: { isDeleted: false },
+            _count: { _all: true }
+        });
+        
+        const byStatus: Record<string, number> = {};
+        statusGroups.forEach(g => {
+            byStatus[g.status] = g._count._all;
+        });
+
+        const byType: Record<string, number> = {};
+        typeGroups.forEach(g => {
+            byType[g.type] = g._count._all;
+        });
+
+        return { byStatus, byType };
+    }
 }
 
 export class CourseRepository {
@@ -273,5 +310,35 @@ export class CourseRepository {
                     departmentId: u.departmentId,
                 }),
         );
+    }
+
+    async getRecentCourses(limit: number = 5): Promise<Course[]> {
+        const courses = await prisma.course.findMany({
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+        return courses.map(
+            (u) =>
+                new Course({
+                    id: u.id,
+                    name: u.name,
+                    code: u.code,
+                    acadamicYear: u.acadamicYear,
+                    instructorId: u.instructorId ?? "",
+                    departmentId: u.departmentId,
+                }),
+        );
+    }
+
+    async getInstructorCourseStats(): Promise<{ totalCourses: number; mappedCourses: number }> {
+        const totalCourses = await prisma.course.count();
+        const mappedCourses = await prisma.course.count({
+            where: {
+                NOT: {
+                    instructorId: null
+                }
+            }
+        });
+        return { totalCourses, mappedCourses };
     }
 }

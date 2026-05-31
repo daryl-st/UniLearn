@@ -1,11 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, Download, TrendingUp, Users, Zap, Database, Shield, Router, Cpu, Globe } from 'lucide-react';
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'recharts';
+import { DashboardAPI, type AdminStats } from '@/api/dashboard';
 
 const heatmapOpacity = Array.from({ length: 72 }, (_, i) => 0.18 + ((i * 37) % 10) / 14);
 
 export const Analytics: React.FC = () => {
   const [rangeLabel, setRangeLabel] = React.useState<'LAST 90 DAYS' | 'LAST 30 DAYS'>('LAST 90 DAYS');
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    DashboardAPI.getAdminStats()
+      .then((data) => {
+        if (active) {
+          setStats(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load admin analytics:", err);
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const palette = {
     muted: 'var(--color-surface-highest)',
@@ -16,7 +37,7 @@ export const Analytics: React.FC = () => {
     tooltipText: 'var(--color-on-surface)',
   };
 
-  const data = [
+  const data = stats?.weeklyUserGrowth || [
     { name: 'M', value: 400, tone: 'muted' },
     { name: 'T', value: 300, tone: 'muted' },
     { name: 'W', value: 600, tone: 'primary' },
@@ -36,8 +57,13 @@ export const Analytics: React.FC = () => {
   ];
 
   const handleExportReport = () => {
+    const activeStudentsCount = stats ? stats.totalStudents : 601;
+    const newUsersCount = stats ? stats.totalUsers : 124;
+    const avgScore = stats ? stats.avgQuizScore : 76.8;
+    const totalRes = stats ? stats.totalResources : 9234;
+
     const blob = new Blob([
-      'metric,value\nActive Students,601\nNew Users,+124\nAverage Quiz Score,76.8%\nResources Viewed,9234\n'
+      `metric,value\nActive Students,${activeStudentsCount}\nNew Users,+${newUsersCount}\nAverage Quiz Score,${avgScore}%\nResources Viewed,${totalRes}\n`
     ], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -81,12 +107,12 @@ export const Analytics: React.FC = () => {
             </div>
             <div className="flex gap-4 text-right">
               <div>
-                <span className="block text-secondary font-mono text-lg font-bold">601</span>
+                <span className="block text-secondary font-mono text-lg font-bold">{isLoading ? "..." : stats?.totalStudents.toLocaleString()}</span>
                 <span className="text-[10px] text-on-surface-variant uppercase">Active Students</span>
               </div>
               <div className="w-px h-8 bg-border"></div>
               <div>
-                <span className="block text-primary font-mono text-lg font-bold">+124</span>
+                <span className="block text-primary font-mono text-lg font-bold">+{isLoading ? "..." : stats?.totalUsers.toLocaleString()}</span>
                 <span className="text-[10px] text-on-surface-variant uppercase">New Users</span>
               </div>
             </div>
@@ -96,7 +122,7 @@ export const Analytics: React.FC = () => {
               <BarChart data={data}>
                 <XAxis dataKey="name" hide />
                 <Tooltip 
-                  contentStyle={{ 
+                   contentStyle={{ 
                     backgroundColor: palette.tooltipBg,
                     border: `1px solid ${palette.tooltipBorder}`,
                     borderRadius: '8px',
@@ -106,7 +132,7 @@ export const Analytics: React.FC = () => {
                 />
                 <Bar dataKey="value" radius={[2, 2, 0, 0]}>
                   {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={palette[entry.tone as keyof typeof palette]} />
+                    <Cell key={`cell-${index}`} fill={palette[entry.tone as keyof typeof palette] || palette.muted} />
                   ))}
                 </Bar>
               </BarChart>
@@ -121,9 +147,9 @@ export const Analytics: React.FC = () => {
               <span className="text-[10px] font-mono text-primary/80 px-2 py-0.5 bg-primary/10 rounded uppercase">Peak Load</span>
             </div>
             <h4 className="text-on-surface-variant text-xs font-mono uppercase tracking-widest mb-1">Average Quiz Score</h4>
-            <p className="text-4xl font-headline font-bold text-on-surface">76.8<span className="text-primary text-xl">%</span></p>
+            <p className="text-4xl font-headline font-bold text-on-surface">{isLoading ? "..." : stats?.avgQuizScore}<span className="text-primary text-xl">%</span></p>
             <div className="mt-4 h-1 w-full bg-surface-high rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[76.8%]"></div>
+              <div className="h-full bg-primary" style={{ width: `${stats?.avgQuizScore || 76.8}%` }}></div>
             </div>
           </div>
           <div className="bg-surface-low rounded-lg p-6 flex-1 border border-border">
@@ -132,7 +158,7 @@ export const Analytics: React.FC = () => {
               <span className="text-[10px] font-mono text-secondary/80 px-2 py-0.5 bg-secondary/10 rounded uppercase">Engagement</span>
             </div>
             <h4 className="text-on-surface-variant text-xs font-mono uppercase tracking-widest mb-1">Resources Viewed</h4>
-            <p className="text-4xl font-headline font-bold text-on-surface">9,234</p>
+            <p className="text-4xl font-headline font-bold text-on-surface">{isLoading ? "..." : stats?.totalResources.toLocaleString()}</p>
             <p className="text-secondary text-[10px] font-mono mt-2 uppercase">Across selected date range</p>
           </div>
         </div>
@@ -178,10 +204,10 @@ export const Analytics: React.FC = () => {
           </h3>
           <div className="bg-surface-low rounded-lg p-1 divide-y divide-border border border-border">
             {[
-              { icon: Database, label: 'Course Activity', sub: 'Courses accessed this week', val: '73', status: 'Within expected range', color: 'text-secondary' },
+              { icon: Database, label: 'Course Activity', sub: 'Courses accessed this week', val: isLoading ? '...' : String(stats?.totalCourses || 73), status: 'Within expected range', color: 'text-secondary' },
               { icon: Shield, label: 'Access Reliability', sub: 'Login and role checks', val: '99.9%', status: 'Stable', color: 'text-primary' },
               { icon: Router, label: 'Average Response Time', sub: 'Platform APIs', val: '14 ms', status: 'Optimized', color: 'text-secondary' },
-              { icon: Cpu, label: 'Pending Governance Tasks', sub: 'Reviews and assignments', val: '12', status: 'Needs attention', color: 'text-destructive' },
+              { icon: Cpu, label: 'Pending Governance Tasks', sub: 'Reviews and assignments', val: isLoading ? '...' : String(stats?.instructorCourseStats ? (stats.instructorCourseStats.totalCourses - stats.instructorCourseStats.mappedCourses) : 12), status: 'Needs attention', color: 'text-destructive' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between p-4 hover:bg-surface-high transition-colors">
                 <div className="flex items-center gap-4">

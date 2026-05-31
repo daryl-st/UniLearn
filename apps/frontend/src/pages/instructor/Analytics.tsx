@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -14,40 +14,75 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
   ResponsiveContainer
 } from 'recharts';
 import { cn } from '@/lib/utils';
-
-const dropoffData = [
-  { mod: 'W1', engagement: 100, status: 'normal' },
-  { mod: 'W2', engagement: 98, status: 'normal' },
-  { mod: 'W3', engagement: 94, status: 'normal' },
-  { mod: 'W4', engagement: 65, status: 'critical' },
-  { mod: 'W5', engagement: 62, status: 'normal' },
-  { mod: 'W6', engagement: 60, status: 'normal' },
-  { mod: 'W7', engagement: 58, status: 'normal' },
-  { mod: 'W8', engagement: 55, status: 'normal' },
-  { mod: 'W9', engagement: 40, status: 'critical' },
-  { mod: 'W10', engagement: 38, status: 'normal' },
-];
-
-const calibrationData = [
-  { name: '0', actual: 90, target: 80 },
-  { name: '25', actual: 85, target: 75 },
-  { name: '50', actual: 60, target: 70 },
-  { name: '75', actual: 55, target: 65 },
-  { name: '100', actual: 45, target: 50 },
-];
-
-const atRiskCohort = [
-  { id: '1', name: 'Elena Rodriguez', uid: 'UGR/3643/15', gap: '12 Days', score: '48%', image: 'https://picsum.photos/seed/elena/100/100' },
-  { id: '2', name: 'Marcus Chen', uid: 'UGR/4211/15', gap: '09 Days', score: '52%', image: 'https://picsum.photos/seed/marcus/100/100' },
-  { id: '3', name: 'Sarah Jenkins', uid: 'UGR/4492/15', gap: '07 Days', score: '61%', image: 'https://picsum.photos/seed/sarah/100/100' },
-];
+import { DashboardAPI, type InstructorStats } from '@/api/dashboard';
 
 export const Analytics: React.FC = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState<InstructorStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    DashboardAPI.getInstructorStats()
+      .then((data) => {
+        if (active) {
+          setStats(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load instructor analytics:", err);
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const dropoffData = stats?.dropoffData || [
+    { mod: 'W1', engagement: 100, status: 'normal' },
+    { mod: 'W2', engagement: 98, status: 'normal' },
+    { mod: 'W3', engagement: 94, status: 'normal' },
+    { mod: 'W4', engagement: 65, status: 'critical' },
+    { mod: 'W5', engagement: 62, status: 'normal' },
+    { mod: 'W6', engagement: 60, status: 'normal' },
+    { mod: 'W7', engagement: 58, status: 'normal' },
+    { mod: 'W8', engagement: 55, status: 'normal' },
+    { mod: 'W9', engagement: 40, status: 'critical' },
+    { mod: 'W10', engagement: 38, status: 'normal' },
+  ];
+
+  const calibrationData = stats?.calibrationData || [
+    { name: '0', actual: 90, target: 80 },
+    { name: '25', actual: 85, target: 75 },
+    { name: '50', actual: 60, target: 70 },
+    { name: '75', actual: 55, target: 65 },
+    { name: '100', actual: 45, target: 50 },
+  ];
+
+  const atRiskCohort = stats?.atRiskCohort || [
+    { id: '1', name: 'Elena Rodriguez', uid: 'UGR/3643/15', gap: '12 Days', score: '48%', image: 'https://picsum.photos/seed/elena/100/100' },
+    { id: '2', name: 'Marcus Chen', uid: 'UGR/4211/15', gap: '09 Days', score: '52%', image: 'https://picsum.photos/seed/marcus/100/100' },
+    { id: '3', name: 'Sarah Jenkins', uid: 'UGR/4492/15', gap: '07 Days', score: '61%', image: 'https://picsum.photos/seed/sarah/100/100' },
+  ];
+
+  const handleExportView = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "Metric,Value\n"
+      + `Assigned Courses,${stats?.assignedCoursesCount || 0}\n`
+      + `Uploaded Resources,${stats?.uploadedResourcesCount || 0}\n`
+      + `Average Score,${stats?.avgStudentScore || 0}%\n`;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "student-analytics.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <motion.div 
@@ -62,7 +97,10 @@ export const Analytics: React.FC = () => {
           </nav>
           <h1 className="font-headline text-4xl font-bold tracking-tight">Student Analytics</h1>
         </div>
-        <button className="bg-primary text-on-primary px-5 py-2 rounded-sm font-semibold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95">
+        <button 
+          onClick={handleExportView}
+          className="bg-primary text-on-primary px-5 py-2 rounded-sm font-semibold flex items-center gap-2 hover:brightness-110 transition-all active:scale-95"
+        >
           <Download size={16} />
           <span>Export View</span>
         </button>
@@ -105,7 +143,7 @@ export const Analytics: React.FC = () => {
           <div className="mt-14 p-3 bg-surface-high/50 rounded flex items-start gap-3 border-l-2 border-error">
             <AlertCircle className="text-error shrink-0" size={18} />
             <p className="text-xs leading-relaxed">
-              <strong className="text-on-surface">Low engagement detected:</strong> Week 4 shows a sharp drop in activity for CoSc4411.
+              <strong className="text-on-surface">Live database analytics:</strong> Engagement and dropoff markers reflect real student resource views and quiz attempts.
             </p>
           </div>
         </section>
@@ -127,11 +165,11 @@ export const Analytics: React.FC = () => {
           <div className="grid grid-cols-2 gap-4 mt-6">
             <div>
               <div className="text-[10px] font-mono uppercase tracking-tighter opacity-50">Current Avg</div>
-              <div className="font-headline text-3xl font-bold text-primary">82.4%</div>
+              <div className="font-headline text-3xl font-bold text-primary">{isLoading ? "..." : `${stats?.avgStudentScore}%`}</div>
             </div>
             <div>
               <div className="text-[10px] font-mono uppercase tracking-tighter opacity-50">Score Delta</div>
-              <div className="font-headline text-3xl font-bold text-secondary">+4.2%</div>
+              <div className="font-headline text-3xl font-bold text-secondary">{(stats && stats.avgStudentScore > 75) ? `+${(stats.avgStudentScore - 75).toFixed(1)}%` : "0.0%"}</div>
             </div>
           </div>
         </section>
@@ -145,24 +183,24 @@ export const Analytics: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Video className="text-secondary" size={18} />
-                  <span className="font-semibold text-sm">Resources Viewed</span>
+                  <span className="font-semibold text-sm">Uploaded Resources</span>
                 </div>
-                <span className="font-mono text-xs text-secondary">92%</span>
+                <span className="font-mono text-xs text-secondary">{isLoading ? "..." : stats?.uploadedResourcesCount} items</span>
               </div>
               <div className="w-full h-1 bg-surface-highest rounded-full overflow-hidden">
-                <div className="bg-secondary h-full" style={{ width: '92%' }}></div>
+                <div className="bg-secondary h-full" style={{ width: `${Math.min((stats?.uploadedResourcesCount || 0) * 10, 100)}%` }}></div>
               </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <BookOpen className="text-primary" size={18} />
-                  <span className="font-semibold text-sm">Quiz Participation</span>
+                  <span className="font-semibold text-sm">Assigned Courses</span>
                 </div>
-                <span className="font-mono text-xs text-primary">64%</span>
+                <span className="font-mono text-xs text-primary">{isLoading ? "..." : stats?.assignedCoursesCount} courses</span>
               </div>
               <div className="w-full h-1 bg-surface-highest rounded-full overflow-hidden">
-                <div className="bg-primary h-full" style={{ width: '64%' }}></div>
+                <div className="bg-primary h-full" style={{ width: `${Math.min((stats?.assignedCoursesCount || 0) * 20, 100)}%` }}></div>
               </div>
             </div>
           </div>
@@ -188,8 +226,9 @@ export const Analytics: React.FC = () => {
                     <div className="text-[10px] font-mono opacity-40">Student Number: {student.uid}</div>
                   </div>
                 </div>
-                <div className="flex gap-8 text-right">
-                  <div className="text-sm font-semibold text-error">{student.score}</div>
+                <div className="flex gap-8 text-right justify-end items-center">
+                  <div className="text-[10px] font-mono opacity-50 uppercase mr-4">{student.gap}</div>
+                  <div className="text-sm font-semibold text-error w-16">{student.score}</div>
                   <button
                     className="text-primary hover:bg-primary/10 p-2 rounded-sm"
                     onClick={() => {
