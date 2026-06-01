@@ -78,6 +78,24 @@ export type RagAskResponseBody = {
     usedChunks: number;
 };
 
+export type SummarizeResponseBody = {
+    resourceId: string;
+    summary: string;
+};
+
+export type GenerateQuizQuestionBody = {
+    type: "mcq" | "short";
+    content: string;
+    options: Record<string, string> | null;
+    correctAns: string;
+};
+
+export type GenerateQuizResponseBody = {
+    resourceId: string;
+    title: string;
+    questions: GenerateQuizQuestionBody[];
+};
+
 async function readJsonBody(upstream: globalThis.Response): Promise<unknown> {
     const text = await upstream.text();
     if (!text) return null;
@@ -216,6 +234,62 @@ export async function proxyRagAsk(
             "Content-Type": "application/json",
         },
         body: JSON.stringify({ resourceId, question, topK }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxySummarize(
+    resourceId: string,
+    maxChunks?: number,
+): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/rag/summarize`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            resourceId,
+            ...(maxChunks !== undefined ? { maxChunks } : {}),
+        }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    const body = await readJsonBody(upstream);
+    if (!upstream.ok) {
+        return { ok: false, status: upstream.status, body };
+    }
+    return { ok: true, status: upstream.status, body };
+}
+
+export async function proxyGenerateQuiz(params: {
+    resourceId: string;
+    difficulty: string;
+    maxChunks?: number;
+    questionCount?: number;
+}): Promise<ProxyResult> {
+    const key = requireInternalKey();
+    const base = normalizeBaseUrl();
+    const upstream = await fetch(`${base}/rag/generate-quiz`, {
+        method: "POST",
+        headers: {
+            "X-Internal-API-Key": key,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            resourceId: params.resourceId,
+            difficulty: params.difficulty,
+            ...(params.maxChunks !== undefined ? { maxChunks: params.maxChunks } : {}),
+            ...(params.questionCount !== undefined
+                ? { questionCount: params.questionCount }
+                : {}),
+        }),
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     const body = await readJsonBody(upstream);

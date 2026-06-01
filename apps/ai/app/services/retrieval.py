@@ -13,7 +13,17 @@ class RetrievedChunk(TypedDict):
     score: float
 
 
+class OrderedChunk(TypedDict):
+    chunkIndex: int
+    pageNumber: int
+    content: str
+
+
 _pool: asyncpg.Pool | None = None
+
+
+class DatabaseUnavailableError(Exception):
+    """PostgreSQL is unreachable or misconfigured."""
 
 
 def _database_url() -> str:
@@ -26,7 +36,18 @@ def _database_url() -> str:
 async def _get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(dsn=_database_url(), min_size=1, max_size=5)
+        try:
+            _pool = await asyncpg.create_pool(dsn=_database_url(), min_size=1, max_size=5)
+        except OSError as exc:
+            raise DatabaseUnavailableError(
+                "Cannot connect to PostgreSQL. Check DATABASE_URL and that the "
+                "database is running (Docker db: localhost:5433, native: localhost:5432)."
+            ) from exc
+        except asyncpg.PostgresError as exc:
+            raise DatabaseUnavailableError(
+                "PostgreSQL rejected the connection. Verify DATABASE_URL credentials "
+                "and that the unilearn database exists."
+            ) from exc
     return _pool
 
 
@@ -63,6 +84,30 @@ async def retrieve_top_chunks(
             "pageNumber": int(r["pageNumber"]),
             "content": str(r["content"]),
             "score": float(r["score"]),
+        }
+        for r in rows
+    ]
+
+
+async def retrieve_chunks_ordered(resource_id: str, limit: int) -> list[OrderedChunk]:
+    pool = await _get_pool()
+    query = """
+        SELECT
+            "chunkIndex",
+            "pageNumber",
+            content
+        FROM "ResourceChunk"
+        WHERE "resourceId" = $1
+        ORDER BY "chunkIndex" ASC
+        LIMIT $2
+    """
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(query, resource_id, limit)
+    return [
+        {
+            "chunkIndex": int(r["chunkIndex"]),
+            "pageNumber": int(r["pageNumber"]),
+            "content": str(r["content"]),
         }
         for r in rows
     ]

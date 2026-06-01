@@ -4,23 +4,8 @@ import json
 import os
 import re
 
-import httpx
-
 from app.models.ask import AskAnswerBody, AskAnswerResponse, AskCitation
-
-GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
-GEMINI_TIMEOUT_SEC = 45.0
-
-
-def _gemini_api_key() -> str:
-    key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not key:
-        raise ValueError("GEMINI_API_KEY is not configured")
-    return key
-
-
-def _gen_model() -> str:
-    return os.getenv("GEMINI_GEN_MODEL", "gemini-2.0-flash").strip() or "gemini-2.0-flash"
+from app.services.gemini_generate import extract_text, generate_content
 
 
 def _max_context_chunks() -> int:
@@ -30,19 +15,6 @@ def _max_context_chunks() -> int:
     return max(1, int(raw))
 
 
-def _extract_text(data: dict) -> str:
-    candidates = data.get("candidates")
-    if not isinstance(candidates, list) or not candidates:
-        return ""
-    content = candidates[0].get("content", {})
-    parts = content.get("parts", [])
-    texts: list[str] = []
-    for p in parts:
-        if isinstance(p, dict) and isinstance(p.get("text"), str):
-            texts.append(p["text"])
-    return "\n".join(texts).strip()
-
-
 def _safe_json_from_text(text: str) -> dict:
     text = text.strip()
     if not text:
@@ -50,7 +22,6 @@ def _safe_json_from_text(text: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # Try extracting first JSON object block.
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if not match:
             return {}
@@ -75,17 +46,8 @@ async def generate_grounded_answer(body: AskAnswerBody) -> AskAnswerResponse:
         f"Chunks:\n{citations_block}"
     )
 
-    key = _gemini_api_key()
-    model = _gen_model()
-    url = f"{GEMINI_API_BASE}/models/{model}:generateContent"
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SEC) as client:
-        response = await client.post(url, params={"key": key}, json=payload)
-        if response.status_code >= 400:
-            raise ValueError(f"Gemini generation failed with status {response.status_code}")
-        data = response.json()
-
-    text = _extract_text(data)
+    data = await generate_content(prompt)
+    text = extract_text(data)
     parsed = _safe_json_from_text(text)
     answer = parsed.get("answer") if isinstance(parsed.get("answer"), str) else text
 

@@ -30,8 +30,9 @@ export const mockAiTools: AiToolItem[] = [
     description:
       'Generate concise summaries from selected lecture notes and readings to speed up revision.',
     icon: FileText,
-    status: 'coming_soon',
-    ctaLabel: 'Coming soon',
+    status: 'live',
+    href: '/dashboard/courses',
+    ctaLabel: 'Open courses',
   },
   {
     id: 'quiz',
@@ -39,8 +40,9 @@ export const mockAiTools: AiToolItem[] = [
     description:
       'Auto-generated quizzes from course content with feedback on incorrect answers.',
     icon: Sparkles,
-    status: 'coming_soon',
-    ctaLabel: 'Coming soon',
+    status: 'live',
+    href: '/dashboard/courses',
+    ctaLabel: 'Open courses',
   },
   {
     id: 'study-tips',
@@ -68,8 +70,8 @@ export const mockAiActivity = [
   },
   {
     id: 'ai-3',
-    title: 'Quiz feedback pending',
-    description: 'Practice quiz APIs are not wired yet — this is sample activity.',
+    title: 'Practice quiz completed',
+    description: 'Review your score and per-question feedback in the learning workspace.',
     time: 'Last week',
   },
 ] as const;

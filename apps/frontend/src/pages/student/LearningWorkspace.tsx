@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, ExternalLink } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import type { Resource } from '@unilearn/shared-types';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { LearningQuizPanel } from '@/components/features/learning/LearningQuizPanel';
+import { LearningSummaryPanel } from '@/components/features/learning/LearningSummaryPanel';
+import type { ChatMessageRecord, Resource } from '@unilearn/shared-types';
 import { CourseAPI, type CourseWithInstructor } from '@/api/course';
 import { AiAPI, askResourceErrorMessage } from '@/api/ai';
 import { ResourcePdfViewer } from '@/components/features/learning/ResourcePdfViewer';
@@ -9,7 +11,14 @@ import { LearningChatPanel } from '@/components/features/learning/LearningChatPa
 
 export default function Learning() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { courseId, resourceId } = useParams<{ courseId: string; resourceId: string }>();
+  const [sidePanel, setSidePanel] = useState<'chat' | 'summary' | 'quiz'>(() => {
+    const panel = searchParams.get('panel');
+    if (panel === 'summary') return 'summary';
+    if (panel === 'quiz') return 'quiz';
+    return 'chat';
+  });
 
   const [course, setCourse] = useState<CourseWithInstructor | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
@@ -20,6 +29,15 @@ export default function Learning() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
+  const welcomeMessage = (resourceTitle: string, courseName: string) =>
+    `You're studying "${resourceTitle}" in ${courseName}. Ask questions about this material and I'll answer using the indexed course content.`;
+
+  const mapChatRecords = (records: ChatMessageRecord[]) =>
+    records.map((m) => ({
+      role: (m.role === 'user' ? 'user' : 'ai') as 'ai' | 'user',
+      content: m.content,
+    }));
+
   useEffect(() => {
     if (!courseId || !resourceId) return;
     let cancelled = false;
@@ -27,9 +45,10 @@ export default function Learning() {
       setLoading(true);
       setError(null);
       try {
-        const [c, r] = await Promise.all([
+        const [c, r, chat] = await Promise.all([
           CourseAPI.getCourse(courseId),
           CourseAPI.getResourcesByCourseId(courseId),
+          AiAPI.getChat(resourceId).catch(() => ({ messages: [] as ChatMessageRecord[] })),
         ]);
         if (cancelled) return;
 
@@ -45,12 +64,18 @@ export default function Learning() {
 
         setCourse(c);
         setSelectedResource(resource);
-        setMessages([
-          {
-            role: 'ai',
-            content: `You're studying "${resource.title}" in ${c.name}. Ask questions about this material and I'll answer using the indexed course content.`,
-          },
-        ]);
+
+        const persisted = mapChatRecords(chat.messages ?? []);
+        if (persisted.length > 0) {
+          setMessages(persisted);
+        } else {
+          setMessages([
+            {
+              role: 'ai',
+              content: welcomeMessage(resource.title, c.name),
+            },
+          ]);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -68,19 +93,29 @@ export default function Learning() {
     const question = input.trim();
     if (!question || !resourceId || !selectedResource) return;
 
-    const userMsg = { role: 'user' as const, content: question };
-    setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
 
     try {
       const response = await AiAPI.askResource({ resourceId, question });
-      setMessages((prev) => [...prev, { role: 'ai', content: response.answer }]);
+      if (response.messages && response.messages.length > 0) {
+        setMessages(mapChatRecords(response.messages));
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'user', content: question },
+          { role: 'ai', content: response.answer },
+        ]);
+      }
     } catch (err) {
       if (import.meta.env.DEV) {
         console.error('askResource failed', err);
       }
-      setMessages((prev) => [...prev, { role: 'ai', content: askResourceErrorMessage(err) }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: question },
+        { role: 'ai', content: askResourceErrorMessage(err) },
+      ]);
     } finally {
       setIsTyping(false);
     }
@@ -206,16 +241,61 @@ export default function Learning() {
         </div>
       </section>
 
-      <LearningChatPanel
-        courseCode={course.code}
-        resourceTitle={resourceTitle}
-        messages={messages}
-        input={input}
-        onInputChange={setInput}
-        onSend={() => void handleSend()}
-        isTyping={isTyping}
-        canSend={canSend}
-      />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col border-t border-outline-variant/10 lg:border-t-0 lg:max-w-[26rem]">
+        <div className="flex shrink-0 border-b border-outline-variant/10">
+          <button
+            type="button"
+            onClick={() => setSidePanel('chat')}
+            className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+              sidePanel === 'chat'
+                ? 'bg-surface-high text-primary'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Chat
+          </button>
+          <button
+            type="button"
+            onClick={() => setSidePanel('summary')}
+            className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+              sidePanel === 'summary'
+                ? 'bg-surface-high text-primary'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Summary
+          </button>
+          <button
+            type="button"
+            onClick={() => setSidePanel('quiz')}
+            className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+              sidePanel === 'quiz'
+                ? 'bg-surface-high text-primary'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Quiz
+          </button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          {sidePanel === 'chat' ? (
+            <LearningChatPanel
+              courseCode={course.code}
+              resourceTitle={resourceTitle}
+              messages={messages}
+              input={input}
+              onInputChange={setInput}
+              onSend={() => void handleSend()}
+              isTyping={isTyping}
+              canSend={canSend}
+            />
+          ) : sidePanel === 'summary' && resourceId ? (
+            <LearningSummaryPanel resourceId={resourceId} resourceTitle={resourceTitle} />
+          ) : sidePanel === 'quiz' && resourceId ? (
+            <LearningQuizPanel resourceId={resourceId} resourceTitle={resourceTitle} />
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
