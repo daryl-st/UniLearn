@@ -9,7 +9,7 @@ export class Resource {
     version: number;
     isDeleted: boolean;
     courseId: string;
-    instructorId?: string;
+    instructorId?: string | null;
     status?: ResourceStatus;
 
     constructor(resourceData: ResourceType) {
@@ -20,7 +20,7 @@ export class Resource {
         this.version = resourceData.version;
         this.isDeleted = resourceData.isDeleted;
         this.courseId = resourceData.courseId;
-        this.instructorId = resourceData.instructorId;
+        this.instructorId = resourceData.instructorId ?? null;
         if (resourceData.status !== undefined) {
             this.status = resourceData.status;
         }

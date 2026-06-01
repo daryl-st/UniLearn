@@ -47,7 +47,7 @@ export interface Resource {
     courseId: string;
     isDeleted: boolean;
     version: number;
-    instructorId: string;
+    instructorId?: string | null;
     status?: ResourceStatus;
 };
 

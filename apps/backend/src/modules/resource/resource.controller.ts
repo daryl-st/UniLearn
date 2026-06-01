@@ -34,7 +34,7 @@ function serializeResource(resource: {
     type: string;
     fileUrl: string;
     version: number;
-    instructorId?: string;
+    instructorId?: string | null;
     courseId: string;
     isDeleted: boolean;
     status?: string;

@@ -8,5 +8,7 @@ const controller = new UserController();
 
 router.get("/", requireAuth, authorize("ADMIN"), controller.getUsers); // auth middleware is working
 router.post("/", requireAuth, authorize("ADMIN"), controller.createUser);
+router.put("/:id", requireAuth, authorize("ADMIN"), controller.updateUser);
+router.delete("/:id", requireAuth, authorize("ADMIN"), controller.deleteUser);
 
 export default router;

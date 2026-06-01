@@ -10,7 +10,7 @@ function toResource(row: {
     type: FileType;
     fileUrl: string;
     version: number;
-    instructorId: string;
+    instructorId: string | null;
     courseId: string;
     isDeleted: boolean;
     status: ResourceStatus;
@@ -128,7 +128,7 @@ export class ResourceRepository {
     async delete(data: { id: string }): Promise<Resource | null> {
         const resource = await prisma.resource.delete({ where: { id: data.id } });
         if (!resource) return null;
-        return resource;
+        return toResource(resource);
     }
 
     async updateStatus(resourceId: string, status: ResourceStatus): Promise<void> {

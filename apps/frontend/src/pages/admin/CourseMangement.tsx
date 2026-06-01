@@ -19,6 +19,9 @@ type CourseFormState = Omit<CreateCourseInput, 'departmentId'> & {
 export const CourseManagement: React.FC = () => {
   const { courses, fetchCourses } = useCourseStore();
   const [instructors, setInstructors] = useState<SafeUserRow[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [yearFilter, setYearFilter] = useState<'ALL' | number | '1' | '2' | '3' | '4'>('ALL');
+  const [instructorFilter, setInstructorFilter] = useState<string>('');
   const [selectedCourse, setSelectedCourse] = useState<CourseCatalogRow | null>(null);
   const [formState, setFormState] = useState<CourseFormState>({
     name: '',
@@ -63,6 +66,23 @@ export const CourseManagement: React.FC = () => {
       status: selectedCourse.status ?? 'ACTIVE',
     });
   }, [selectedCourse, instructors]);
+
+  const filteredCourses = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return courses.filter((course) => {
+      if (yearFilter !== 'ALL' && String(course.acadamicYear) !== String(yearFilter)) return false;
+      if (instructorFilter && instructorFilter !== '') {
+        // match instructor id
+        if (course.instructorId !== instructorFilter && !(course.instructorNames ?? []).includes(instructors.find(i => i.id === instructorFilter)?.name ?? '')) {
+          return false;
+        }
+      }
+      if (!term) return true;
+      const inName = course.name?.toLowerCase().includes(term);
+      const inInstructor = (course.instructorNames ?? []).join(' ').toLowerCase().includes(term);
+      return Boolean(inName || inInstructor || course.code?.toLowerCase().includes(term));
+    });
+  }, [courses, searchTerm, yearFilter, instructorFilter, instructors]);
 
   const handleInputChange = (key: keyof CourseFormState, value: string | number) => {
     setFormState((prev) => ({
@@ -224,6 +244,42 @@ export const CourseManagement: React.FC = () => {
             </span>
           </div>
 
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <input
+                type="search"
+                placeholder="Search by course name or instructor"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-xl border border-border bg-surface-low px-3 py-2 text-sm text-on-surface"
+              />
+              <select
+                value={yearFilter}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setYearFilter(v === 'ALL' ? 'ALL' : (Number(v) as 1 | 2 | 3 | 4));
+                }}
+                className="rounded-xl border border-border bg-surface-low px-3 py-2 text-sm text-on-surface"
+              >
+                <option value="ALL">All years</option>
+                <option value="1">Year 1</option>
+                <option value="2">Year 2</option>
+                <option value="3">Year 3</option>
+                <option value="4">Year 4</option>
+              </select>
+              <select
+                value={instructorFilter}
+                onChange={(e) => setInstructorFilter(e.target.value)}
+                className="rounded-xl border border-border bg-surface-low px-3 py-2 text-sm text-on-surface"
+              >
+                <option value="">All instructors</option>
+                {instructors.map((ins) => (
+                  <option key={ins.id} value={ins.id}>{ins.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
             <table className="min-w-full text-left text-sm">
               <thead>
@@ -237,7 +293,7 @@ export const CourseManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {courses.map((course) => (
+                {filteredCourses.map((course) => (
                   <tr key={course.id} className="hover:bg-primary/5 transition-colors">
                     <td className="px-5 py-4 font-semibold text-on-surface">{course.code}</td>
                     <td className="px-5 py-4 text-sm text-on-surface-variant">{course.name}</td>

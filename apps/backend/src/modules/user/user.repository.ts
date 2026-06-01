@@ -8,7 +8,19 @@ import type { Department } from "@prisma/client";
 export class UserRepository {
     async findAll(): Promise<User[]> {
         const users = await prisma.user.findMany();
-        return users.map(u => new User({id: u.id, name: u.name, email: u.email, password: u.password, role: u.role, mustChangePassword: u.mustChangePassword, updatedAt: u.updatedAt})); // username is not included
+        return users.map((u) =>
+            new User({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                password: u.password,
+                role: u.role,
+                mustChangePassword: u.mustChangePassword,
+                isVerified: u.isVerified,
+                createdAt: u.createdAt,
+                updatedAt: u.updatedAt,
+            }),
+        );
     }
 
     async create(data: {
@@ -29,6 +41,8 @@ export class UserRepository {
             mustChangePassword: user.mustChangePassword,
             isVerified: user.isVerified,
             verificationToken: user.verificationToken ?? undefined,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
         });
     }
 
@@ -127,6 +141,8 @@ export class UserRepository {
             mustChangePassword: existingUser.mustChangePassword,
             isVerified: existingUser.isVerified,
             verificationToken: existingUser.verificationToken ?? undefined,
+            createdAt: existingUser.createdAt,
+            updatedAt: existingUser.updatedAt,
         });
     }
 
@@ -168,6 +184,51 @@ export class UserRepository {
             mustChangePassword: existingUser.mustChangePassword,
             isVerified: existingUser.isVerified,
             verificationToken: existingUser.verificationToken ?? undefined,
+            createdAt: existingUser.createdAt,
+            updatedAt: existingUser.updatedAt,
+        });
+    }
+
+    async update(id: string, data: { name: string; email: string; role: Role }): Promise<User> {
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: {
+                name: data.name,
+                email: data.email,
+                role: data.role,
+            },
+        });
+
+        return new User({
+            id: updatedUser.id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            password: updatedUser.password,
+            role: updatedUser.role,
+            mustChangePassword: updatedUser.mustChangePassword,
+            isVerified: updatedUser.isVerified,
+            verificationToken: updatedUser.verificationToken ?? undefined,
+            createdAt: updatedUser.createdAt,
+            updatedAt: updatedUser.updatedAt,
+        });
+    }
+
+    async delete(id: string): Promise<User> {
+        const deletedUser = await prisma.user.delete({
+            where: { id },
+        });
+
+        return new User({
+            id: deletedUser.id,
+            name: deletedUser.name,
+            email: deletedUser.email,
+            password: deletedUser.password,
+            role: deletedUser.role,
+            mustChangePassword: deletedUser.mustChangePassword,
+            isVerified: deletedUser.isVerified,
+            verificationToken: deletedUser.verificationToken ?? undefined,
+            createdAt: deletedUser.createdAt,
+            updatedAt: deletedUser.updatedAt,
         });
     }
 }
