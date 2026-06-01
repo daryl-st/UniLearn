@@ -8,6 +8,7 @@ import { RoleGate } from "@/components/guards/RoleGate";
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'));
 const ChangePasswordPage = lazy(() => import('@/pages/auth/ChangePasswordPage'));
 
 // shared page
@@ -117,6 +118,10 @@ const publicRoutes: RouteEntry[] = [
         <RegisterPage />
       </PublicRoute>
     ),
+  },
+  {
+    path: '/verify-email',
+    element: <VerifyEmailPage />,
   },
   {
     path: ROUTES.CHANGE_PASSWORD,

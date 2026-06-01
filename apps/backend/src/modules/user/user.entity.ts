@@ -11,15 +11,19 @@ export class User implements UserType {
     role: Role;
     username?: string; // it's optional.
     mustChangePassword?: boolean;
+    isVerified?: boolean;
+    verificationToken: string | undefined;
     updatedAt?: Date | string;
 
-    constructor(data: UserType & { updatedAt?: Date | string }) {
+    constructor(data: UserType & { updatedAt?: Date | string; isVerified?: boolean; verificationToken?: string | undefined }) {
         this.id = data.id;
         this.email = data.email;
         this.password = data.password;
         this.name = data.name
         this.role = data.role;
         this.mustChangePassword = data.mustChangePassword ?? false;
+        this.isVerified = data.isVerified ?? false;
+        this.verificationToken = data.verificationToken ?? undefined;
         if (data.updatedAt) {
             this.updatedAt = data.updatedAt;
         }
@@ -50,6 +54,7 @@ export class User implements UserType {
             username: this.username,
             role: this.role,
             mustChangePassword: this.mustChangePassword,
+            isVerified: this.isVerified,
             updatedAt: this.updatedAt instanceof Date ? this.updatedAt.toISOString() : this.updatedAt,
         }
     }

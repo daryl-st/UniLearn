@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AAU_STUDENT_EMAIL_ERROR, AAU_STUDENT_EMAIL_REGEX, normalizeStudentEmail } from "../modules/Auth/aauEmail.js";
 // import type { Role, Difficulty } from "@unilearn/shared-types";
 
 const email = z.email().max(255);
@@ -8,7 +9,9 @@ const role = z.enum(["ADMIN", "INSTRUCTOR", "STUDENT"]);
 
 // Auth
 export const registerSchema = z.object({
-    email,
+    email: email.transform(normalizeStudentEmail).refine((v) => AAU_STUDENT_EMAIL_REGEX.test(v), {
+        message: AAU_STUDENT_EMAIL_ERROR,
+    }),
     password,
     role,
     firstName: name,
@@ -17,8 +20,13 @@ export const registerSchema = z.object({
 });
 export type RegisterBody = z.infer<typeof registerSchema>;
 
+export const verifyEmailQuerySchema = z.object({
+    token: z.string().min(1),
+});
+export type VerifyEmailQuery = z.infer<typeof verifyEmailQuerySchema>;
+
 export const loginSchema = z.object({
-    email: z.email(),
+    email: z.email().max(255).transform((v) => v.trim()),
     password: z.string().min(1),
 });
 export type LoginBody = z.infer<typeof loginSchema>

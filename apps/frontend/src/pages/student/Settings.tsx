@@ -15,7 +15,6 @@ import { ApiKeysSection } from '@/components/features/student/settings/ApiKeysSe
 import { UsageStatsSection } from '@/components/features/student/settings/UsageStatsSection';
 
 
-
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
   const user = useAuthStore((s) => s.user);

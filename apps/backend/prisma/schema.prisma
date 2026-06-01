@@ -16,6 +16,8 @@ model User {
   name               String
   password           String
   mustChangePassword Boolean            @default(false)
+  isVerified         Boolean            @default(false)
+  verificationToken  String?
   instructorProfile  InstructorProfile?
   quizes             Quiz[]
   refreshTokens      RefreshToken[]

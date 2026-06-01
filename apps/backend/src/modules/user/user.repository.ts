@@ -1,7 +1,6 @@
 import type { Role } from "@unilearn/shared-types";
 import type { Student as StudentType, Instructor as InstructorType } from "@unilearn/shared-types";
 import prisma from "../../config/db.js";
-// import { User, StudentProfile, InstructorProfile } from "./user.entity.js";
 import { User, Student, Instructor } from "./user.entity.js";
 import type { Department } from "@prisma/client";
 
@@ -12,10 +11,25 @@ export class UserRepository {
         return users.map(u => new User({id: u.id, name: u.name, email: u.email, password: u.password, role: u.role, mustChangePassword: u.mustChangePassword, updatedAt: u.updatedAt})); // username is not included
     }
 
-    async create(data: {email: string, name: string, password: string, role: Role}): Promise<User> {
-        const user = await prisma.user.create({ data }); // we need to trim and toLowerCase when storing data
-        // we might need to have a discussion about returning the password or not, but for now let's return it as it is.
-        return new User({id: user.id, name: user.name, email: user.email, password: user.password, role: user.role, mustChangePassword: user.mustChangePassword});
+    async create(data: {
+        email: string;
+        name: string;
+        password: string;
+        role: Role;
+        isVerified?: boolean;
+        verificationToken?: string | null;
+    }): Promise<User> {
+        const user = await prisma.user.create({ data });
+        return new User({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            password: user.password,
+            role: user.role,
+            mustChangePassword: user.mustChangePassword,
+            isVerified: user.isVerified,
+            verificationToken: user.verificationToken ?? undefined,
+        });
     }
 
     // create refresh token 
@@ -79,20 +93,22 @@ export class UserRepository {
     }
 
     async findUserByEmail(email: string): Promise<User | null> {
-        const existingUser = await prisma.user.findUnique({
-            where: { email: email }
+        const existingUser = await prisma.user.findFirst({
+            where: { email: { equals: email.trim(), mode: "insensitive" } },
         });
 
         if (!existingUser) return null;
 
         return new User({
-            id: existingUser.id, 
-            name: existingUser.name, 
-            email: existingUser.email, 
-            password: existingUser.password, 
+            id: existingUser.id,
+            name: existingUser.name,
+            email: existingUser.email,
+            password: existingUser.password,
             role: existingUser.role,
-            mustChangePassword: existingUser.mustChangePassword
-        }); // return null if not found
+            mustChangePassword: existingUser.mustChangePassword,
+            isVerified: existingUser.isVerified,
+            verificationToken: existingUser.verificationToken ?? undefined,
+        });
     }
 
     async findUserById(id: string): Promise<User | null> {
@@ -108,8 +124,10 @@ export class UserRepository {
             email: existingUser.email,
             password: existingUser.password,
             role: existingUser.role,
-            mustChangePassword: existingUser.mustChangePassword
-        }); // return null if not found
+            mustChangePassword: existingUser.mustChangePassword,
+            isVerified: existingUser.isVerified,
+            verificationToken: existingUser.verificationToken ?? undefined,
+        });
     }
 
     async getUserNameById(id: string): Promise<string> {
@@ -132,5 +150,24 @@ export class UserRepository {
 
     async countInstructors(): Promise<number> {
         return prisma.instructorProfile.count();
+    }
+
+    async findUserByVerificationToken(token: string): Promise<User | null> {
+        const existingUser = await prisma.user.findFirst({
+            where: { verificationToken: token },
+        });
+
+        if (!existingUser) return null;
+
+        return new User({
+            id: existingUser.id,
+            name: existingUser.name,
+            email: existingUser.email,
+            password: existingUser.password,
+            role: existingUser.role,
+            mustChangePassword: existingUser.mustChangePassword,
+            isVerified: existingUser.isVerified,
+            verificationToken: existingUser.verificationToken ?? undefined,
+        });
     }
 }

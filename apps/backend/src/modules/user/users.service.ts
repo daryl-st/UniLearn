@@ -40,6 +40,7 @@ export class UserService {
                     role: data.role,
                     password: hashedPassword,
                     mustChangePassword: true,
+                    isVerified: true,
                 },
             });
 
