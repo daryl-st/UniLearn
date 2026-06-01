@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Filter, UserPlus, Edit2, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/features/admin/StatCard';
-import { AIInsightCard } from '@/components/features/admin/AlInsightsCard';
 import { CreateUserForm } from '@/components/features/admin/CreateUserForm';
 import type { User } from '@/types/admin';
 import { UsersAPI, type SafeUserRow } from '@/api/users';
@@ -306,8 +305,6 @@ export const UserManagement: React.FC = () => {
           </table>
         </div>
       </div>
-
-      <AIInsightCard />
 
       {editingUser && (
         <div className="fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center">
