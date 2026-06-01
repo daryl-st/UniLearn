@@ -43,9 +43,18 @@ export default function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-full items-center justify-center p-8">
-        <div className="text-center font-mono text-sm text-on-surface-variant animate-pulse">
-          Loading student analytics...
+      <div className="min-h-screen bg-surface px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <div className="h-10 w-2/5 rounded-full bg-surface-low animate-pulse" />
+          <div className="grid gap-6 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="h-40 rounded-[1.5rem] bg-surface-low animate-pulse" />
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="h-72 rounded-[1.75rem] bg-surface-low animate-pulse" />
+            <div className="h-72 rounded-[1.75rem] bg-surface-low animate-pulse" />
+          </div>
         </div>
       </div>
     );

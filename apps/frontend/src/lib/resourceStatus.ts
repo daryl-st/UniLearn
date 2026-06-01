@@ -43,13 +43,9 @@ export function shouldAttemptPdfPreview(resource: {
   if (resource.status === 'FAILED') return false;
 
   const url = resource.fileUrl ?? '';
+  if (!isCloudinaryDeliveryUrl(url)) return false;
 
-  if (resource.type === 'PDF') {
-    return isCloudinaryDeliveryUrl(url);
-  }
-
-  // Converted Office files (Aspose) are delivered as image/pdf URLs.
-  return isCloudinaryDeliveryUrl(url) && url.includes('/image/upload/');
+  return resource.type === 'PDF' || resource.type === 'PPT' || resource.type === 'DOC';
 }
 
 export function isDownloadOnlyResource(resource: {
@@ -57,7 +53,10 @@ export function isDownloadOnlyResource(resource: {
   fileUrl?: string;
 }): boolean {
   if (resource.type === 'PDF') return false;
-  return isCloudinaryDeliveryUrl(resource.fileUrl ?? '');
+  if (resource.type === 'PPT' || resource.type === 'DOC') {
+    return !isCloudinaryDeliveryUrl(resource.fileUrl ?? '');
+  }
+  return false;
 }
 
 export function isUnavailableResource(resource: { fileUrl?: string }): boolean {

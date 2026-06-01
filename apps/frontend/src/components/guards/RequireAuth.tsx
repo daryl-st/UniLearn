@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { ROUTES } from "@/lib/route-paths";
 import { useAuthStore } from "@/stores/authStore";
+import { PageLoadingSkeleton } from "@/components/ui/PageSkeleton";
 
 export function RequireAuth() {
     const user = useAuthStore((s) => s.user);
@@ -8,11 +9,7 @@ export function RequireAuth() {
     const location = useLocation();
 
     if (isLoading) {
-        return (
-            <div className="flex min-h-[40vh] items-center justify-center text-on-surface-variant">
-                Loading…
-            </div>
-        );
+        return <PageLoadingSkeleton />;
     }
 
     if (!user) {

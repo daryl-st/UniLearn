@@ -101,8 +101,19 @@ export default function Learning() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 text-on-surface-variant text-sm">
-        Loading workspace…
+      <div className="min-h-screen bg-surface px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <div className="h-10 w-72 rounded-full bg-surface-low animate-pulse" />
+          <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <div className="space-y-6">
+              <div className="h-[28rem] rounded-[1.75rem] bg-surface-low animate-pulse" />
+              <div className="h-16 rounded-3xl bg-surface-low animate-pulse" />
+            </div>
+            <div className="space-y-6">
+              <div className="h-[28rem] rounded-[1.75rem] bg-surface-low animate-pulse" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

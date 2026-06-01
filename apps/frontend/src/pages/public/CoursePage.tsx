@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { CourseCard } from "@/components/features/public/CourseCard";
 import { Button } from "@/components/ui/Button";
-import { AlertCircle, Loader, Search } from "lucide-react";
+import { AlertCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseStore } from "@/stores/courseStrore";
-// skeleton needs ajustment to match the course card design
-// import { CourseSkeleton, CourseSkeletonGrid } from "@/components/features/public_pages/CourseSkeleton";
+import { CourseSkeletonGrid } from "@/components/features/public/CourseSkeleton";
 
 // MVP: single department (Computer Science) — filters are cosmetic until server-side filters exist.
 const disciplines = ["All Courses", "Computer Science"];
@@ -41,10 +40,14 @@ export default function CoursesPage() {
 
   if( isLoading ) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader className="w-8 h-8 animate-spin text-blue-500" />
-        <span className="ml-2">Loading catalog...</span>
-        {/* <CourseSkeletonGrid count={6} /> */}
+      <div className="mx-auto max-w-7xl px-8 py-24 lg:px-12">
+        <div className="space-y-8">
+          <div className="space-y-4 max-w-3xl">
+            <div className="h-10 w-60 rounded-full bg-surface-low animate-pulse" />
+            <div className="h-5 w-2/3 rounded-full bg-surface-low animate-pulse" />
+          </div>
+          <CourseSkeletonGrid count={6} columns={{ sm: 1, md: 2, lg: 3, xl: 3 }} />
+        </div>
       </div>
     );
   }
