@@ -150,25 +150,38 @@ class _SummarySheetBody extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final item = state.summaries[index];
                     final whenLabel = _formatWhen(item.createdAt);
+                    final maxSummaryHeight =
+                        MediaQuery.sizeOf(context).height * 0.32;
                     return Container(
-                      padding: const EdgeInsets.all(14),
+                      clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(AppRadii.md),
                         border: Border.all(color: scheme.outlineVariant),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            whenLabel,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                            child: Text(
+                              whenLabel,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          StudyMarkdownBody(
-                            data: item.content,
-                            shrinkWrap: true,
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: maxSummaryHeight,
+                            ),
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                              child: StudyMarkdownBody(
+                                data: item.content,
+                                shrinkWrap: true,
+                              ),
+                            ),
                           ),
                         ],
                       ),

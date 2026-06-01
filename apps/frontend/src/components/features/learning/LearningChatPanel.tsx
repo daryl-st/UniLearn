@@ -35,7 +35,7 @@ export function LearningChatPanel({
   }, [messages, isTyping]);
 
   return (
-    <aside className="flex h-full min-h-0 w-full flex-1 flex-col bg-surface-low">
+    <aside className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-surface-low">
       <div className="shrink-0 border-b border-outline-variant/10 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-primary/80" />

@@ -187,8 +187,8 @@ export default function Learning() {
   const instructorSeed = instructorName;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:h-[calc(100dvh-7rem)] lg:max-h-[calc(100dvh-7rem)] lg:flex-row">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:min-h-0">
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto subtle-scrollbar px-4 py-4 md:px-6 md:py-5">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -241,7 +241,7 @@ export default function Learning() {
         </div>
       </section>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col border-t border-outline-variant/10 lg:border-t-0 lg:max-w-[26rem]">
+      <div className="flex max-h-[min(50dvh,calc(100dvh-7rem))] min-h-0 w-full flex-col overflow-hidden border-t border-outline-variant/10 lg:h-[calc(100dvh-7rem)] lg:max-h-[calc(100dvh-7rem)] lg:shrink-0 lg:border-t-0 lg:max-w-[26rem]">
         <div className="flex shrink-0 border-b border-outline-variant/10">
           <button
             type="button"
@@ -277,7 +277,7 @@ export default function Learning() {
             Quiz
           </button>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex h-0 min-h-0 flex-1 flex-col overflow-hidden">
           {sidePanel === 'chat' ? (
             <LearningChatPanel
               courseCode={course.code}
