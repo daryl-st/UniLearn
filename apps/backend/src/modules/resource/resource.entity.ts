@@ -38,6 +38,7 @@ export class Course {
     status: CourseStatus | undefined;
     resources: Resource[] | undefined;
     instructorIds: string[] | undefined;
+    instructorNames: string[] | undefined;
 
     constructor(courseData: CourseType) {
         this.id = courseData.id;

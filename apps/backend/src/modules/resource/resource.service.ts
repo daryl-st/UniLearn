@@ -137,7 +137,7 @@ export class CourseService {
             description: course.description,
             status: course.status,
             instructorId: course.instructorId,
-            instructorNames: course.instructorIds,
+            instructorNames: course.instructorNames,
         }));
     }
 

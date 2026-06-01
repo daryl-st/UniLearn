@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { CheckCircle2, Pencil, Trash2 } from 'lucide-react';
 import { CourseAPI, type CourseCatalogRow } from '@/api/course';
 import { UsersAPI, type SafeUserRow } from '@/api/users';
 import { useCourseStore } from '@/stores/courseStrore';
@@ -194,14 +194,7 @@ export const CourseManagement: React.FC = () => {
             Manage course catalog entries, update statuses, and assign instructors across the active curriculum.
           </p>
         </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-xs font-bold uppercase tracking-[0.2em] text-on-primary shadow-lg shadow-primary/20 transition hover:brightness-110"
-          onClick={resetForm}
-        >
-          <Plus className="h-4 w-4" />
-          New course
-        </button>
+        
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 mb-10">

@@ -254,6 +254,7 @@ function toCourse(row: CourseRow): Course {
     });
     if (row.instructors) {
         course.instructorIds = row.instructors.map((item) => item.instructor.id);
+        course.instructorNames = row.instructors.map((item) => item.instructor.name);
     }
     return course;
 }
