@@ -8,7 +8,12 @@ import os
 import httpx
 
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
-GEMINI_TIMEOUT_SEC = 30.0
+def _embed_timeout_sec() -> float:
+    raw = os.getenv("GEMINI_EMBED_TIMEOUT_SEC", "60").strip()
+    try:
+        return max(10.0, min(120.0, float(raw)))
+    except ValueError:
+        return 60.0
 DEFAULT_EMBED_MODEL = "gemini-embedding-001"
 DEFAULT_EMBED_DIMENSIONS = 768
 
@@ -70,15 +75,22 @@ async def _embed_text_async(text: str, *, task_type: str) -> list[float]:
     if dims != 3072:
         body["outputDimensionality"] = dims
 
-    async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SEC) as client:
-        response = await client.post(url, params={"key": key}, json=body)
-        if response.status_code >= 400:
-            detail = response.text.strip()
-            msg = f"Gemini embedding failed with status {response.status_code}"
-            if detail:
-                msg = f"{msg}: {detail}"
-            raise ValueError(msg)
-        data = response.json()
+    timeout = _embed_timeout_sec()
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(url, params={"key": key}, json=body)
+    except httpx.TimeoutException as exc:
+        raise ValueError(
+            f"Gemini embedding timed out after {timeout:.0f}s. Please retry."
+        ) from exc
+
+    if response.status_code >= 400:
+        detail = response.text.strip()
+        msg = f"Gemini embedding failed with status {response.status_code}"
+        if detail:
+            msg = f"{msg}: {detail}"
+        raise ValueError(msg)
+    data = response.json()
 
     vector = _extract_embedding(data, dims)
     if dims != 3072:

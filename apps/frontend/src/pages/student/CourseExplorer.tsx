@@ -112,7 +112,7 @@ export default function Courses() {
                 </div>
                 <h3 className="font-headline text-4xl font-bold text-white mb-3 leading-tight tracking-tighter">{featured.name}</h3>
                 <p className="text-on-surface-variant max-w-xl text-sm mb-8 leading-relaxed">
-                  {featured.instructorName || featured.instructorId} · {MVP_DEPARTMENT_LABEL}
+                  {(featured.instructorNames && featured.instructorNames.length > 0 ? featured.instructorNames[0] : undefined) || featured.instructorId} · {MVP_DEPARTMENT_LABEL}
                 </p>
 
                 <div className="flex items-center gap-8">
@@ -228,7 +228,7 @@ export default function Courses() {
                 <p className="text-on-surface-variant text-[13px] line-clamp-2 mb-6 leading-relaxed font-mono">{course.code}</p>
                 <div className="mt-auto pt-4 flex items-center justify-between border-t border-outline-variant/5">
                   <span className="text-on-surface-variant font-mono text-[10px] uppercase tracking-wider truncate max-w-[60%]">
-                    {course.instructorName || course.instructorId}
+                    {(course.instructorNames && course.instructorNames.length > 0 ? course.instructorNames[0] : undefined) || course.instructorId}
                   </span>
                   <span className="text-on-surface-variant font-mono text-[10px] px-2 py-0.5 border border-outline-variant/20 rounded-sm uppercase tracking-tighter shrink-0">
                     Dept

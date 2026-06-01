@@ -105,7 +105,7 @@ export default function CourseDetail() {
   }
 
   const thumb = courseThumbUrl(course.id);
-  const instructorLabel = course.instructorName?.trim() || course.instructorId;
+  const instructorLabel = (course.instructorNames && course.instructorNames.length > 0 ? course.instructorNames.join(', ') : undefined) || course.instructorId || 'Unassigned';
 
   return (
     <div className="min-h-full bg-surface">

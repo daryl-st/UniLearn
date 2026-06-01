@@ -162,7 +162,7 @@ export const ContentLibrary: React.FC = () => {
       fd.append('title', title);
       fd.append('type', inferFileType(selectedFile));
       fd.append('courseId', selectedCourseId);
-      fd.append('instructorId', authUser?.id ?? selectedCourse.instructorId);
+      fd.append('instructorId', authUser?.id ?? selectedCourse.instructorId ?? '');
 
       const response = await CourseAPI.uploadResource(fd);
       const ingestNote =

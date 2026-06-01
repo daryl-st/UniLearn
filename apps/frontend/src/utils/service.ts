@@ -1,12 +1,12 @@
-import { GoogleGenAI } from "@google/genai";
-
 // This whole page is just here for now for testing purpose.
-const API_KEY = process.env.GEMINI_API_KEY;
+// import { GoogleGenAI } from "@google/genai";
 
-let genAI: GoogleGenAI | null = null;
+const API_KEY = (import.meta as any).env?.GEMINI_API_KEY;
+
+let genAI: any = null;
 
 if (API_KEY) {
-  genAI = new GoogleGenAI({ apiKey: API_KEY }) as any;
+  // genAI = new GoogleGenAI({ apiKey: API_KEY }) as any;
 }
 
 export async function getChatResponse(message: string, context: string) {
@@ -14,7 +14,7 @@ export async function getChatResponse(message: string, context: string) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
 
-  const model = (genAI as any).getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
   const prompt = `
     You are UniLearn AI Copilot v4.2, a high-precision enterprise learning assistant.

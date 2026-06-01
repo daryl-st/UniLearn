@@ -186,7 +186,7 @@ export default function Dashboard() {
                 </div>
                 <h3 className="font-headline text-3xl font-bold text-white leading-tight">{featured.name}</h3>
                 <p className="text-on-surface-variant text-sm max-w-xl mt-2 font-mono">
-                  Instructor: {featured.instructorName || featured.instructorId}
+                  Instructor: {(featured.instructorNames && featured.instructorNames.length > 0 ? featured.instructorNames[0] : undefined) || featured.instructorId || 'Unassigned'}
                 </p>
               </div>
 
@@ -280,12 +280,12 @@ export default function Dashboard() {
                 </h5>
                 <div className="flex items-center gap-3 mt-4">
                   <img
-                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(course.instructorId)}`}
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(course.instructorId || 'Unassigned')}`}
                     alt=""
                     className="w-6 h-6 rounded-sm grayscale"
                   />
                   <span className="text-[11px] text-on-surface-variant truncate">
-                    {course.instructorName || course.instructorId}
+                    {(course.instructorNames && course.instructorNames.length > 0 ? course.instructorNames[0] : undefined) || course.instructorId || 'Unassigned'}
                   </span>
                   <span className="ml-auto text-on-surface-variant font-mono text-[10px]">Y{course.acadamicYear}</span>
                 </div>

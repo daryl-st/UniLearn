@@ -42,7 +42,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>() (
     persist(
-        (set, get) => ({
+        (set) => ({
             user: null,
             isLoading: true,
             error: null,
@@ -68,14 +68,14 @@ export const useAuthStore = create<AuthState>() (
                 try {
                     const response = await authAPI.register(userData);
                     if ("accessToken" in response && response.accessToken) {
-                        set({ user: userFromAuthResponse(response.user), isLoading: false });
+                        set({ user: userFromAuthResponse((response as any).user), isLoading: false });
                         return { verificationSent: false };
                     }
                     set({ isLoading: false });
                     return {
                         verificationSent: true,
-                        message: response.message ?? "Verification email sent. Please check your inbox.",
-                        devVerificationUrl: response.devVerificationUrl,
+                        message: (response as any).message ?? "Verification email sent. Please check your inbox.",
+                        devVerificationUrl: (response as any).devVerificationUrl,
                     };
                 } catch (err: any) {
                     set({

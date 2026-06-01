@@ -11,7 +11,7 @@ import httpx
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_GEN_MODEL = "gemini-2.5-flash"
 DEFAULT_FALLBACK_MODELS = "gemini-2.5-flash-lite"
-DEFAULT_TIMEOUT_SEC = 45.0
+DEFAULT_TIMEOUT_SEC = 60.0
 
 
 class GeminiApiError(Exception):
