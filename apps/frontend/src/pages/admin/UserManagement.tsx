@@ -338,6 +338,7 @@ export const UserManagement: React.FC = () => {
                   <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Email</span>
                   <input
                     type="email"
+                     placeholder="firstname.lastname@aau.edu.et"
                     value={editForm.email}
                     onChange={(event) => setEditForm((prev) => ({ ...prev, email: event.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-border bg-surface-low px-4 py-3 text-sm text-on-surface"
