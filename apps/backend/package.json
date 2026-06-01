@@ -8,10 +8,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "tsx --test src/modules/resource/cloudinary.utils.test.ts",
-    "db:reset": "prisma migrate reset",
-    "db:deploy": "prisma migrate deploy",
-    "db:pgvector": "tsx scripts/run-ensure-pgvector.ts"
+    "test": "tsx --test src/modules/resource/cloudinary.utils.test.ts src/modules/Auth/aauEmail.test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -33,6 +30,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
+    "nodemailer": "^6.9.4",
     "pg": "^8.19.0",
     "pino": "^10.3.1",
     "streamifier": "^0.1.1",
@@ -47,6 +45,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.1.0",
     "@types/node": "^24.10.15",
+    "@types/nodemailer": "^8.0.0",
     "@types/streamifier": "^0.1.2",
     "prisma": "^7.4.2",
     "ts-node-dev": "^2.0.0",

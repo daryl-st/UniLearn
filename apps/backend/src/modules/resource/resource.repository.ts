@@ -1,4 +1,4 @@
-import type { FileType, ResourceStatus } from "@prisma/client";
+import type { CourseStatus, FileType, ResourceStatus } from "@prisma/client";
 import prisma from "../../config/db.js";
 import { Course, Resource } from "./resource.entity.js";
 import type { IngestChunk } from "../ai/ai.service.js";
@@ -10,7 +10,7 @@ function toResource(row: {
     type: FileType;
     fileUrl: string;
     version: number;
-    instructorId: string;
+    instructorId: string | null;
     courseId: string;
     isDeleted: boolean;
     status: ResourceStatus;
@@ -128,7 +128,7 @@ export class ResourceRepository {
     async delete(data: { id: string }): Promise<Resource | null> {
         const resource = await prisma.resource.delete({ where: { id: data.id } });
         if (!resource) return null;
-        return resource;
+        return toResource(resource);
     }
 
     async updateStatus(resourceId: string, status: ResourceStatus): Promise<void> {
@@ -224,64 +224,145 @@ export class ResourceRepository {
     }
 }
 
+interface CourseRow {
+    id: string;
+    name: string;
+    code: string;
+    description?: string | null;
+    acadamicYear: number;
+    status: CourseStatus;
+    instructorId?: string | null;
+    departmentId: string;
+    instructors?: Array<{
+        instructor: {
+            id: string;
+            name: string;
+        };
+    }>;
+}
+
+function toCourse(row: CourseRow): Course {
+    const course = new Course({
+        id: row.id,
+        name: row.name,
+        code: row.code,
+        acadamicYear: row.acadamicYear,
+        instructorId: row.instructorId ?? undefined,
+        departmentId: row.departmentId,
+        description: row.description ?? undefined,
+        status: row.status,
+    });
+    if (row.instructors) {
+        course.instructorIds = row.instructors.map((item) => item.instructor.id);
+        course.instructorNames = row.instructors.map((item) => item.instructor.name);
+    }
+    return course;
+}
+
 export class CourseRepository {
     async findAll(): Promise<Course[]> {
-        const courses = await prisma.course.findMany();
-        return courses.map(
-            (u) =>
-                new Course({
-                    id: u.id,
-                    name: u.name,
-                    code: u.code,
-                    acadamicYear: u.acadamicYear,
-                    instructorId: u.instructorId ?? "",
-                    departmentId: u.departmentId,
-                }),
-        );
+        const courses = await prisma.course.findMany({
+            include: {
+                instructors: {
+                    include: {
+                        instructor: {
+                            select: { id: true, name: true },
+                        },
+                    },
+                },
+            },
+        });
+        return courses.map(toCourse);
     }
 
     async findOne(data: { id: string }): Promise<Course | null> {
-        const course = await prisma.course.findUnique({ where: { id: data.id } });
-        if (!course) return null;
-        return new Course({
-            id: course.id,
-            name: course.name,
-            code: course.code,
-            acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId ?? "",
-            departmentId: course.departmentId,
+        const course = await prisma.course.findUnique({
+            where: { id: data.id },
+            include: {
+                instructors: {
+                    include: { instructor: { select: { id: true, name: true } } },
+                },
+            },
         });
+        if (!course) return null;
+        return toCourse(course);
     }
 
     async findOneByCode(code: string): Promise<Course | null> {
-        const course = await prisma.course.findUnique({ where: { code: code } });
-        if (!course) return null;
-        return new Course({
-            id: course.id,
-            name: course.name,
-            code: course.code,
-            acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId ?? "",
-            departmentId: course.departmentId,
+        const course = await prisma.course.findUnique({
+            where: { code },
+            include: {
+                instructors: {
+                    include: { instructor: { select: { id: true, name: true } } },
+                },
+            },
         });
+        if (!course) return null;
+        return toCourse(course);
     }
 
     async create(data: {
         name: string;
         code: string;
         acadamicYear: number;
-        instructorId: string;
+        instructorId?: string | undefined;
         departmentId: string;
+        description?: string | undefined;
+        status?: CourseStatus | undefined;
     }): Promise<Course> {
-        const course = await prisma.course.create({ data });
-        return new Course({
+        const createData: Record<string, unknown> = {
+            name: data.name,
+            code: data.code,
+            acadamicYear: data.acadamicYear,
+            departmentId: data.departmentId,
+        };
+        if (data.instructorId !== undefined) createData.instructorId = data.instructorId;
+        if (data.description !== undefined) createData.description = data.description;
+        if (data.status !== undefined) createData.status = data.status;
+
+        const course = await prisma.course.create({ data: createData as any });
+        return toCourse({
             id: course.id,
             name: course.name,
             code: course.code,
+            description: course.description,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId ?? "",
+            instructorId: course.instructorId,
             departmentId: course.departmentId,
+            status: course.status,
+            instructors: [],
         });
+    }
+
+    async update(data: {
+        id: string;
+        name?: string | undefined;
+        code?: string | undefined;
+        acadamicYear?: number | undefined;
+        instructorId?: string | undefined;
+        departmentId?: string | undefined;
+        description?: string | undefined;
+        status?: CourseStatus | undefined;
+    }): Promise<Course | null> {
+        const updateData: Record<string, unknown> = {};
+        if (data.name !== undefined) updateData.name = data.name;
+        if (data.code !== undefined) updateData.code = data.code;
+        if (data.acadamicYear !== undefined) updateData.acadamicYear = data.acadamicYear;
+        if (data.instructorId !== undefined) updateData.instructorId = data.instructorId;
+        if (data.departmentId !== undefined) updateData.departmentId = data.departmentId;
+        if (data.description !== undefined) updateData.description = data.description;
+        if (data.status !== undefined) updateData.status = data.status;
+
+        const course = await prisma.course.update({
+            where: { id: data.id },
+            data: updateData,
+            include: {
+                instructors: {
+                    include: { instructor: { select: { id: true, name: true } } },
+                },
+            },
+        });
+        return toCourse(course);
     }
 
     async delete(data: { id: string }): Promise<Course | null> {
@@ -292,8 +373,10 @@ export class CourseRepository {
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId ?? "",
+            instructorId: course.instructorId ?? undefined,
             departmentId: course.departmentId,
+            description: course.description ?? undefined,
+            status: course.status,
         });
     }
 
@@ -302,55 +385,104 @@ export class CourseRepository {
     }
 
     async countByInstructor(instructorId: string): Promise<number> {
-        return prisma.course.count({
+        return prisma.courseInstructor.count({
             where: { instructorId },
         });
     }
 
     async findByInstructor(instructorId: string): Promise<Course[]> {
         const courses = await prisma.course.findMany({
-            where: { instructorId },
+            where: {
+                instructors: {
+                    some: { instructorId },
+                },
+            },
+            include: {
+                instructors: {
+                    include: { instructor: { select: { id: true, name: true } } },
+                },
+            },
         });
-        return courses.map(
-            (u) =>
-                new Course({
-                    id: u.id,
-                    name: u.name,
-                    code: u.code,
-                    acadamicYear: u.acadamicYear,
-                    instructorId: u.instructorId ?? "",
-                    departmentId: u.departmentId,
-                }),
-        );
+        return courses.map(toCourse);
     }
 
     async getRecentCourses(limit: number = 5): Promise<Course[]> {
         const courses = await prisma.course.findMany({
             orderBy: { createdAt: "desc" },
             take: limit,
+            include: {
+                instructors: {
+                    include: { instructor: { select: { id: true, name: true } } },
+                },
+            },
         });
-        return courses.map(
-            (u) =>
-                new Course({
-                    id: u.id,
-                    name: u.name,
-                    code: u.code,
-                    acadamicYear: u.acadamicYear,
-                    instructorId: u.instructorId ?? "",
-                    departmentId: u.departmentId,
-                }),
-        );
+        return courses.map(toCourse);
     }
 
     async getInstructorCourseStats(): Promise<{ totalCourses: number; mappedCourses: number }> {
         const totalCourses = await prisma.course.count();
         const mappedCourses = await prisma.course.count({
             where: {
-                NOT: {
-                    instructorId: null
-                }
-            }
+                instructors: {
+                    some: {},
+                },
+            },
         });
         return { totalCourses, mappedCourses };
+    }
+
+    async assignInstructor(courseId: string, instructorId: string): Promise<void> {
+        await prisma.courseInstructor.upsert({
+            where: {
+                courseId_instructorId: {
+                    courseId,
+                    instructorId,
+                },
+            },
+            update: {},
+            create: {
+                courseId,
+                instructorId,
+            },
+        });
+    }
+
+    async unassignInstructor(courseId: string, instructorId: string): Promise<void> {
+        await prisma.courseInstructor.delete({
+            where: {
+                courseId_instructorId: {
+                    courseId,
+                    instructorId,
+                },
+            },
+        });
+    }
+
+    async findCourseInstructors(courseId: string): Promise<Array<{ id: string; name: string }>> {
+        const course = await prisma.course.findUnique({
+            where: { id: courseId },
+            include: {
+                instructors: {
+                    include: { instructor: { select: { id: true, name: true } } },
+                },
+            },
+        });
+        if (!course?.instructors) return [];
+        return course.instructors.map((item) => ({
+            id: item.instructor.id,
+            name: item.instructor.name,
+        }));
+    }
+
+    async isInstructorAssigned(courseId: string, instructorId: string): Promise<boolean> {
+        const assignment = await prisma.courseInstructor.findUnique({
+            where: {
+                courseId_instructorId: {
+                    courseId,
+                    instructorId,
+                },
+            },
+        });
+        return Boolean(assignment);
     }
 }

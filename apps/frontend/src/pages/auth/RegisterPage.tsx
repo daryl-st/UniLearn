@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-react';
-import {SiGooglechrome, SiApple} from 'react-icons/si';
+// import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -19,6 +19,9 @@ export default function RegisterPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState('');
+  const [devVerificationUrl, setDevVerificationUrl] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,8 +34,8 @@ export default function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (formData.password.length < 4) { // TODO: edit later
-      setValidationError('Password must be at least 6 characters');
+    if (formData.password.length < 8) {
+      setValidationError('Password must be at least 8 characters');
       return;
     } 
 
@@ -46,7 +49,15 @@ export default function RegisterPage() {
         password: formData.password,
         email: formData.email,
       };
-      await register(userData);
+      const result = await register(userData);
+      if (result.verificationSent) {
+        setVerificationSent(true);
+        setVerificationMessage(
+          result.message ?? 'Verification email sent. Please check your inbox.',
+        );
+        setDevVerificationUrl(result.devVerificationUrl ?? '');
+        return;
+      }
       const u = useAuthStore.getState().user;
       navigate(dashboardPathForBackendRole(asBackendRole(u?.role)), { replace: true });
     } catch (err) {
@@ -143,6 +154,19 @@ export default function RegisterPage() {
               {error || validationError}
             </p>
           ) : null}
+          {verificationSent ? (
+            <div className="rounded-xl border border-green-400/40 bg-green-500/10 px-3 py-2 text-sm text-green-300 space-y-2">
+              <p>{verificationMessage}</p>
+              {devVerificationUrl ? (
+                <p>
+                  Dev link:{' '}
+                  <a href={devVerificationUrl} className="underline break-all">
+                    {devVerificationUrl}
+                  </a>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           {/* Full Name */}
           <div className="flex flex-col gap-1.5">
@@ -168,7 +192,7 @@ export default function RegisterPage() {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-5 h-5" />
               <input 
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
-                placeholder="name@university.edu" 
+                placeholder="firstname.lastname-ug@aau.edu.et" 
                 type="email" 
                 name='email'
                 value={formData.email}
@@ -210,13 +234,13 @@ export default function RegisterPage() {
           </div>
         </form>
 
-        <div className="mt-4 lg:mt-6 flex items-center gap-3">
+        {/* <div className="mt-4 lg:mt-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-border"></div>
           <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">or continue with</span>
           <div className="h-px flex-1 bg-border"></div>
-        </div>
+        </div> */}
 
-        <div className="mt-4 lg:mt-5 grid grid-cols-2 gap-3">
+        {/* <div className="mt-4 lg:mt-5 grid grid-cols-2 gap-3">
           <button className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-input hover:bg-accent transition-all font-semibold text-foreground">
             <SiGooglechrome className="w-5 h-5 text-[#4285F4]" />
             <span>Google</span>
@@ -225,7 +249,7 @@ export default function RegisterPage() {
             <SiApple className="w-5 h-5" />
             <span>Apple</span>
           </button>
-        </div>
+        </div> */}
 
         <div className="mt-4 lg:mt-6 pt-4 lg:pt-5 border-t border-border text-center">
           <p className="text-muted-foreground text-sm">

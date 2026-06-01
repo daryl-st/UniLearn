@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { AuthService } from "./auth.service.js";
+import { AuthService, EmailServiceNotConfiguredError, EmailServiceDeliveryError } from "./auth.service.js";
 import { UserRepository } from "../user/user.repository.js";
-import type { LoginBody, RegisterBody } from "../../schemas/index.js";
+import type { LoginBody, RegisterBody, VerifyEmailQuery } from "../../schemas/index.js";
 import type { AuthRequest } from "../../middlewares/auth.js";
 import { REFRESH_TOKEN_COOKIE_NAME, refreshTokenCookieOptions } from "./auth.cookie.js";
 
@@ -11,20 +11,31 @@ const authService = new AuthService(userRepository);
 export class AuthController {
     async registerUser(req: Request, res: Response) {
         const userData = req.body as RegisterBody;
-        const { user, userProfile, accessToken, refreshToken } =
-            await authService.registerUser(userData);
+        try {
+            const result = await authService.registerUser(userData);
+            return res.status(202).json(result);
+        } catch (err) {
+            if (err instanceof EmailServiceNotConfiguredError) {
+                return res.status(503).json({ message: err.message });
+            }
+            if (err instanceof EmailServiceDeliveryError) {
+                return res.status(502).json({ message: err.message });
+            }
+            throw err;
+        }
+    }
 
-        res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, refreshTokenCookieOptions());
+    async verifyEmail(req: Request, res: Response) {
+        const { token } = (req as Request & { validatedQuery?: VerifyEmailQuery }).validatedQuery ?? {
+            token: String(req.query.token ?? ""),
+        };
 
-        res.status(201).json({
-            user: user.toJson(),
-            userProfile: {
-                studentId: userProfile.studentId,
-                academicYear: userProfile.academicYear,
-                departmentId: userProfile.departmentId,
-            },
-            accessToken,
-        });
+        try {
+            const result = await authService.verifyEmail(token);
+            return res.status(200).json(result);
+        } catch (err) {
+            throw err;
+        }
     }
 
     async loginUser(req: Request, res: Response) {

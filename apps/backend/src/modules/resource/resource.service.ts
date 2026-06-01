@@ -1,6 +1,7 @@
-import type { FileType, IngestStatus } from "@unilearn/shared-types";
+import type { CourseStatus, FileType, IngestStatus } from "@unilearn/shared-types";
 import type { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { Course, Resource } from "./resource.entity.js";
+import prisma from "../../config/db.js";
 import type { UserRepository } from "../user/user.repository.js";
 import { proxyIngestResource, type IngestResponseBody } from "../ai/ai.service.js";
 import { cloudinaryService } from "./cloudinary.service.js";
@@ -123,48 +124,38 @@ export class CourseService {
         private userRepository: UserRepository,
     ) {}
 
-    async getCourses(instructorId?: string): Promise<
-        Array<{
-            id: string;
-            name: string;
-            code: string;
-            acadamicYear: number;
-            instructorId: string;
-            departmentId: string;
-            instructorName: string;
-        }>
-    > {
+    async getCourses(instructorId?: string) {
         const response = instructorId
             ? await this.courseRepository.findByInstructor(instructorId)
             : await this.courseRepository.findAll();
-        const instructorIds = response.map((course) => course.instructorId);
-
-        const instructorNames = await Promise.all(
-            instructorIds.map((id) => this.userRepository.getUserNameById(id)),
-        );
-        return response.map((course, i) => ({
+        return response.map((course) => ({
             id: course.id,
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
             departmentId: course.departmentId,
-            instructorName: instructorNames[i] ?? "",
+            description: course.description,
+            status: course.status,
+            instructorId: course.instructorId,
+            instructorNames: course.instructorNames,
         }));
     }
 
     async getCourseById(data: { id: string }) {
         const course = await this.courseRepository.findOne(data);
         if (!course) return null;
-        const instructorName = await this.userRepository.getUserNameById(course.instructorId);
+        const instructorNames = await this.courseRepository.findCourseInstructors(course.id);
         return {
             id: course.id,
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
             departmentId: course.departmentId,
-            instructorName: instructorName ?? "",
+            description: course.description,
+            status: course.status,
+            instructorId: course.instructorId,
+            instructorNames: instructorNames.map((instructor) => instructor.name),
+            instructors: instructorNames,
         };
     }
 
@@ -173,13 +164,68 @@ export class CourseService {
         code: string;
         acadamicYear: number;
         instructorId: string;
-        departmentId: string;
+        departmentId?: string | undefined;
+        description?: string | undefined;
+        status?: CourseStatus | undefined;
     }): Promise<Course | string> {
         const existing = await this.courseRepository.findOneByCode(data.code);
         if (existing) {
             return "Course Already Exists!";
         }
-        return this.courseRepository.create(data);
+
+        const departmentId = data.departmentId ?? await this.getDefaultDepartmentId();
+        const course = await this.courseRepository.create({
+            name: data.name,
+            code: data.code,
+            acadamicYear: data.acadamicYear,
+            instructorId: data.instructorId,
+            departmentId,
+            description: data.description,
+            status: data.status,
+        });
+        await this.courseRepository.assignInstructor(course.id, data.instructorId);
+        return course;
+    }
+
+    async updateCourse(data: {
+        id: string;
+        name?: string | undefined;
+        code?: string | undefined;
+        acadamicYear?: number | undefined;
+        instructorId?: string | undefined;
+        departmentId?: string | undefined;
+        description?: string | undefined;
+        status?: CourseStatus | undefined;
+    }) {
+        const course = await this.courseRepository.findOne({ id: data.id });
+        if (!course) {
+            return "Course Not Found!";
+        }
+        const updated = await this.courseRepository.update(data);
+        if (data.instructorId) {
+            await this.courseRepository.assignInstructor(data.id, data.instructorId);
+        }
+        return updated;
+    }
+
+    async assignInstructor(courseId: string, instructorId: string) {
+        const course = await this.courseRepository.findOne({ id: courseId });
+        if (!course) return "Course Not Found!";
+
+        const user = await this.userRepository.findUserById(instructorId);
+        if (!user || user.role !== "INSTRUCTOR") {
+            return "Instructor not found or invalid role!";
+        }
+
+        await this.courseRepository.assignInstructor(courseId, instructorId);
+        return true;
+    }
+
+    async unassignInstructor(courseId: string, instructorId: string) {
+        const course = await this.courseRepository.findOne({ id: courseId });
+        if (!course) return "Course Not Found!";
+        await this.courseRepository.unassignInstructor(courseId, instructorId);
+        return true;
     }
 
     async deleteCourse(data: { id: string }): Promise<Course | string> {
@@ -194,6 +240,16 @@ export class CourseService {
             acadamicYear: deleted.acadamicYear,
             instructorId: deleted.instructorId,
             departmentId: deleted.departmentId,
+            description: deleted.description,
+            status: deleted.status,
         });
+    }
+
+    private async getDefaultDepartmentId(): Promise<string> {
+        const department = await prisma.department.findUnique({ where: { code: "CS101" } });
+        if (!department) {
+            throw new Error("Default department CS101 not found. Run seed first.");
+        }
+        return department.id;
     }
 }

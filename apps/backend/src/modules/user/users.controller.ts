@@ -12,6 +12,49 @@ export class UserController {
         res.status(200).json(users.map((u) => u.toJson()));
     };
 
+    async updateUser(req: Request, res: Response) {
+        try {
+            const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            const { email, name, role } = req.body;
+
+            if (!id || !email || !name || !role) {
+                return res.status(400).json({ error: "User id, email, name, and role are required." });
+            }
+
+            if (!["ADMIN", "INSTRUCTOR", "STUDENT"].includes(role)) {
+                return res.status(400).json({ error: "Role must be ADMIN, INSTRUCTOR, or STUDENT." });
+            }
+
+            const user = await userService.updateUser(id, {
+                email,
+                name,
+                role,
+            });
+
+            return res.status(200).json({ user: user.toJson() });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to update user";
+            const status = message === "User not found" ? 404 : message === "Email already registered!" ? 409 : 500;
+            return res.status(status).json({ error: message });
+        }
+    }
+
+    async deleteUser(req: Request, res: Response) {
+        try {
+            const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            if (!id) {
+                return res.status(400).json({ error: "User id is required." });
+            }
+
+            await userService.deleteUser(id);
+            return res.status(204).send();
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to delete user";
+            const status = message === "User not found" ? 404 : message === "Cannot delete an admin user" ? 400 : 500;
+            return res.status(status).json({ error: message });
+        }
+    }
+
     // This is admin functionality. For now let's just create students only with hardcoded logic.
     async createUser(req: Request, res: Response) {
         try {

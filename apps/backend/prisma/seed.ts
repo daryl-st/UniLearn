@@ -12,91 +12,103 @@ async function hashPassword(plain: string): Promise<string> {
 async function main() {
     const passwordHash = await hashPassword(DEMO_PASSWORD);
 
+    await prisma.user.updateMany({
+        data: { isVerified: true },
+    });
+
     const student1 = await prisma.user.upsert({
         where: { email: "John@uni.test" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "John Doe",
             email: "John@uni.test",
             password: passwordHash,
             role: "STUDENT",
+            isVerified: true,
         },
     });
 
     const student2 = await prisma.user.upsert({
         where: { email: "Mary@uni.test" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "Mary Johnson",
             email: "Mary@uni.test",
             password: passwordHash,
             role: "STUDENT",
+            isVerified: true,
         },
     });
 
     const student3 = await prisma.user.upsert({
         where: { email: "Alex@uni.test" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "Alex Chen",
             email: "Alex@uni.test",
             password: passwordHash,
             role: "STUDENT",
+            isVerified: true,
         },
     });
 
     const mobileStudent = await prisma.user.upsert({
         where: { email: "m@aau.edu.et" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "Mobile Test",
             email: "m@aau.edu.et",
             password: passwordHash,
             role: "STUDENT",
+            isVerified: true,
         },
     });
 
     const aauStudent = await prisma.user.upsert({
         where: { email: "student@aau.edu.et" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "AAU Student",
             email: "student@aau.edu.et",
             password: passwordHash,
             role: "STUDENT",
+            isVerified: true,
         },
     });
 
     const instructor1 = await prisma.user.upsert({
         where: { email: "Ins@uni.test" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "Dr. Jane Smith",
             email: "Ins@uni.test",
             password: passwordHash,
             role: "INSTRUCTOR",
+            isVerified: true,
         },
     });
 
     const instructor2 = await prisma.user.upsert({
         where: { email: "Samuel@uni.test" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "Prof. Samuel Alemayehu",
             email: "Samuel@uni.test",
             password: passwordHash,
             role: "INSTRUCTOR",
+            isVerified: true,
         },
     });
 
     const admin = await prisma.user.upsert({
         where: { email: "Admin@uni.test" },
-        update: { password: passwordHash },
+        update: { password: passwordHash, isVerified: true },
         create: {
             name: "Joe Herald",
             email: "Admin@uni.test",
             password: passwordHash,
             role: "ADMIN",
+            isVerified: true,
         },
     });
 
@@ -267,6 +279,19 @@ async function main() {
                 code: c.code,
                 acadamicYear: c.year,
                 departmentId: c.deptId,
+                instructorId: c.instructorProfileId,
+            },
+        });
+        await prisma.courseInstructor.upsert({
+            where: {
+                courseId_instructorId: {
+                    courseId: row.id,
+                    instructorId: c.instructorProfileId,
+                },
+            },
+            update: {},
+            create: {
+                courseId: row.id,
                 instructorId: c.instructorProfileId,
             },
         });

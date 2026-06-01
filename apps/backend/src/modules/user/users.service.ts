@@ -10,6 +10,40 @@ export class UserService {
         return this.userRepository.findAll();
     }
 
+    async updateUser(id: string, data: { name: string; email: string; role: Role }) {
+        const user = await this.userRepository.findUserById(id);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const normalizedEmail = data.email.trim().toLowerCase();
+        if (normalizedEmail !== user.email.toLowerCase()) {
+            const existing = await this.userRepository.findUserByEmail(normalizedEmail);
+            if (existing) {
+                throw new Error("Email already registered!");
+            }
+        }
+
+        return this.userRepository.update(id, {
+            name: data.name.trim(),
+            email: normalizedEmail,
+            role: data.role,
+        });
+    }
+
+    async deleteUser(id: string) {
+        const user = await this.userRepository.findUserById(id);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        if (user.role === "ADMIN") {
+            throw new Error("Cannot delete an admin user");
+        }
+
+        return this.userRepository.delete(id);
+    }
+
     // This should be admin functionality, but for now let's keep it simple.
     // Admins can create instructors and students.
     async createUser(data: {email: string, name: string, password: string, role: Role}) {
@@ -40,6 +74,8 @@ export class UserService {
                     role: data.role,
                     password: hashedPassword,
                     mustChangePassword: true,
+                    isVerified: true,
+                    verificationToken: null,
                 },
             });
 
@@ -100,6 +136,9 @@ export class UserService {
             password: user.password,
             role: user.role,
             mustChangePassword: user.mustChangePassword,
+            isVerified: user.isVerified,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
         });
     }
 }

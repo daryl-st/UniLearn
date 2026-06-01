@@ -71,7 +71,25 @@ export default function CourseDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-full bg-surface p-12 text-on-surface-variant font-mono text-sm">Loading course…</div>
+      <div className="min-h-screen bg-surface px-6 py-12">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <div className="h-10 w-2/5 rounded-full bg-surface-low animate-pulse" />
+          <div className="grid gap-8 lg:grid-cols-12">
+            <div className="lg:col-span-7 space-y-6">
+              <div className="h-96 rounded-[2rem] bg-surface-low animate-pulse" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="h-24 rounded-3xl bg-surface-low animate-pulse" />
+                <div className="h-24 rounded-3xl bg-surface-low animate-pulse" />
+              </div>
+            </div>
+            <div className="lg:col-span-5 space-y-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="h-14 rounded-3xl bg-surface-low animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 

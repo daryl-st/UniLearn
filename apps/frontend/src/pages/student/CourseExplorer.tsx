@@ -30,7 +30,24 @@ export default function Courses() {
 
   if (isLoading && courses.length === 0) {
     return (
-      <div className="p-8 text-on-surface-variant font-mono text-sm">Loading courses…</div>
+      <div className="space-y-8 p-8">
+        <div className="h-10 w-52 rounded-full bg-surface-low animate-pulse" />
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="hidden lg:block lg:col-span-4 space-y-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-14 rounded-2xl bg-surface-low animate-pulse" />
+            ))}
+          </div>
+          <div className="lg:col-span-8 space-y-6">
+            <div className="h-72 rounded-[2rem] bg-surface-low animate-pulse" />
+            <div className="grid gap-6 sm:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-40 rounded-[1.5rem] bg-surface-low animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 

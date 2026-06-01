@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { ROUTES } from "@/lib/route-paths";
+import { PageLoadingSkeleton } from "@/components/ui/PageSkeleton";
 import { asBackendRole, postAuthRedirectPath, type BackendRole } from "@/utils/auth";
 
 type RequireRoleProps = {
@@ -13,11 +14,7 @@ export function RequireRole({ allowed }: RequireRoleProps) {
     const isLoading = useAuthStore((s) => s.isLoading);
 
     if (isLoading) {
-        return (
-            <div className="flex min-h-[40vh] items-center justify-center text-on-surface-variant">
-                Loading…
-            </div>
-        );
+        return <PageLoadingSkeleton />;
     }
 
     if (!user) {

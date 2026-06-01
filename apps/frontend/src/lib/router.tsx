@@ -4,10 +4,12 @@ import { useAuthStore } from "@/stores/authStore";
 import { postAuthRedirectPath } from "@/utils/auth";
 import { ROUTES } from "@/lib/route-paths";
 import { RoleGate } from "@/components/guards/RoleGate";
+import { PageLoadingSkeleton } from "@/components/ui/PageSkeleton";
 
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'));
 const ChangePasswordPage = lazy(() => import('@/pages/auth/ChangePasswordPage'));
 
 // shared page
@@ -36,7 +38,7 @@ function ChangePasswordRoute() {
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!user) return <Navigate to={ROUTES.LOGIN} replace />;
 
   return <ChangePasswordPage />;
@@ -86,7 +88,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <PageLoadingSkeleton />;
 
   if (user) return <Navigate to={postAuthRedirectPath(user)} replace />;
 
@@ -118,6 +120,10 @@ const publicRoutes: RouteEntry[] = [
         <RegisterPage />
       </PublicRoute>
     ),
+  },
+  {
+    path: '/verify-email',
+    element: <VerifyEmailPage />,
   },
   {
     path: ROUTES.CHANGE_PASSWORD,
@@ -293,7 +299,7 @@ const protectedRoutes: RouteEntry[] = [
 export function AppRouter() {
   // TODO: needs refactoring
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<PageLoadingSkeleton />}>
       <AppLayout>
         <Routes>
           {publicRoutes.map((route) => (

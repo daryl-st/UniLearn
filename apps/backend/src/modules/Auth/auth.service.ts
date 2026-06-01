@@ -1,9 +1,20 @@
+import { randomBytes } from "node:crypto";
 import type { UserRepository } from "../user/user.repository.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../../config/db.js";
 import { generateAccessToken, generateRefreshToken } from "./auth.tokens.js";
-import { User, Student } from "../user/user.entity.js";
+import {
+    sendVerificationEmail,
+    EmailServiceNotConfiguredError,
+    EmailServiceDeliveryError,
+} from "../../services/email.service.js";
+import {
+    AAU_STUDENT_EMAIL_ERROR,
+    isAauStudentEmail,
+    normalizeLoginEmail,
+    normalizeStudentEmail,
+} from "./aauEmail.js";
 
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const DEFAULT_DEPARTMENT_CODE = "CS101";
@@ -23,73 +34,93 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
-    /** Public self-registration: always STUDENT regardless of body role. */
+    /** Public self-registration: AAU email + Brevo verification before account activation. */
     async registerUser(data: { email: string; firstName: string; lastName: string; password: string }) {
-        const existingUser = await this.userRepository.findUserByEmail(data.email);
+        const email = normalizeStudentEmail(data.email);
+        if (!isAauStudentEmail(email)) {
+            throw new Error(AAU_STUDENT_EMAIL_ERROR);
+        }
+
+        const existingUser = await this.userRepository.findUserByEmail(email);
         if (existingUser) throw new Error("Email already registered!");
 
-        const department = await prisma.department.findUnique({
-            where: { code: DEFAULT_DEPARTMENT_CODE },
-        });
-        if (!department) throw new Error("Run database seed first");
-
         const hashedPass = await bcrypt.hash(data.password, 10);
-        const name = `${data.firstName} ${data.lastName}`;
+        const token = randomBytes(32).toString("hex");
+        const name = `${data.firstName.trim()} ${data.lastName.trim()}`.trim();
 
-        const { user, profile } = await prisma.$transaction(async (tx) => {
-            const createdUser = await tx.user.create({
-                data: {
-                    email: data.email,
-                    name,
-                    role: "STUDENT",
-                    password: hashedPass,
-                },
-            });
-
-            const studnetId = `UGR/${createdUser.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
-
-            const createdProfile = await tx.studentProfile.create({
-                data: {
-                    id: createdUser.id,
-                    studnetId,
-                    departmentId: department.id,
-                    acadamicYear: 1,
-                },
-            });
-
-            return { user: createdUser, profile: createdProfile };
+        await this.userRepository.create({
+            email,
+            name,
+            role: "STUDENT",
+            password: hashedPass,
+            isVerified: false,
+            verificationToken: token,
         });
 
-        const userEntity = new User({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            password: user.password,
-            role: user.role,
+        const clientOrigin =
+            process.env.CLIENT_ORIGIN?.split(",")[0]?.trim() ?? "http://localhost:5173";
+        const verifyUrl = `${clientOrigin.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
+
+        const emailSent = await this.deliverVerificationEmail(email, verifyUrl);
+
+        return {
+            message: emailSent
+                ? "Verification email sent. Please check your inbox."
+                : "Verification email could not be delivered. Please try again later.",
+            email,
+        };
+    }
+
+    private async deliverVerificationEmail(email: string, verifyUrl: string): Promise<boolean> {
+        try {
+            await sendVerificationEmail(email, verifyUrl);
+            return true;
+        } catch (err) {
+            if (err instanceof EmailServiceNotConfiguredError) {
+                throw err;
+            }
+            if (err instanceof EmailServiceDeliveryError) {
+                throw err;
+            }
+            console.error("[AuthService] Email delivery error", err);
+            throw new EmailServiceDeliveryError(
+                err instanceof Error ? err.message : "Failed to send verification email.",
+            );
+        }
+    }
+
+    async verifyEmail(token: string) {
+        const trimmed = token?.trim();
+        if (!trimmed) throw new Error("Invalid verification token");
+
+        const existingUser = await this.userRepository.findUserByVerificationToken(trimmed);
+        if (!existingUser) throw new Error("Invalid or expired verification link");
+        if (existingUser.isVerified) {
+            return { message: "Your account is already verified. You can now sign in." };
+        }
+
+        await prisma.user.update({
+            where: { id: existingUser.id },
+            data: {
+                isVerified: true,
+                verificationToken: null,
+            },
         });
 
-        const userProfile = new Student({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            password: user.password,
-            role: user.role,
-            studentId: profile.studnetId,
-            departmentId: profile.departmentId,
-            academicYear: profile.acadamicYear,
-        });
-
-        const { accessToken, refreshToken } = await this.issueSession(user.id, user.role);
-
-        return { user: userEntity, userProfile, accessToken, refreshToken };
+        return { message: "Email verified successfully. You can now sign in." };
     }
 
     async loginUser(data: { email: string; password: string }) {
-        const existingUser = await this.userRepository.findUserByEmail(data.email);
+        const email = normalizeLoginEmail(data.email);
+        const existingUser = await this.userRepository.findUserByEmail(email);
         if (!existingUser) throw new Error("User not found!");
 
         const isPassValid = await bcrypt.compare(data.password, existingUser.password);
         if (!isPassValid) throw new Error("Invalid email or password!");
+
+        if (existingUser.role === "STUDENT" && existingUser.isVerified === false) {
+            throw new Error("Please verify your email before logging in.");
+        }
 
         const { accessToken, refreshToken } = await this.issueSession(existingUser.id, existingUser.role);
 
@@ -237,3 +268,5 @@ export class AuthService {
         };
     }
 }
+
+export { EmailServiceNotConfiguredError, EmailServiceDeliveryError };
