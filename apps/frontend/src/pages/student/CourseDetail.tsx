@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Resource } from '@unilearn/shared-types';
-import { CourseAPI, type CourseWithInstructor } from '@/api/course';
+import { CourseAPI, formatCourseInstructorLabel, type CourseWithInstructor } from '@/api/course';
 import { courseThumbUrl } from '@/lib/coursePlaceholders';
 import { isPdfPreviewPending, shouldAttemptPdfPreview } from '@/lib/resourceStatus';
 import { ResourcePdfViewer } from '@/components/features/learning/ResourcePdfViewer';
@@ -105,7 +105,7 @@ export default function CourseDetail() {
   }
 
   const thumb = courseThumbUrl(course.id);
-  const instructorLabel = course.instructorName?.trim() || course.instructorId;
+  const instructorLabel = formatCourseInstructorLabel(course, course.instructorId ?? 'Instructor');
 
   return (
     <div className="min-h-full bg-surface">

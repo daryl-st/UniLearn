@@ -7,6 +7,15 @@ export type CourseWithInstructor = Course & {
 };
 export type CourseCatalogRow = CourseWithInstructor;
 
+export function formatCourseInstructorLabel(
+    course: Pick<CourseWithInstructor, "instructorNames" | "instructorId">,
+    fallback = "Unassigned",
+): string {
+    const names = course.instructorNames?.filter(Boolean);
+    if (names?.length) return names.join(", ");
+    return course.instructorId ?? fallback;
+}
+
 export const CourseAPI = {
     getAllCourses: async () => {
         try {

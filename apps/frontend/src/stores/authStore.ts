@@ -42,7 +42,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>() (
     persist(
-        (set, get) => ({
+        (set) => ({
             user: null,
             isLoading: true,
             error: null,
@@ -71,12 +71,16 @@ export const useAuthStore = create<AuthState>() (
                         set({ user: userFromAuthResponse(response.user), isLoading: false });
                         return { verificationSent: false };
                     }
+                    if ("message" in response) {
+                        set({ isLoading: false });
+                        return {
+                            verificationSent: true,
+                            message: response.message ?? "Verification email sent. Please check your inbox.",
+                            devVerificationUrl: response.devVerificationUrl,
+                        };
+                    }
                     set({ isLoading: false });
-                    return {
-                        verificationSent: true,
-                        message: response.message ?? "Verification email sent. Please check your inbox.",
-                        devVerificationUrl: response.devVerificationUrl,
-                    };
+                    return { verificationSent: true, message: "Registration completed." };
                 } catch (err: any) {
                     set({
                         error: err.message || 'Registration Failed!',
