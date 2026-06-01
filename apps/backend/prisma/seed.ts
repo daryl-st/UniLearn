@@ -12,6 +12,10 @@ async function hashPassword(plain: string): Promise<string> {
 async function main() {
     const passwordHash = await hashPassword(DEMO_PASSWORD);
 
+    await prisma.user.updateMany({
+        data: { isVerified: true },
+    });
+
     const student1 = await prisma.user.upsert({
         where: { email: "John@uni.test" },
         update: { password: passwordHash, isVerified: true },
@@ -275,6 +279,19 @@ async function main() {
                 code: c.code,
                 acadamicYear: c.year,
                 departmentId: c.deptId,
+                instructorId: c.instructorProfileId,
+            },
+        });
+        await prisma.courseInstructor.upsert({
+            where: {
+                courseId_instructorId: {
+                    courseId: row.id,
+                    instructorId: c.instructorProfileId,
+                },
+            },
+            update: {},
+            create: {
+                courseId: row.id,
                 instructorId: c.instructorProfileId,
             },
         });

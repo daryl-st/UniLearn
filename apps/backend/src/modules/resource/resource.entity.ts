@@ -1,4 +1,4 @@
-import type { FileType, Resource as ResourceType, Course as CourseType, ResourceStatus } from "@unilearn/shared-types";
+import type { CourseStatus, FileType, Resource as ResourceType, Course as CourseType, ResourceStatus } from "@unilearn/shared-types";
 import type { Instructor, Student } from "../user/user.entity.js";
 
 export class Resource {
@@ -32,9 +32,12 @@ export class Course {
     name: string;
     code: string;
     acadamicYear: number;
-    instructorId: string;
+    instructorId: string | undefined;
     departmentId: string;
-    resources?: Resource[];
+    description: string | undefined;
+    status: CourseStatus | undefined;
+    resources: Resource[] | undefined;
+    instructorIds: string[] | undefined;
 
     constructor(courseData: CourseType) {
         this.id = courseData.id;
@@ -43,6 +46,8 @@ export class Course {
         this.acadamicYear = courseData.acadamicYear;
         this.instructorId = courseData.instructorId;
         this.departmentId = courseData.departmentId;
+        this.description = courseData.description;
+        this.status = courseData.status;
         if (courseData.resources) {
             this.resources = courseData.resources;
         }

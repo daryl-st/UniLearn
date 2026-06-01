@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { GraduationCap, Mail, Lock, LogIn } from 'lucide-react';
-import { SiGooglechrome, SiApple } from 'react-icons/si';
+import { GraduationCap, Mail, Lock, LogIn, EyeOff, Eye } from 'lucide-react';
+// import { SiGooglechrome, SiApple } from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -15,7 +15,7 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
-
+  const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,12 +148,12 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-foreground/90" htmlFor="password">
                   Password
                 </label>
-                <a
+                {/* <a
                   href="#"
                   className="text-sm font-medium text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 rounded-sm"
                 >
                   Forgot password?
-                </a>
+                </a> */}
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -161,12 +161,19 @@ export default function LoginPage() {
                   className="w-full pl-11 pr-4 py-2.5 lg:py-3 bg-card border border-input text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none placeholder:text-muted-foreground/70"
                   id="password"
                   name='password'
-                  type="password"
+                  type={showPassword ? "text" : "password"} 
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
                   required
                 />
+                    <button 
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors" 
+                type="button"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
               </div>
             </div>
 
@@ -191,15 +198,15 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 lg:mt-8">
+          {/* <div className="mt-5 lg:mt-8">
             <div className="relative flex items-center justify-center mb-5 lg:mb-8">
               <div className="w-full h-px bg-border" />
               <span className="absolute px-4 bg-background text-xs font-medium text-muted-foreground uppercase tracking-widest">
                 Or continue with
               </span>
-            </div>
+            </div> */}
 
-            <div className="grid grid-cols-2 gap-3 lg:gap-4">
+            {/* <div className="grid grid-cols-2 gap-3 lg:gap-4">
               <button className="flex items-center justify-center gap-2 py-2.5 lg:py-3 px-4 bg-card border border-input rounded-lg hover:bg-accent transition-colors">
                 <SiGooglechrome className="w-5 h-5 text-[#4285F4]" />
                 <span className="text-sm font-medium">Google</span>
@@ -209,7 +216,7 @@ export default function LoginPage() {
                 <span className="text-sm font-medium">Apple</span>
               </button>
             </div>
-          </div>
+          </div> */}
 
           <div className="mt-5 lg:mt-10 text-center">
             <p className="text-muted-foreground">

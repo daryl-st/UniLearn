@@ -25,17 +25,7 @@ export const useCourseStore = create<CourseState>() (
                 set({ isLoading: true, error: null });
                 try {
                     const response = await CourseAPI.getAllCourses();
-                    const courses: CourseCatalogRow[] = response.map((course) => ({
-                        id: course.id,
-                        name: course.name,
-                        code: course.code,
-                        acadamicYear: course.acadamicYear,
-                        instructorId: course.instructorId,
-                        departmentId: course.departmentId,
-                        instructorName: course.instructorName,
-                        resources: course.resources,
-                    }));
-                    set({ courses, isLoading: false });
+                    set({ courses: response, isLoading: false });
                 } catch (err: unknown) {
                     set({
                         error: err instanceof Error ? err.message : 'Failed to fetch courses!',

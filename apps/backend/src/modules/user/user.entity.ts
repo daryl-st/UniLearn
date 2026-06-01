@@ -22,7 +22,7 @@ export class User implements UserType {
         this.name = data.name
         this.role = data.role;
         this.mustChangePassword = data.mustChangePassword ?? false;
-        this.isVerified = data.isVerified ?? false;
+        this.isVerified = data.isVerified ?? true;
         this.verificationToken = data.verificationToken ?? undefined;
         if (data.updatedAt) {
             this.updatedAt = data.updatedAt;

@@ -44,9 +44,27 @@ export const createCourseSchema = z.object({
     code: z.string().min(2).max(50),
     acadamicYear: z.number().min(1).max(4),
     instructorId: z.string().uuid(),
-    departmentId: z.string().uuid(),
+    departmentId: z.string().uuid().optional(),
+    description: z.string().max(1000).optional(),
+    status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]).optional(),
 });
 export type createCourseBody = z.infer<typeof createCourseSchema>
+
+export const updateCourseSchema = z.object({
+    name: name.optional(),
+    code: z.string().min(2).max(50).optional(),
+    acadamicYear: z.number().min(1).max(4).optional(),
+    instructorId: z.string().uuid().optional(),
+    departmentId: z.string().uuid().optional(),
+    description: z.string().max(1000).optional(),
+    status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]).optional(),
+});
+export type updateCourseBody = z.infer<typeof updateCourseSchema>
+
+export const assignInstructorSchema = z.object({
+    instructorId: z.string().uuid(),
+});
+export type assignInstructorBody = z.infer<typeof assignInstructorSchema>
 
 export const uploadResourceSchema = z.object({
     title: name,

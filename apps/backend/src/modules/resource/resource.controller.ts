@@ -63,8 +63,8 @@ export class ResourceController {
 
         const authReq = req as AuthRequest;
         if (authReq.user?.role === "INSTRUCTOR") {
-            const course = await courseRepo.findOne({ id: parsed.data.courseId });
-            if (!course || course.instructorId !== authReq.user.userId) {
+            const assigned = await courseRepo.isInstructorAssigned(parsed.data.courseId, authReq.user.userId);
+            if (!assigned) {
                 return res.status(403).json({ error: "Forbidden: Instructor not assigned to this course" });
             }
         }
@@ -157,8 +157,8 @@ export class ResourceController {
         const authReq = req as AuthRequest;
         if (authReq.user?.role === "INSTRUCTOR") {
             resourceDetails.instructorId = authReq.user.userId;
-            const course = await courseRepo.findOne({ id: resourceDetails.courseId });
-            if (!course || course.instructorId !== authReq.user.userId) {
+            const assigned = await courseRepo.isInstructorAssigned(resourceDetails.courseId, authReq.user.userId);
+            if (!assigned) {
                 return res.status(403).json({ error: "Instructor is not assigned to this course." });
             }
         }
@@ -234,16 +234,32 @@ export class ResourceController {
         return res.status(201).json(course);
     }
 
-    async deleteCourse(req: Request, res: Response) {
+    async updateCourse(req: Request, res: Response) {
         const id = paramId(req.params.id);
         if (!id) {
             return res.status(400).json({ error: "Missing course id." });
         }
-        const result = await courseService.deleteCourse({ id });
-        if (typeof result === "string") {
-            return res.status(404).json({ error: result });
+        const updatedCourse = await courseService.updateCourse({ id, ...req.body });
+        if (typeof updatedCourse === "string") {
+            return res.status(404).json({ error: updatedCourse });
         }
-        return res.status(200).json(result);
+        return res.status(200).json(updatedCourse);
+    }
+
+    async assignInstructor(req: Request, res: Response) {
+        const courseId = paramId(req.params.id);
+        if (!courseId) {
+            return res.status(400).json({ error: "Missing course id." });
+        }
+        const { instructorId } = req.body as { instructorId: string };
+        if (!instructorId) {
+            return res.status(400).json({ error: "Missing instructor id." });
+        }
+        const result = await courseService.assignInstructor(courseId, instructorId);
+        if (typeof result === "string") {
+            return res.status(400).json({ error: result });
+        }
+        return res.status(200).json({ ok: true });
     }
 
     async deleteResource(req: Request, res: Response) {
@@ -252,11 +268,48 @@ export class ResourceController {
             return res.status(400).json({ error: "Missing resource id." });
         }
         const { instructorId } = req.body as deleteResourceBody;
-        const resource = await resourceService.deleteResource({ id: resourceId }, instructorId);
-        if (typeof resource === "string") {
-            const status = resource === "Permission Denied!" ? 403 : 404;
-            return res.status(status).json({ error: resource });
+        const result = await resourceService.deleteResource({ id: resourceId }, instructorId);
+        if (typeof result === "string") {
+            const status = result === "Permission Denied!" ? 403 : 404;
+            return res.status(status).json({ error: result });
         }
-        return res.status(200).json(resource);
+        return res.status(200).json(result);
+    }
+
+    async unassignInstructor(req: Request, res: Response) {
+        const courseId = paramId(req.params.id);
+        const instructorId = paramId(req.params.instructorId);
+        if (!courseId || !instructorId) {
+            return res.status(400).json({ error: "Missing course id or instructor id." });
+        }
+        const result = await courseService.unassignInstructor(courseId, instructorId);
+        if (typeof result === "string") {
+            return res.status(400).json({ error: result });
+        }
+        return res.status(200).json({ ok: true });
+    }
+
+    async getCourseInstructors(req: Request, res: Response) {
+        const courseId = paramId(req.params.id);
+        if (!courseId) {
+            return res.status(400).json({ error: "Missing course id." });
+        }
+        const course = await courseService.getCourseById({ id: courseId });
+        if (!course) {
+            return res.status(404).json({ error: "Course not found." });
+        }
+        return res.status(200).json({ instructors: course.instructors ?? [], instructorNames: course.instructorNames ?? [] });
+    }
+
+    async deleteCourse(req: Request, res: Response) {
+        const courseId = paramId(req.params.id);
+        if (!courseId) {
+            return res.status(400).json({ error: "Missing course id." });
+        }
+        const result = await courseService.deleteCourse({ id: courseId });
+        if (typeof result === "string") {
+            return res.status(404).json({ error: result });
+        }
+        return res.status(200).json(result);
     }
 }

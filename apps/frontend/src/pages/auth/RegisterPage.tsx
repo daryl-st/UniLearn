@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-react';
-import {SiGooglechrome, SiApple} from 'react-icons/si';
+// import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -234,13 +234,13 @@ export default function RegisterPage() {
           </div>
         </form>
 
-        <div className="mt-4 lg:mt-6 flex items-center gap-3">
+        {/* <div className="mt-4 lg:mt-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-border"></div>
           <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">or continue with</span>
           <div className="h-px flex-1 bg-border"></div>
-        </div>
+        </div> */}
 
-        <div className="mt-4 lg:mt-5 grid grid-cols-2 gap-3">
+        {/* <div className="mt-4 lg:mt-5 grid grid-cols-2 gap-3">
           <button className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-input hover:bg-accent transition-all font-semibold text-foreground">
             <SiGooglechrome className="w-5 h-5 text-[#4285F4]" />
             <span>Google</span>
@@ -249,7 +249,7 @@ export default function RegisterPage() {
             <SiApple className="w-5 h-5" />
             <span>Apple</span>
           </button>
-        </div>
+        </div> */}
 
         <div className="mt-4 lg:mt-6 pt-4 lg:pt-5 border-t border-border text-center">
           <p className="text-muted-foreground text-sm">

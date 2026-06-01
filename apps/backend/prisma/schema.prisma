@@ -16,13 +16,14 @@ model User {
   name               String
   password           String
   mustChangePassword Boolean            @default(false)
-  isVerified         Boolean            @default(false)
+  isVerified         Boolean            @default(true)
   verificationToken  String?
   instructorProfile  InstructorProfile?
   quizes             Quiz[]
   refreshTokens      RefreshToken[]
   resources          Resource[]
   studentProfile     StudentProfile?
+  courseInstructorAssignments CourseInstructor[]
 
   @@index([email])
 }
@@ -65,16 +66,32 @@ model Course {
   id           String             @id @default(uuid())
   name         String
   code         String             @unique
+  description  String?
   acadamicYear Int
+  status       CourseStatus       @default(ACTIVE)
   departmentId String
   instructorId String?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
   department   Department         @relation(fields: [departmentId], references: [id])
   instructor   InstructorProfile? @relation(fields: [instructorId], references: [id])
+  instructors  CourseInstructor[]
   progress     Progress[]
   resources    Resource[]
 
+  @@index([instructorId])
+}
+
+model CourseInstructor {
+  id           String    @id @default(uuid())
+  courseId     String
+  instructorId String
+  assignedAt   DateTime  @default(now())
+
+  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor   User      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, instructorId])
   @@index([instructorId])
 }
 
@@ -221,6 +238,12 @@ enum Difficulty {
   EASY
   MEDIUM
   HARD
+}
+
+enum CourseStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
 }
 
 enum ResourceStatus {

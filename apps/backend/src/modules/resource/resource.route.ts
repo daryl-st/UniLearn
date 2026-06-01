@@ -3,6 +3,8 @@ import { ResourceController } from "./resource.controller.js";
 import { validateBody } from "../../middlewares/validate.js";
 import {
     createCourseSchema,
+    updateCourseSchema,
+    assignInstructorSchema,
     deleteResourceBodySchema,
     uploadResourceSchema,
 } from "../../schemas/index.js";
@@ -23,6 +25,10 @@ router.get("/resources/:id/file", requireAuth, controller.streamResourceFile);
 router.get("/resources/:id", requireAuth, controller.getResourceById);
 router.delete("/resource/:id", requireAuth, validateBody(deleteResourceBodySchema), controller.deleteResource);
 
+router.put("/:id", requireAuth, authorize("ADMIN"), validateBody(updateCourseSchema), controller.updateCourse);
+router.post("/:id/instructors", requireAuth, authorize("ADMIN"), validateBody(assignInstructorSchema), controller.assignInstructor);
+router.delete("/:id/instructors/:instructorId", requireAuth, authorize("ADMIN"), controller.unassignInstructor);
+router.get("/:id/instructors", requireAuth, authorize("ADMIN"), controller.getCourseInstructors);
 router.delete("/:id", requireAuth, authorize("ADMIN"), controller.deleteCourse);
 router.get("/:id", requireAuth, controller.getCourseById);
 

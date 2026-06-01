@@ -118,7 +118,7 @@ export class AuthService {
         const isPassValid = await bcrypt.compare(data.password, existingUser.password);
         if (!isPassValid) throw new Error("Invalid email or password!");
 
-        if (existingUser.isVerified === false) {
+        if (existingUser.role === "STUDENT" && existingUser.isVerified === false) {
             throw new Error("Please verify your email before logging in.");
         }
 

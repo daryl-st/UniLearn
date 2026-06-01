@@ -41,6 +41,7 @@ export class UserService {
                     password: hashedPassword,
                     mustChangePassword: true,
                     isVerified: true,
+                    verificationToken: null,
                 },
             });
 
