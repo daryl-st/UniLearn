@@ -87,6 +87,50 @@ export const askResourceSchema = z.object({
 });
 export type askResourceBody = z.infer<typeof askResourceSchema>
 
+export const summarizeResourceSchema = z.object({
+    resourceId: z.string().uuid(),
+    maxChunks: z.number().int().min(1).max(30).optional(),
+});
+export type summarizeResourceBody = z.infer<typeof summarizeResourceSchema>;
+
+export const listSummariesQuerySchema = z.object({
+    resourceId: z.string().uuid(),
+});
+export type listSummariesQuery = z.infer<typeof listSummariesQuerySchema>;
+
+export const listChatQuerySchema = z.object({
+    resourceId: z.string().uuid(),
+});
+export type listChatQuery = z.infer<typeof listChatQuerySchema>;
+
+const difficultyEnum = z.enum(["EASY", "MEDIUM", "HARD"]);
+
+export const generateQuizSchema = z.object({
+    resourceId: z.string().uuid(),
+    difficulty: difficultyEnum,
+    title: z.string().min(1).max(200).optional(),
+    maxChunks: z.number().int().min(1).max(30).optional(),
+    questionCount: z.number().int().min(3).max(15).optional(),
+});
+export type generateQuizBody = z.infer<typeof generateQuizSchema>;
+
+export const listQuizzesQuerySchema = z.object({
+    resourceId: z.string().uuid(),
+});
+export type listQuizzesQuery = z.infer<typeof listQuizzesQuerySchema>;
+
+export const submitQuizSchema = z.object({
+    answers: z
+        .array(
+            z.object({
+                questionId: z.string().uuid(),
+                answer: z.string().min(0).max(2000),
+            }),
+        )
+        .min(1),
+});
+export type submitQuizBody = z.infer<typeof submitQuizSchema>;
+
 /** Body for DELETE /course/resource/:id — resource id is in the URL. */
 export const deleteResourceBodySchema = z.object({
     instructorId: z.string().uuid(),

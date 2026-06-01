@@ -27,6 +27,7 @@ const CoursesPage = lazy(() => import('@/pages/public/CoursePage'));
 const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
+const TakeQuizPage = lazy(() => import('@/pages/student/TakeQuizPage'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
 const StudentAnalyticsPage = lazy(() => import('@/pages/student/Analytics'));
 const StudentAiToolsPage = lazy(() => import('@/pages/student/AiTools'));
@@ -160,6 +161,14 @@ const protectedRoutes: RouteEntry[] = [
     element: (
       <RoleGate allowed={['STUDENT']}>
         <LearningWorkspace />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/dashboard/learning/:courseId/:resourceId/quiz/:quizId',
+    element: (
+      <RoleGate allowed={['STUDENT']}>
+        <TakeQuizPage />
       </RoleGate>
     ),
   },

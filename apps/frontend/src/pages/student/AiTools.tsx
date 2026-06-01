@@ -8,7 +8,7 @@ export default function AiTools() {
       <StudentPageHeader
         eyebrow="AI learning tools"
         title="AI Tools"
-        description="Resource Q&A is available in the learning workspace. Summaries and practice quizzes will appear here when those APIs are connected."
+        description="Resource Q&A, AI summaries, and practice quizzes are available from the learning workspace on any indexed course resource."
       />
 
       <AiToolsGrid tools={mockAiTools} />
