@@ -22,6 +22,10 @@ class OrderedChunk(TypedDict):
 _pool: asyncpg.Pool | None = None
 
 
+class DatabaseUnavailableError(Exception):
+    """PostgreSQL is unreachable or misconfigured."""
+
+
 def _database_url() -> str:
     url = os.getenv("DATABASE_URL", "").strip()
     if not url:
@@ -32,7 +36,18 @@ def _database_url() -> str:
 async def _get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(dsn=_database_url(), min_size=1, max_size=5)
+        try:
+            _pool = await asyncpg.create_pool(dsn=_database_url(), min_size=1, max_size=5)
+        except OSError as exc:
+            raise DatabaseUnavailableError(
+                "Cannot connect to PostgreSQL. Check DATABASE_URL and that the "
+                "database is running (Docker db: localhost:5433, native: localhost:5432)."
+            ) from exc
+        except asyncpg.PostgresError as exc:
+            raise DatabaseUnavailableError(
+                "PostgreSQL rejected the connection. Verify DATABASE_URL credentials "
+                "and that the unilearn database exists."
+            ) from exc
     return _pool
 
 

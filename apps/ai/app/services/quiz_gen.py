@@ -4,23 +4,10 @@ import json
 import os
 import re
 
-import httpx
-
+from app.services.gemini_generate import extract_text, generate_content
 from app.services.retrieval import OrderedChunk
 
-GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
-GEMINI_TIMEOUT_SEC = 60.0
-
-
-def _gemini_api_key() -> str:
-    key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not key:
-        raise ValueError("GEMINI_API_KEY is not configured")
-    return key
-
-
-def _gen_model() -> str:
-    return os.getenv("GEMINI_GEN_MODEL", "gemini-2.0-flash").strip() or "gemini-2.0-flash"
+QUIZ_TIMEOUT_SEC = 60.0
 
 
 def _default_max_chunks() -> int:
@@ -47,19 +34,6 @@ def resolve_question_count(requested: int | None) -> int:
     if requested is None:
         return _default_question_count()
     return max(3, min(15, requested))
-
-
-def _extract_text(data: dict) -> str:
-    candidates = data.get("candidates")
-    if not isinstance(candidates, list) or not candidates:
-        return ""
-    content = candidates[0].get("content", {})
-    parts = content.get("parts", [])
-    texts: list[str] = []
-    for p in parts:
-        if isinstance(p, dict) and isinstance(p.get("text"), str):
-            texts.append(p["text"])
-    return "\n".join(texts).strip()
 
 
 def _strip_json_fence(text: str) -> str:
@@ -122,17 +96,8 @@ async def generate_quiz_from_chunks(
         f"Source excerpts:\n{chunks_block}"
     )
 
-    key = _gemini_api_key()
-    model = _gen_model()
-    url = f"{GEMINI_API_BASE}/models/{model}:generateContent"
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    async with httpx.AsyncClient(timeout=GEMINI_TIMEOUT_SEC) as client:
-        response = await client.post(url, params={"key": key}, json=payload)
-        if response.status_code >= 400:
-            raise ValueError(f"Gemini generation failed with status {response.status_code}")
-        data = response.json()
-
-    raw = _extract_text(data)
+    data = await generate_content(prompt, timeout_sec=QUIZ_TIMEOUT_SEC)
+    raw = extract_text(data)
     if not raw:
         raise ValueError("Gemini returned an empty quiz")
 

@@ -36,6 +36,7 @@ model StudentProfile {
   department   Department    @relation(fields: [departmentId], references: [id])
   student      User          @relation(fields: [id], references: [id], onDelete: Cascade)
   summaries    Summary[]
+  chatThreads  ChatThread[]
 }
 
 model InstructorProfile {
@@ -96,6 +97,7 @@ model Resource {
   instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
   chunks              ResourceChunk[]
   summaries           Summary[]
+  chatThreads         ChatThread[]
 
   @@index([courseId])
   @@index([instructorId])
@@ -129,6 +131,33 @@ model Summary {
 
   @@index([resourceId])
   @@index([studnetId])
+}
+
+model ChatThread {
+  id         String        @id @default(uuid())
+  resourceId String
+  studnetId  String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  resource   Resource      @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  student    StudentProfile @relation(fields: [studnetId], references: [id])
+  messages   ChatMessage[]
+
+  @@unique([resourceId, studnetId])
+  @@index([resourceId])
+  @@index([studnetId])
+}
+
+model ChatMessage {
+  id        String          @id @default(uuid())
+  threadId  String
+  role      ChatMessageRole
+  content   String
+  citations Json?
+  createdAt DateTime        @default(now())
+  thread    ChatThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
 }
 
 model Quiz {
@@ -227,4 +256,9 @@ enum ResourceStatus {
   PROCESSING
   READY
   FAILED
+}
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
 }

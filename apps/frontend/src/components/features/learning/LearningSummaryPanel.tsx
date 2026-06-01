@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FileText, Loader2, Sparkles } from 'lucide-react';
 import type { SummaryRecord } from '@unilearn/shared-types';
 import { AiAPI, aiResourceErrorMessage } from '@/api/ai';
+import { MarkdownContent } from '@/components/features/learning/MarkdownContent';
 
 type LearningSummaryPanelProps = {
   resourceId: string;
@@ -101,9 +102,7 @@ export function LearningSummaryPanel({ resourceId, resourceTitle }: LearningSumm
               <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant">
                 {formatWhen(item.createdAt)}
               </p>
-              <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-on-surface">
-                {item.content}
-              </div>
+              <MarkdownContent>{item.content}</MarkdownContent>
             </article>
           ))
         )}

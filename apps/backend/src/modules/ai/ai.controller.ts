@@ -8,6 +8,8 @@ import {
     type ingestResourceBody,
     type listQuizzesQuery,
     listQuizzesQuerySchema,
+    type listChatQuery,
+    listChatQuerySchema,
     type listSummariesQuery,
     listSummariesQuerySchema,
     type submitQuizBody,
@@ -15,12 +17,12 @@ import {
 } from "../../schemas/index.js";
 import {
     AiConfigError,
-    type RagAskResponseBody,
     proxyExtractFile,
     proxyExtractUrl,
     proxyIngestResource,
-    proxyRagAsk,
 } from "./ai.service.js";
+import { ChatRepository } from "./chat.repository.js";
+import { ChatService, ChatServiceError, type ClientChatMessageRecord } from "./chat.service.js";
 import { ResourceRepository } from "../resource/resource.repository.js";
 import { QuizRepository } from "./quiz.repository.js";
 import { QuizService, QuizServiceError } from "./quiz.service.js";
@@ -28,15 +30,27 @@ import { SummaryRepository, type SummaryRecord } from "./summary.repository.js";
 import { SummaryService, SummaryServiceError } from "./summary.service.js";
 
 const summaryRepository = new SummaryRepository();
+const chatRepository = new ChatRepository();
 const quizRepository = new QuizRepository();
 const resourceRepository = new ResourceRepository();
 const summaryService = new SummaryService(summaryRepository, resourceRepository);
+const chatService = new ChatService(chatRepository, resourceRepository);
 const quizService = new QuizService(quizRepository, resourceRepository);
 
 function routeParam(value: string | string[] | undefined): string | null {
     if (typeof value === "string" && value.length > 0) return value;
     if (Array.isArray(value) && typeof value[0] === "string") return value[0];
     return null;
+}
+
+function toChatMessageJson(record: ClientChatMessageRecord) {
+    return {
+        id: record.id,
+        role: record.role,
+        content: record.content,
+        ...(record.citations ? { citations: record.citations } : {}),
+        createdAt: record.createdAt.toISOString(),
+    };
 }
 
 function toSummaryJson(record: SummaryRecord) {
@@ -180,6 +194,35 @@ export class AiController {
                 return;
             }
             res.status(500).json({ error: "Failed to list summaries" });
+        }
+    };
+
+    getChat = async (req: AuthRequest, res: Response): Promise<void> => {
+        try {
+            const userId = req.user?.userId;
+            if (!userId) {
+                res.status(401).json({ error: "Unauthorized" });
+                return;
+            }
+            const parsed = listChatQuerySchema.safeParse(req.query);
+            if (!parsed.success) {
+                res.status(400).json({
+                    error: "Invalid query",
+                    details: parsed.error.flatten(),
+                });
+                return;
+            }
+            const query = parsed.data as listChatQuery;
+            const messages = await chatService.listMessages(userId, query.resourceId);
+            res.status(200).json({
+                messages: messages.map(toChatMessageJson),
+            });
+        } catch (e) {
+            if (e instanceof ChatServiceError) {
+                res.status(e.statusCode).json({ error: e.message });
+                return;
+            }
+            res.status(500).json({ error: "Failed to load chat" });
         }
     };
 
@@ -351,28 +394,31 @@ export class AiController {
 
     askResource = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
-            const body = req.body as askResourceBody;
-            const result = await proxyRagAsk(body.resourceId, body.question, body.topK);
-            if (!result.ok) {
-                res.status(result.status).json(result.body);
+            const userId = req.user?.userId;
+            if (!userId) {
+                res.status(401).json({ error: "Unauthorized" });
                 return;
             }
-            const answerBody = result.body as RagAskResponseBody;
+            const body = req.body as askResourceBody;
+            const result = await chatService.askAndPersist(
+                userId,
+                body.resourceId,
+                body.question,
+                body.topK,
+            );
             res.status(200).json({
-                resourceId: answerBody.resourceId,
-                answer: answerBody.answer,
-                citations: answerBody.citations,
-                usedChunks: answerBody.usedChunks,
+                resourceId: result.resourceId,
+                answer: result.answer,
+                citations: result.citations,
+                usedChunks: result.usedChunks,
+                messages: result.messages.map(toChatMessageJson),
             });
         } catch (e) {
-            if (e instanceof AiConfigError) {
-                res.status(503).json({ error: e.message });
+            if (e instanceof ChatServiceError) {
+                res.status(e.statusCode).json({ error: e.message });
                 return;
             }
-            res.status(502).json({
-                error: "AI service unreachable",
-                detail: e instanceof Error ? e.message : String(e),
-            });
+            res.status(500).json({ error: "Failed to process question" });
         }
     };
 }

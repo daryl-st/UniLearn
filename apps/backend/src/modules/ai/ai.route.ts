@@ -52,6 +52,8 @@ router.post(
 
 router.get("/summaries", ...studentOnly, controller.listSummaries);
 
+router.get("/chat", ...studentOnly, controller.getChat);
+
 router.post(
     "/generate-quiz",
     ...studentOnly,

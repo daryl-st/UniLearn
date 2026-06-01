@@ -21,6 +21,32 @@ export interface ListSummariesResponse {
     summaries: SummaryRecord[];
 }
 
+export interface ChatCitation {
+    chunkIndex: number;
+    pageNumber: number;
+    score: number;
+}
+
+export interface ChatMessageRecord {
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+    citations?: ChatCitation[];
+    createdAt: string;
+}
+
+export interface GetChatResponse {
+    messages: ChatMessageRecord[];
+}
+
+export interface AskResourceResponse {
+    resourceId: string;
+    answer: string;
+    citations: ChatCitation[];
+    usedChunks: number;
+    messages?: ChatMessageRecord[];
+}
+
 /** @deprecated Use CreateSummaryRequest */
 export interface SummaryRequest {
     content: string;

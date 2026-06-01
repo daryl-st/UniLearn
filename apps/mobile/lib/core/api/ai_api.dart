@@ -7,21 +7,56 @@ final aiApiProvider = Provider<AiApi>((ref) {
   return AiApi(ref.watch(dioProvider));
 });
 
+final class ChatMessageRecord {
+  const ChatMessageRecord({
+    required this.id,
+    required this.role,
+    required this.content,
+    required this.createdAt,
+    this.citations,
+  });
+
+  final String id;
+  final String role;
+  final String content;
+  final String createdAt;
+  final List<AskCitation>? citations;
+
+  factory ChatMessageRecord.fromJson(Map<String, dynamic> json) {
+    final citations = json['citations'];
+    return ChatMessageRecord(
+      id: json['id'] as String,
+      role: json['role'] as String,
+      content: json['content'] as String,
+      createdAt: json['createdAt'] as String,
+      citations: citations is List
+          ? citations
+                .whereType<Map<String, dynamic>>()
+                .map(AskCitation.fromJson)
+                .toList()
+          : null,
+    );
+  }
+}
+
 final class AskResourceResponse {
   const AskResourceResponse({
     required this.resourceId,
     required this.answer,
     required this.citations,
     required this.usedChunks,
+    this.messages,
   });
 
   final String resourceId;
   final String answer;
   final List<AskCitation> citations;
   final int usedChunks;
+  final List<ChatMessageRecord>? messages;
 
   factory AskResourceResponse.fromJson(Map<String, dynamic> json) {
     final citations = json['citations'];
+    final messages = json['messages'];
     return AskResourceResponse(
       resourceId: json['resourceId'] as String,
       answer: json['answer'] as String,
@@ -32,6 +67,12 @@ final class AskResourceResponse {
                 .toList()
           : const [],
       usedChunks: (json['usedChunks'] as num?)?.toInt() ?? 0,
+      messages: messages is List
+          ? messages
+                .whereType<Map<String, dynamic>>()
+                .map(ChatMessageRecord.fromJson)
+                .toList()
+          : null,
     );
   }
 }
@@ -340,6 +381,26 @@ class AiApi {
         throw ApiException('Invalid submit response.');
       }
       return QuizAttemptRecord.fromJson(attempt);
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  Future<List<ChatMessageRecord>> getChat(String resourceId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        'ai/chat',
+        queryParameters: {'resourceId': resourceId},
+      );
+      final data = response.data;
+      final messages = data?['messages'];
+      if (messages is! List) {
+        return const [];
+      }
+      return messages
+          .whereType<Map<String, dynamic>>()
+          .map(ChatMessageRecord.fromJson)
+          .toList();
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }

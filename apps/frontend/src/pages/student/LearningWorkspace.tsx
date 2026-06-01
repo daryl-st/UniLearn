@@ -3,7 +3,7 @@ import { ChevronRight, ExternalLink } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { LearningQuizPanel } from '@/components/features/learning/LearningQuizPanel';
 import { LearningSummaryPanel } from '@/components/features/learning/LearningSummaryPanel';
-import type { Resource } from '@unilearn/shared-types';
+import type { ChatMessageRecord, Resource } from '@unilearn/shared-types';
 import { CourseAPI, type CourseWithInstructor } from '@/api/course';
 import { AiAPI, askResourceErrorMessage } from '@/api/ai';
 import { ResourcePdfViewer } from '@/components/features/learning/ResourcePdfViewer';
@@ -29,6 +29,15 @@ export default function Learning() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
+  const welcomeMessage = (resourceTitle: string, courseName: string) =>
+    `You're studying "${resourceTitle}" in ${courseName}. Ask questions about this material and I'll answer using the indexed course content.`;
+
+  const mapChatRecords = (records: ChatMessageRecord[]) =>
+    records.map((m) => ({
+      role: (m.role === 'user' ? 'user' : 'ai') as 'ai' | 'user',
+      content: m.content,
+    }));
+
   useEffect(() => {
     if (!courseId || !resourceId) return;
     let cancelled = false;
@@ -36,9 +45,10 @@ export default function Learning() {
       setLoading(true);
       setError(null);
       try {
-        const [c, r] = await Promise.all([
+        const [c, r, chat] = await Promise.all([
           CourseAPI.getCourse(courseId),
           CourseAPI.getResourcesByCourseId(courseId),
+          AiAPI.getChat(resourceId).catch(() => ({ messages: [] as ChatMessageRecord[] })),
         ]);
         if (cancelled) return;
 
@@ -54,12 +64,18 @@ export default function Learning() {
 
         setCourse(c);
         setSelectedResource(resource);
-        setMessages([
-          {
-            role: 'ai',
-            content: `You're studying "${resource.title}" in ${c.name}. Ask questions about this material and I'll answer using the indexed course content.`,
-          },
-        ]);
+
+        const persisted = mapChatRecords(chat.messages ?? []);
+        if (persisted.length > 0) {
+          setMessages(persisted);
+        } else {
+          setMessages([
+            {
+              role: 'ai',
+              content: welcomeMessage(resource.title, c.name),
+            },
+          ]);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -77,19 +93,29 @@ export default function Learning() {
     const question = input.trim();
     if (!question || !resourceId || !selectedResource) return;
 
-    const userMsg = { role: 'user' as const, content: question };
-    setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
 
     try {
       const response = await AiAPI.askResource({ resourceId, question });
-      setMessages((prev) => [...prev, { role: 'ai', content: response.answer }]);
+      if (response.messages && response.messages.length > 0) {
+        setMessages(mapChatRecords(response.messages));
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'user', content: question },
+          { role: 'ai', content: response.answer },
+        ]);
+      }
     } catch (err) {
       if (import.meta.env.DEV) {
         console.error('askResource failed', err);
       }
-      setMessages((prev) => [...prev, { role: 'ai', content: askResourceErrorMessage(err) }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: question },
+        { role: 'ai', content: askResourceErrorMessage(err) },
+      ]);
     } finally {
       setIsTyping(false);
     }

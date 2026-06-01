@@ -1,7 +1,9 @@
 import type {
+    AskResourceResponse,
     CreateSummaryResponse,
     Difficulty,
     GenerateQuizResponse,
+    GetChatResponse,
     GetQuizAttemptResponse,
     GetQuizResponse,
     ListQuizzesResponse,
@@ -11,14 +13,7 @@ import type {
 } from '@unilearn/shared-types';
 import { api, ApiError } from './client';
 
-export type { SummaryRecord };
-
-export type AskResourceResponse = {
-    resourceId: string;
-    answer: string;
-    citations: Array<{ chunkIndex: number; pageNumber: number; score: number }>;
-    usedChunks: number;
-};
+export type { AskResourceResponse, SummaryRecord };
 
 function messageFromApiData(data: unknown): string | null {
     if (data == null) return null;
@@ -78,6 +73,17 @@ export function aiResourceErrorMessage(err: unknown): string {
 export const askResourceErrorMessage = aiResourceErrorMessage;
 
 export const AiAPI = {
+    getChat: async (resourceId: string) => {
+        try {
+            return await api.get<GetChatResponse>('ai/chat', {
+                params: { resourceId },
+            });
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error('Failed to load chat');
+        }
+    },
+
     askResource: async (body: { resourceId: string; question: string; topK?: number }) => {
         try {
             return await api.post<AskResourceResponse>('ai/ask', body, { timeout: 120_000 });

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile/core/api/ai_api.dart';
+import 'package:mobile/features/ai/presentation/widgets/markdown_body.dart';
 import 'package:mobile/features/ai/providers/resource_summary_provider.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/color_tokens.dart';
@@ -166,9 +166,9 @@ class _SummarySheetBody extends ConsumerWidget {
                                 ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            item.content,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                          StudyMarkdownBody(
+                            data: item.content,
+                            shrinkWrap: true,
                           ),
                         ],
                       ),

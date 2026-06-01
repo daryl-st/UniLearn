@@ -6,10 +6,13 @@ from dotenv import load_dotenv
 # Load apps/ai/.env before reading any configuration from the environment.
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.routes import ask, extract, generate_quiz, health, ingest, rag, summarize
+from app.services.gemini_generate import GeminiApiError
+from app.services.retrieval import DatabaseUnavailableError
 
 
 def _parse_cors_origins() -> list[str]:
@@ -24,6 +27,20 @@ app = FastAPI(
     description="Internal AI / NLP service for UniLearn (Node backend only).",
     version="0.1.0",
 )
+
+
+@app.exception_handler(DatabaseUnavailableError)
+async def database_unavailable_handler(
+    _request: Request, exc: DatabaseUnavailableError
+) -> JSONResponse:
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+
+@app.exception_handler(GeminiApiError)
+async def gemini_api_error_handler(_request: Request, exc: GeminiApiError) -> JSONResponse:
+    status = exc.status_code if 400 <= exc.status_code < 600 else 502
+    return JSONResponse(status_code=status, content={"detail": str(exc)})
+
 
 _origins = _parse_cors_origins()
 if _origins:

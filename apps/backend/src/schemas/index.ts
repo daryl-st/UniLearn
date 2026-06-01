@@ -72,6 +72,11 @@ export const listSummariesQuerySchema = z.object({
 });
 export type listSummariesQuery = z.infer<typeof listSummariesQuerySchema>;
 
+export const listChatQuerySchema = z.object({
+    resourceId: z.string().uuid(),
+});
+export type listChatQuery = z.infer<typeof listChatQuerySchema>;
+
 const difficultyEnum = z.enum(["EASY", "MEDIUM", "HARD"]);
 
 export const generateQuizSchema = z.object({
