@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
@@ -12,8 +13,8 @@ export function generateAccessToken(userId: string, role: string) {
 
 export function generateRefreshToken(userId: string) {
   return jwt.sign(
-    { sub: userId },
+    { sub: userId, jti: randomBytes(16).toString("hex") },
     process.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: "30d" }
+    { expiresIn: "30d" },
   );
 }

@@ -1,6 +1,5 @@
-import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import {
     buildPdfDeliveryUrl,
     buildResourcePublicId,
@@ -18,66 +17,60 @@ import {
 
 describe("cloudinary.utils", () => {
     it("sanitizeFilename replaces unsafe characters", () => {
-        assert.equal(sanitizeFilename("My Lecture Notes.pdf"), "My_Lecture_Notes.pdf");
-        assert.equal(sanitizeFilename("path/to/file.docx"), "file.docx");
+        expect(sanitizeFilename("My Lecture Notes.pdf")).toBe("My_Lecture_Notes.pdf");
+        expect(sanitizeFilename("path/to/file.docx")).toBe("file.docx");
     });
 
     it("buildResourcePublicId includes folder and preserves extension", () => {
         const id = buildResourcePublicId("slides.pptx");
-        assert.match(id, /^unilearn\/resources\/[0-9a-f-]+\/slides\.pptx$/);
+        expect(id).toMatch(/^unilearn\/resources\/[0-9a-f-]+\/slides\.pptx$/);
     });
 
     it("detects pdf and office files", () => {
-        assert.equal(isPdfFile("notes.pdf"), true);
-        assert.equal(isPdfFile("slides.pptx"), false);
-        assert.equal(isOfficeFile("slides.pptx"), true);
-        assert.equal(isOfficeFile("notes.pdf"), false);
-        assert.equal(extensionOf("a.b.c.docx"), ".docx");
+        expect(isPdfFile("notes.pdf")).toBe(true);
+        expect(isPdfFile("slides.pptx")).toBe(false);
+        expect(isOfficeFile("slides.pptx")).toBe(true);
+        expect(isOfficeFile("notes.pdf")).toBe(false);
+        expect(extensionOf("a.b.c.docx")).toBe(".docx");
     });
 
     it("buildPdfDeliveryUrl encodes path segments", () => {
         const url = buildPdfDeliveryUrl("unilearn/resources/id/file.docx", "demo");
-        assert.equal(
-            url,
-            "https://res.cloudinary.com/demo/image/upload/unilearn/resources/id/file.docx",
-        );
+        expect(url).toBe("https://res.cloudinary.com/demo/image/upload/unilearn/resources/id/file.docx");
     });
 
     it("resolveCloudinaryViewerUrl returns the stored URL unchanged", () => {
         const raw =
             "https://res.cloudinary.com/demo/raw/upload/v1/unilearn/resources/id/notes.pdf";
-        assert.equal(resolveCloudinaryViewerUrl(raw, "PDF"), raw);
+        expect(resolveCloudinaryViewerUrl(raw, "PDF")).toBe(raw);
     });
 
     it("buildResourcePublicId omits pdf extension when requested", () => {
         const id = buildResourcePublicId("Motivation.pdf", { omitPdfExtension: true });
-        assert.match(id, /\/Motivation$/);
-        assert.doesNotMatch(id, /\.pdf$/);
+        expect(id).toMatch(/\/Motivation$/);
+        expect(id).not.toMatch(/\.pdf$/);
     });
 
     it("parsePublicIdFromCloudinaryUrl extracts public_id", () => {
-        assert.equal(
+        expect(
             parsePublicIdFromCloudinaryUrl(
                 "https://res.cloudinary.com/demo/raw/upload/v1780253358/unilearn/resources/id/test-viewer",
             ),
-            "unilearn/resources/id/test-viewer",
-        );
-        assert.equal(
+        ).toBe("unilearn/resources/id/test-viewer");
+        expect(
             parsePublicIdFromCloudinaryUrl(
                 "https://res.cloudinary.com/demo/raw/upload/v1780032060/Chapter_3-_Decidability_.pdf",
             ),
-            "Chapter_3-_Decidability_.pdf",
-        );
+        ).toBe("Chapter_3-_Decidability_.pdf");
     });
 
     it("isCloudinaryDeliveryUrl detects Cloudinary hosts", () => {
-        assert.equal(
+        expect(
             isCloudinaryDeliveryUrl(
                 "https://res.cloudinary.com/demo/raw/upload/v1/unilearn/resources/id/notes.pdf",
             ),
-            true,
-        );
-        assert.equal(isCloudinaryDeliveryUrl("https://www.w3.org/test.pdf"), false);
+        ).toBe(true);
+        expect(isCloudinaryDeliveryUrl("https://www.w3.org/test.pdf")).toBe(false);
     });
 
     it("verifyNotificationSignature validates sha1 payload", () => {
@@ -86,18 +79,17 @@ describe("cloudinary.utils", () => {
         const secret = "test-secret";
         const signature = createHash("sha1").update(body + timestamp + secret).digest("hex");
 
-        assert.equal(verifyNotificationSignature(body, timestamp, signature, secret, 999999999), true);
-        assert.equal(verifyNotificationSignature(body, timestamp, "bad", secret, 999999999), false);
+        expect(verifyNotificationSignature(body, timestamp, signature, secret, 999999999)).toBe(true);
+        expect(verifyNotificationSignature(body, timestamp, "bad", secret, 999999999)).toBe(false);
     });
 
     it("isConversionComplete detects eager pdf transformation", () => {
-        assert.equal(
+        expect(
             isConversionComplete({
                 notification_type: "upload",
                 eager: [{ format: "pdf", secure_url: "https://example.com/x.pdf" }],
             }),
-            true,
-        );
-        assert.equal(isConversionFailure({ notification_type: "error" }), true);
+        ).toBe(true);
+        expect(isConversionFailure({ notification_type: "error" })).toBe(true);
     });
 });

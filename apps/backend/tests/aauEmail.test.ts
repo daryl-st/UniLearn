@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import {
     AAU_INSTRUCTOR_EMAIL_REGEX,
     AAU_STUDENT_EMAIL_REGEX,
@@ -12,41 +11,41 @@ import {
 
 describe("aauEmail", () => {
     it("accepts valid AAU undergraduate emails", () => {
-        assert.equal(isAauStudentEmail("john.smith-ug@aau.edu.et"), true);
-        assert.equal(isAauStudentEmail("sara.bekele-ug@aau.edu.et"), true);
-        assert.equal(AAU_STUDENT_EMAIL_REGEX.test("John.Smith-ug@aau.edu.et"), true);
+        expect(isAauStudentEmail("john.smith-ug@aau.edu.et")).toBe(true);
+        expect(isAauStudentEmail("sara.bekele-ug@aau.edu.et")).toBe(true);
+        expect(AAU_STUDENT_EMAIL_REGEX.test("John.Smith-ug@aau.edu.et")).toBe(true);
     });
 
     it("rejects invalid student emails", () => {
-        assert.equal(isAauStudentEmail("john@gmail.com"), false);
-        assert.equal(isAauStudentEmail("johnsmith-ug@aau.edu"), false);
-        assert.equal(isAauStudentEmail("john.smith@aau.edu.et"), false);
-        assert.equal(isAauStudentEmail("john@outlook.com"), false);
+        expect(isAauStudentEmail("john@gmail.com")).toBe(false);
+        expect(isAauStudentEmail("johnsmith-ug@aau.edu")).toBe(false);
+        expect(isAauStudentEmail("john.smith@aau.edu.et")).toBe(false);
+        expect(isAauStudentEmail("john@outlook.com")).toBe(false);
     });
 
     it("normalizes student email to lowercase", () => {
-        assert.equal(normalizeStudentEmail(" John.Smith-UG@aau.edu.et "), "john.smith-ug@aau.edu.et");
+        expect(normalizeStudentEmail(" John.Smith-UG@aau.edu.et ")).toBe("john.smith-ug@aau.edu.et");
     });
 
     it("accepts valid AAU instructor emails", () => {
-        assert.equal(isAauInstructorEmail("john.smith@aau.edu.et"), true);
-        assert.equal(isAauInstructorEmail("sara.bekele@aau.edu.et"), true);
-        assert.equal(AAU_INSTRUCTOR_EMAIL_REGEX.test("Daniel.Kebede@aau.edu.et"), true);
+        expect(isAauInstructorEmail("john.smith@aau.edu.et")).toBe(true);
+        expect(isAauInstructorEmail("sara.bekele@aau.edu.et")).toBe(true);
+        expect(AAU_INSTRUCTOR_EMAIL_REGEX.test("Daniel.Kebede@aau.edu.et")).toBe(true);
     });
 
     it("rejects invalid instructor emails", () => {
-        assert.equal(isAauInstructorEmail("john@gmail.com"), false);
-        assert.equal(isAauInstructorEmail("john.smith-ug@aau.edu.et"), false);
-        assert.equal(isAauInstructorEmail("smith@aau.edu"), false);
-        assert.equal(isAauInstructorEmail("john@outlook.com"), false);
-        assert.equal(isAauInstructorEmail("johnsmith@aau.edu.et"), false);
+        expect(isAauInstructorEmail("john@gmail.com")).toBe(false);
+        expect(isAauInstructorEmail("john.smith-ug@aau.edu.et")).toBe(false);
+        expect(isAauInstructorEmail("smith@aau.edu")).toBe(false);
+        expect(isAauInstructorEmail("john@outlook.com")).toBe(false);
+        expect(isAauInstructorEmail("johnsmith@aau.edu.et")).toBe(false);
     });
 
     it("normalizes instructor email to lowercase", () => {
-        assert.equal(normalizeInstructorEmail(" John.Smith@aau.edu.et "), "john.smith@aau.edu.et");
+        expect(normalizeInstructorEmail(" John.Smith@aau.edu.et ")).toBe("john.smith@aau.edu.et");
     });
 
     it("login email is trimmed only", () => {
-        assert.equal(normalizeLoginEmail(" Admin@uni.test "), "Admin@uni.test");
+        expect(normalizeLoginEmail(" Admin@uni.test ")).toBe("Admin@uni.test");
     });
 });
