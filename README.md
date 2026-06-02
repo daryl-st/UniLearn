@@ -113,4 +113,4 @@ To verify administrative control and instructor material management, use the see
 
 
 
-### notice - it doesn't include mobile app, the folder is aimed for mobile app course submission. 
+### notice - it doesn't include mobile app, the Mobile folder inside the apps folder is aimed for mobile app course submission. 
