@@ -8,6 +8,8 @@ export const ROUTES = {
     ADMIN_DASHBOARD: "/admin/dashboard",
     UNAUTHORIZED: "/unauthorized",
     CHANGE_PASSWORD: "/change-password",
+    FORGOT_PASSWORD: "/forgot-password",
+    RESET_PASSWORD: "/reset-password",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;

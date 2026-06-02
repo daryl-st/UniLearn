@@ -217,11 +217,11 @@ export const Dashboard: React.FC = () => {
           <div className="absolute bottom-8 right-8 flex gap-8">
             <div className="text-right">
               <p className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Pending Reviews</p>
-              <p className="text-xl font-headline font-bold">12</p>
+
             </div>
             <div className="text-right">
               <p className="text-[10px] font-mono text-on-surface-variant uppercase mb-1">Resolved Today</p>
-              <p className="text-xl font-headline font-bold">28</p>
+
             </div>
           </div>
         </div>
