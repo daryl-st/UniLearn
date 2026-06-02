@@ -144,12 +144,19 @@ export const ContentLibrary: React.FC = () => {
       alert('Select a PDF, PowerPoint, or Word file to upload to Cloudinary.');
       return;
     }
+    const instructorId = authUser?.id ?? selectedCourse.instructorId;
+    if (!instructorId) {
+      alert('No instructor is assigned to this course.');
+      return;
+    }
+    const file = selectedFile;
+    const courseId = selectedCourseId;
     setSubmitting(true);
     setUploadSuccess(null);
     try {
       const duplicateFile = resources.some(
         (resource) =>
-          resource.courseId === selectedCourseId &&
+          resource.courseId === courseId &&
           resource.title === title,
       );
       if (duplicateFile) {
@@ -158,11 +165,11 @@ export const ContentLibrary: React.FC = () => {
       }
 
       const fd = new FormData();
-      fd.append('file', selectedFile);
+      fd.append('file', file);
       fd.append('title', title);
-      fd.append('type', inferFileType(selectedFile));
-      fd.append('courseId', selectedCourseId);
-      fd.append('instructorId', authUser?.id ?? selectedCourse.instructorId ?? '');
+      fd.append('type', inferFileType(file));
+      fd.append('courseId', courseId);
+      fd.append('instructorId', instructorId);
 
       const response = await CourseAPI.uploadResource(fd);
       const ingestNote =

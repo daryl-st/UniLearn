@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { LearningQuizPanel } from '@/components/features/learning/LearningQuizPanel';
 import { LearningSummaryPanel } from '@/components/features/learning/LearningSummaryPanel';
 import type { ChatMessageRecord, Resource } from '@unilearn/shared-types';
-import { CourseAPI, type CourseWithInstructor } from '@/api/course';
+import { CourseAPI, formatCourseInstructorLabel, type CourseWithInstructor } from '@/api/course';
 import { AiAPI, askResourceErrorMessage } from '@/api/ai';
 import { ResourcePdfViewer } from '@/components/features/learning/ResourcePdfViewer';
 import { LearningChatPanel } from '@/components/features/learning/LearningChatPanel';
@@ -183,7 +183,7 @@ export default function Learning() {
     );
   }
 
-  const instructorName = (course.instructorNames && course.instructorNames.length > 0 ? course.instructorNames[0] : undefined) || course.instructorId || 'Instructor';
+  const instructorName = formatCourseInstructorLabel(course, 'Instructor');
   const instructorSeed = instructorName;
 
   return (
