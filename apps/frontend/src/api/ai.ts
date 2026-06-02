@@ -56,6 +56,14 @@ export function aiResourceErrorMessage(err: unknown): string {
         ) {
             return 'This material is still being processed. Try again after upload finishes.';
         }
+        if (
+            lower.includes('indexing failed') ||
+            lower.includes('failed to ingest') ||
+            lower.includes('gemini') ||
+            lower.includes('downloaded content does not look like a pdf')
+        ) {
+            return 'AI indexing failed for this resource. Please ask your instructor to reprocess it.';
+        }
         if (err.status === 408) {
             return 'Request timed out — try again with a shorter request.';
         }

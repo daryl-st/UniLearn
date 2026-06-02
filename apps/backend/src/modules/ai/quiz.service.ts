@@ -64,6 +64,12 @@ export class QuizService {
         if (!resource || resource.isDeleted) {
             throw new QuizServiceError("Resource not found.", 404);
         }
+        if (resource.status === "FAILED") {
+            throw new QuizServiceError("AI indexing failed for this resource.", 400);
+        }
+        if (resource.status === "PROCESSING" || resource.status === "QUEUED") {
+            throw new QuizServiceError("Resource is still being processed for AI indexing.", 400);
+        }
 
         const chunkCount = await this.quizRepository.countChunksForResource(resourceId);
         if (chunkCount === 0) {

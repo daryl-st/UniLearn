@@ -28,6 +28,12 @@ export class SummaryService {
         if (!resource || resource.isDeleted) {
             throw new SummaryServiceError("Resource not found.", 404);
         }
+        if (resource.status === "FAILED") {
+            throw new SummaryServiceError("AI indexing failed for this resource.", 400);
+        }
+        if (resource.status === "PROCESSING" || resource.status === "QUEUED") {
+            throw new SummaryServiceError("Resource is still being processed for AI indexing.", 400);
+        }
 
         const chunkCount = await this.summaryRepository.countChunksForResource(resourceId);
         if (chunkCount === 0) {

@@ -19,11 +19,11 @@ import {
     AiConfigError,
     proxyExtractFile,
     proxyExtractUrl,
-    proxyIngestResource,
 } from "./ai.service.js";
 import { ChatRepository } from "./chat.repository.js";
 import { ChatService, ChatServiceError, type ClientChatMessageRecord } from "./chat.service.js";
 import { ResourceRepository } from "../resource/resource.repository.js";
+import { ResourceService } from "../resource/resource.service.js";
 import { QuizRepository } from "./quiz.repository.js";
 import { QuizService, QuizServiceError } from "./quiz.service.js";
 import { SummaryRepository, type SummaryRecord } from "./summary.repository.js";
@@ -33,6 +33,7 @@ const summaryRepository = new SummaryRepository();
 const chatRepository = new ChatRepository();
 const quizRepository = new QuizRepository();
 const resourceRepository = new ResourceRepository();
+const resourceService = new ResourceService(resourceRepository);
 const summaryService = new SummaryService(summaryRepository, resourceRepository);
 const chatService = new ChatService(chatRepository, resourceRepository);
 const quizService = new QuizService(quizRepository, resourceRepository);
@@ -127,12 +128,20 @@ export class AiController {
     ingestResource = async (req: Request, res: Response): Promise<void> => {
         try {
             const body = req.body as ingestResourceBody;
-            const result = await proxyIngestResource(body.resourceId, body.fileUrl);
+            const result = await resourceService.reindexResource({
+                resourceId: body.resourceId,
+                fileUrl: body.fileUrl,
+            });
             if (!result.ok) {
-                res.status(result.status).json(result.body);
+                res.status(result.statusCode).json({ error: result.message });
                 return;
             }
-            res.status(200).json(result.body);
+            res.status(200).json({
+                resourceId: body.resourceId,
+                status: result.status,
+                ingestStatus: result.ingestStatus,
+                chunkCount: result.chunkCount,
+            });
         } catch (e) {
             if (e instanceof AiConfigError) {
                 res.status(503).json({ error: e.message });

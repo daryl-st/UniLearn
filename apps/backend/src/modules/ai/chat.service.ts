@@ -44,6 +44,12 @@ export class ChatService {
         if (!resource || resource.isDeleted) {
             throw new ChatServiceError("Resource not found.", 404);
         }
+        if (resource.status === "FAILED") {
+            throw new ChatServiceError("AI indexing failed for this resource.", 400);
+        }
+        if (resource.status === "PROCESSING" || resource.status === "QUEUED") {
+            throw new ChatServiceError("Resource is still being processed for AI indexing.", 400);
+        }
 
         const chunkCount = await this.chatRepository.countChunksForResource(resourceId);
         if (chunkCount === 0) {

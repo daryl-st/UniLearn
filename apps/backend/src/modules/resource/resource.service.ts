@@ -17,8 +17,20 @@ type UploadResourceSuccess = {
     ingestStatus: IngestStatus;
 };
 type UploadResourceConflict = { ok: false; kind: "conflict"; message: string };
+type ReindexResourceSuccess = {
+    ok: true;
+    status: "READY" | "FAILED";
+    ingestStatus: IngestStatus;
+    chunkCount: number;
+};
+type ReindexResourceFailure = {
+    ok: false;
+    statusCode: number;
+    message: string;
+};
 
 export type UploadResourceResult = UploadResourceSuccess | UploadResourceConflict;
+export type ReindexResourceResult = ReindexResourceSuccess | ReindexResourceFailure;
 
 export class ResourceService {
     constructor(private resourceRepository: ResourceRepository) {}
@@ -37,8 +49,7 @@ export class ResourceService {
         cloudinaryPublicId?: string;
         needsConversion?: boolean;
     }): Promise<UploadResourceResult> {
-        // Viewable immediately for native PDFs; Office files stay PROCESSING until conversion webhook.
-        const initialStatus = data.needsConversion ? "PROCESSING" : "READY";
+        const initialStatus = "PROCESSING";
 
         const resource = await this.resourceRepository.create({
             title: data.title,
@@ -63,21 +74,84 @@ export class ResourceService {
     }
 
     async ingestResourceAsync(resourceId: string, pdfUrl: string): Promise<IngestStatus> {
+        await this.resourceRepository.updateStatus(resourceId, "PROCESSING");
         try {
             const ingest = await proxyIngestResource(resourceId, pdfUrl);
             if (!ingest.ok) {
-                // Keep READY so uploads remain viewable when AI indexing is unavailable.
-                await this.resourceRepository.updateStatus(resourceId, "READY");
+                await this.resourceRepository.updateStatus(resourceId, "FAILED");
                 return "failed";
             }
 
             const body = ingest.body as IngestResponseBody;
-            await this.resourceRepository.upsertChunks(resourceId, body.chunks ?? []);
+            const chunks = body.chunks ?? [];
+            if (chunks.length === 0) {
+                await this.resourceRepository.updateStatus(resourceId, "FAILED");
+                return "failed";
+            }
+            await this.resourceRepository.upsertChunks(resourceId, chunks);
             await this.resourceRepository.updateStatus(resourceId, "READY");
             return "ready";
         } catch {
-            await this.resourceRepository.updateStatus(resourceId, "READY");
+            await this.resourceRepository.updateStatus(resourceId, "FAILED");
             return "failed";
+        }
+    }
+
+    async reindexResource(data: { resourceId: string; fileUrl: string }): Promise<ReindexResourceResult> {
+        const resource = await this.resourceRepository.findOne({ id: data.resourceId });
+        if (!resource) {
+            return { ok: false, statusCode: 404, message: "Resource not found." };
+        }
+
+        const normalizedUrl = data.fileUrl.trim();
+        if (!normalizedUrl) {
+            return { ok: false, statusCode: 400, message: "fileUrl is required." };
+        }
+
+        await this.resourceRepository.updateStatus(resource.id, "PROCESSING");
+        try {
+            const ingest = await proxyIngestResource(resource.id, normalizedUrl);
+            if (!ingest.ok) {
+                await this.resourceRepository.updateStatus(resource.id, "FAILED");
+                const message =
+                    typeof ingest.body === "object" &&
+                    ingest.body !== null &&
+                    "detail" in ingest.body
+                        ? String((ingest.body as { detail: unknown }).detail)
+                        : "Failed to ingest resource.";
+                return {
+                    ok: false,
+                    statusCode: ingest.status,
+                    message,
+                };
+            }
+
+            const body = ingest.body as IngestResponseBody;
+            const chunks = body.chunks ?? [];
+            if (chunks.length === 0) {
+                await this.resourceRepository.updateStatus(resource.id, "FAILED");
+                return {
+                    ok: true,
+                    status: "FAILED",
+                    ingestStatus: "failed",
+                    chunkCount: 0,
+                };
+            }
+            await this.resourceRepository.upsertChunks(resource.id, chunks);
+            await this.resourceRepository.updateStatus(resource.id, "READY");
+            return {
+                ok: true,
+                status: "READY",
+                ingestStatus: "ready",
+                chunkCount: chunks.length,
+            };
+        } catch (error) {
+            await this.resourceRepository.updateStatus(resource.id, "FAILED");
+            return {
+                ok: false,
+                statusCode: 502,
+                message: error instanceof Error ? error.message : "Failed to ingest resource.",
+            };
         }
     }
 
@@ -97,7 +171,7 @@ export class ResourceService {
 
         const pdfUrl = cloudinaryService.buildPdfUrl(publicId);
         await this.resourceRepository.updateFileUrl(resource.id, pdfUrl);
-        await this.resourceRepository.updateStatus(resource.id, "READY");
+        await this.resourceRepository.updateStatus(resource.id, "PROCESSING");
         resource.fileUrl = pdfUrl;
         void this.ingestResourceAsync(resource.id, pdfUrl);
     }
