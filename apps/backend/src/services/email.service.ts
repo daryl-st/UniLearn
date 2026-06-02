@@ -14,33 +14,46 @@ export class EmailServiceDeliveryError extends Error {
     }
 }
 
-const BREVO_EMAIL = process.env.BREVO_EMAIL?.trim() ?? "";
-const BREVO_SMTP_KEY = process.env.BREVO_SMTP_KEY?.trim() ?? "";
-const FROM_EMAIL = process.env.FROM_EMAIL?.trim() ?? "";
+interface EmailConfig {
+    brevoEmail: string;
+    brevoSmtpKey: string;
+    fromEmail: string;
+}
 
-function getTransporter() {
-    if (!BREVO_EMAIL || !BREVO_SMTP_KEY || !FROM_EMAIL) {
+function getEmailConfig(): EmailConfig {
+    const brevoEmail = process.env.BREVO_EMAIL?.trim() ?? "";
+    const brevoSmtpKey = process.env.BREVO_SMTP_KEY?.trim() ?? "";
+    const fromEmail = process.env.FROM_EMAIL?.trim() ?? "";
+
+    if (!brevoEmail || !brevoSmtpKey || !fromEmail) {
         throw new EmailServiceNotConfiguredError();
     }
+
+    return { brevoEmail, brevoSmtpKey, fromEmail };
+}
+
+function getTransporter() {
+    const { brevoEmail, brevoSmtpKey } = getEmailConfig();
 
     return nodemailer.createTransport({
         host: "smtp-relay.brevo.com",
         port: 587,
         secure: false,
         auth: {
-            user: BREVO_EMAIL,
-            pass: BREVO_SMTP_KEY,
+            user: brevoEmail,
+            pass: brevoSmtpKey,
         },
     });
 }
 
 export async function sendEmail(options: SendMailOptions): Promise<void> {
+    const { fromEmail } = getEmailConfig();
     const transporter = getTransporter();
 
     try {
         await transporter.sendMail({
             ...options,
-            from: FROM_EMAIL,
+            from: fromEmail,
         });
         console.info(`[EmailService] Sent email to ${options.to}`);
     } catch (error) {

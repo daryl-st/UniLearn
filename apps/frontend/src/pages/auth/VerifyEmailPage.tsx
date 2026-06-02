@@ -27,10 +27,10 @@ export default function VerifyEmailPage() {
         if (cancelled) return;
         setStatus('success');
         setMessage(result.message);
-      } catch (_err) {
+      } catch (err) {
         if (cancelled) return;
         setStatus('error');
-        setMessage('Login');
+        setMessage(err instanceof Error ? err.message : 'Invalid or expired verification link');
       }
     })();
 

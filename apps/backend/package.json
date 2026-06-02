@@ -8,7 +8,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "tsx --test src/modules/resource/cloudinary.utils.test.ts src/modules/Auth/aauEmail.test.ts"
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

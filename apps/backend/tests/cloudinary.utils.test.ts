@@ -14,7 +14,7 @@ import {
     sanitizeFilename,
     resolveCloudinaryViewerUrl,
     verifyNotificationSignature,
-} from "./cloudinary.utils.js";
+} from "../src/modules/resource/cloudinary.utils.js";
 
 describe("cloudinary.utils", () => {
     it("sanitizeFilename replaces unsafe characters", () => {

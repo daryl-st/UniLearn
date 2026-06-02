@@ -7,6 +7,7 @@ const AUTH_STATUS_MAP: Record<string, number> = {
     "Invalid email or password!": 401,
     "Please verify your email before logging in.": 403,
     "Invalid verification token": 400,
+    "Invalid or expired verification link": 400,
     "Verification link expired": 410,
     "Please use a valid AAU student email (firstname.lastname-ug@aau.edu.et)": 400,
     "Invalid Department": 500,

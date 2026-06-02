@@ -1,31 +1,31 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+    AAU_INSTRUCTOR_EMAIL_REGEX,
     AAU_STUDENT_EMAIL_REGEX,
+    isAauInstructorEmail,
     isAauStudentEmail,
+    normalizeInstructorEmail,
     normalizeLoginEmail,
     normalizeStudentEmail,
-    AAU_INSTRUCTOR_EMAIL_REGEX,
-    isAauInstructorEmail,
-    normalizeInstructorEmail,
-} from "./aauEmail.js";
+} from "../src/modules/Auth/aauEmail.js";
 
 describe("aauEmail", () => {
     it("accepts valid AAU undergraduate emails", () => {
         assert.equal(isAauStudentEmail("john.smith-ug@aau.edu.et"), true);
-        assert.equal(isAauStudentEmail("sara.bekele@aau.edu.et"), true);
-        assert.equal(AAU_STUDENT_EMAIL_REGEX.test("John@aau.edu.et"), true);
+        assert.equal(isAauStudentEmail("sara.bekele-ug@aau.edu.et"), true);
+        assert.equal(AAU_STUDENT_EMAIL_REGEX.test("John.Smith-ug@aau.edu.et"), true);
     });
 
-    it("rejects invalid emails", () => {
+    it("rejects invalid student emails", () => {
         assert.equal(isAauStudentEmail("john@gmail.com"), false);
         assert.equal(isAauStudentEmail("johnsmith-ug@aau.edu"), false);
         assert.equal(isAauStudentEmail("john.smith@aau.edu.et"), false);
         assert.equal(isAauStudentEmail("john@outlook.com"), false);
     });
 
-    it("normalizes email to lowercase", () => {
-        assert.equal(normalizeStudentEmail(" John@aau.edu.et "), "john.smith-ug@aau.edu.et");
+    it("normalizes student email to lowercase", () => {
+        assert.equal(normalizeStudentEmail(" John.Smith-UG@aau.edu.et "), "john.smith-ug@aau.edu.et");
     });
 
     it("accepts valid AAU instructor emails", () => {
