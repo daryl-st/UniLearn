@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Download, Plus, Users, Layers, Database, Activity, Shield, FileCheck, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Download, Plus, Users, Layers, Database, Activity, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardAPI, type AdminStats } from '@/api/dashboard';
 
@@ -138,57 +138,68 @@ export const Dashboard: React.FC = () => {
 
         <div className="col-span-12 lg:col-span-7 bg-surface-low rounded-2xl overflow-hidden border border-border shadow-sm">
           <div className="p-6 border-b border-border flex justify-between items-center">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Recent Administrative Actions</h3>
-            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase tracking-wider">LIVE</span>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Recent Course Additions</h3>
+            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase tracking-wider">Catalog</span>
           </div>
           <div className="divide-y divide-border">
-            {[
-              { icon: Shield, label: 'User role updated', sub: 'Helen Kassa promoted to Instructor by admin account', time: '02m ago', color: 'text-primary' },
-              { icon: FileCheck, label: 'Course record updated', sub: 'CoSc2210 metadata revised and published', time: '14m ago', color: 'text-secondary' },
-              { icon: AlertTriangle, label: 'Pending instructor review', sub: 'New instructor accounts are pending review', time: '31m ago', color: 'text-destructive' },
-            ].map((event, i) => (
-              <div key={i} className="p-5 flex items-center gap-4 hover:bg-primary/10 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-surface border border-border flex items-center justify-center">
-                  <event.icon className={`w-5 h-5 ${event.color}`} />
+            {stats.recentCourses && stats.recentCourses.length > 0 ? (
+              stats.recentCourses.map((course, i) => (
+                <div key={course.id || i} className="p-5 flex items-center gap-4 hover:bg-primary/10 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-surface border border-border flex items-center justify-center font-bold text-primary text-xs uppercase font-mono">
+                    {course.code?.slice(0, 4) || 'COSC'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-on-surface">{course.name}</p>
+                    <p className="text-xs text-on-surface-variant">Course Code: {course.code}</p>
+                  </div>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">
+                    {new Date(course.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-on-surface">{event.label}</p>
-                  <p className="text-xs text-on-surface-variant">{event.sub}</p>
-                </div>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase">{event.time}</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="p-6 text-sm text-on-surface-variant text-center">No recent courses found.</p>
+            )}
           </div>
           <button
             className="w-full py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-colors border-t border-border"
-            onClick={() => navigate('/admin/analytics')}
+            onClick={() => navigate('/admin/courses')}
           >
-            View Full Activity
+            Manage Courses
           </button>
         </div>
 
-        <div className="col-span-12 lg:col-span-5 bg-surface-low p-8 rounded-2xl border border-border shadow-sm">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-8">Governance Overview</h3>
-          <div className="space-y-8">
-            {[
-              { label: 'User Account Validation', sub: '97.8% accounts active and compliant', val: 98, rank: 'HIGH' },
-              { label: 'Course Assignment Coverage', sub: '94.5% courses mapped to instructors', val: 95, rank: 'GOOD' },
-              { label: 'Resource Review Completion', sub: '91.0% course resources recently reviewed', val: 91, rank: 'GOOD' },
-            ].map((item, i) => (
-              <div key={i} className="group">
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <p className="text-sm font-bold text-on-surface">{item.label}</p>
-                    <p className="text-xs text-on-surface-variant">{item.sub}</p>
-                  </div>
-                  <span className="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded uppercase">{item.rank}</span>
-                </div>
-                <div className="w-full bg-surface h-2 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full transition-all duration-1000 rounded-full" style={{ width: `${item.val}%` }}></div>
-                </div>
-              </div>
-            ))}
+        <div className="col-span-12 lg:col-span-5 bg-surface-low rounded-2xl overflow-hidden border border-border shadow-sm">
+          <div className="p-6 border-b border-border flex justify-between items-center">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Recent Resource Activity</h3>
+            <span className="text-[10px] font-bold text-secondary bg-secondary/10 px-2.5 py-1 rounded-full uppercase tracking-wider">Materials</span>
           </div>
+          <div className="divide-y divide-border">
+            {stats.recentResources && stats.recentResources.length > 0 ? (
+              stats.recentResources.map((res, i) => (
+                <div key={res.id || i} className="p-5 flex items-center gap-4 hover:bg-primary/10 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-surface border border-border flex items-center justify-center">
+                    <Database className="w-5 h-5 text-secondary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-on-surface truncate max-w-[200px]">{res.title}</p>
+                    <p className="text-xs text-on-surface-variant uppercase tracking-wider font-mono">{res.type}</p>
+                  </div>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">
+                    {new Date(res.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="p-6 text-sm text-on-surface-variant text-center">No recent resources found.</p>
+            )}
+          </div>
+          <button
+            className="w-full py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-secondary hover:bg-secondary/10 transition-colors border-t border-border"
+            onClick={() => navigate('/admin/analytics')}
+          >
+            View Resource Analytics
+          </button>
         </div>
 
         <div className="col-span-12 h-64 rounded-2xl relative overflow-hidden glass-card">

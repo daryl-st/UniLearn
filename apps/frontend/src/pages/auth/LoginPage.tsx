@@ -135,7 +135,7 @@ export default function LoginPage() {
                   id="email"
                   name='email'
                   type="email"
-                  placeholder="name@university.edu"
+                  placeholder="name@aau.edu.et"
                   value={formData.email}
                   onChange={handleChange}
                   required

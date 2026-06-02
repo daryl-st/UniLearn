@@ -2,6 +2,11 @@ import type { Role } from "@unilearn/shared-types";
 import { UserRepository } from "./user.repository.js"
 import prisma from "../../config/db.js";
 import { User } from "./user.entity.js";
+import {
+    isAauInstructorEmail,
+    normalizeInstructorEmail,
+    AAU_INSTRUCTOR_EMAIL_ERROR,
+} from "../Auth/aauEmail.js";
 
 export class UserService {
     constructor(private userRepository: UserRepository) {}
@@ -58,7 +63,15 @@ export class UserService {
         password: string;
         courseIds?: string[];
     }) {
-        const existing = await this.userRepository.findUserByEmail(data.email);
+        let normalizedEmail = data.email;
+        if (data.role === "INSTRUCTOR") {
+            normalizedEmail = normalizeInstructorEmail(data.email);
+            if (!isAauInstructorEmail(normalizedEmail)) {
+                throw new Error(AAU_INSTRUCTOR_EMAIL_ERROR);
+            }
+        }
+
+        const existing = await this.userRepository.findUserByEmail(normalizedEmail);
         if (existing) {
             throw new Error("Email already registered!");
         }
@@ -69,7 +82,7 @@ export class UserService {
         const user = await prisma.$transaction(async (tx) => {
             const createdUser = await tx.user.create({
                 data: {
-                    email: data.email,
+                    email: normalizedEmail,
                     name: data.name,
                     role: data.role,
                     password: hashedPassword,

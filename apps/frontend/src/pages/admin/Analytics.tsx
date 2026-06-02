@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, Download, TrendingUp, Users, Zap, Database, Shield, Router, Cpu, Globe } from 'lucide-react';
+import { Calendar, Download, Users, Zap, Database, Shield, Router, Cpu, Globe } from 'lucide-react';
 import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip, Cell } from 'recharts';
 import { DashboardAPI, type AdminStats } from '@/api/dashboard';
 
@@ -228,59 +228,12 @@ export const Analytics: React.FC = () => {
       </div>
 
       <section className="grid grid-cols-12 gap-5">
-        <div className="col-span-12 md:col-span-5 bg-surface-low rounded-lg overflow-hidden group border border-border">
-          <div className="h-48 relative overflow-hidden">
-            <img 
-              src="https://picsum.photos/seed/data/800/400" 
-              alt="Data Mesh" 
-              className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-surface-low to-transparent"></div>
-            <div className="absolute bottom-4 left-6">
-              <span className="bg-secondary/20 text-secondary text-[10px] px-2 py-0.5 rounded font-mono uppercase">Predictive</span>
-              <h4 className="text-2xl font-headline font-bold uppercase mt-2">Projected Platform Growth</h4>
-            </div>
+        <div className="bg-primary rounded-lg p-6 col-span-12 flex items-center justify-between text-on-primary">
+          <div>
+            <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-80 mb-1">Department Reach</h5>
+            <p className="text-2xl font-headline font-bold uppercase">Computer Science Platform Active</p>
           </div>
-          <div className="p-6 pt-0">
-            <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-              Forecasting indicates a potential <span className="text-primary font-bold">14.2% increase</span> in user onboarding over the next cycle based on current course activity and engagement trends.
-            </p>
-            <div className="flex items-center justify-between font-mono text-[11px] uppercase border-t border-border pt-4">
-              <span className="text-on-surface-variant">Confidence Index</span>
-              <span className="text-secondary">94% Highly Probable</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-span-12 md:col-span-7 grid grid-cols-2 gap-5">
-          <div className="bg-surface-high rounded-lg p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform border border-border">
-            <h5 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-[0.2em] mb-4">Retention Rate</h5>
-            <div>
-              <p className="text-5xl font-headline font-bold text-on-surface mb-2">88.4<span className="text-primary text-2xl">%</span></p>
-              <div className="flex items-center gap-1 text-secondary text-xs font-mono">
-                <TrendingUp className="w-4 h-4" />
-                <span>+1.2% VS LY</span>
-              </div>
-            </div>
-          </div>
-          <div className="bg-surface-high rounded-lg p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform border border-border">
-            <h5 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-[0.2em] mb-4">Avg. Session</h5>
-            <div>
-              <p className="text-5xl font-headline font-bold text-on-surface mb-2">42<span className="text-primary text-2xl">m</span></p>
-              <div className="flex items-center gap-1 text-on-surface-variant text-xs font-mono">
-                <span className="w-4 h-0.5 bg-on-surface-variant"></span>
-                <span>STABLE</span>
-              </div>
-            </div>
-          </div>
-          <div className="bg-primary rounded-lg p-6 col-span-2 flex items-center justify-between text-on-primary">
-            <div>
-              <h5 className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-80 mb-1">Department Reach</h5>
-              <p className="text-2xl font-headline font-bold uppercase">Computer Science Platform Active</p>
-            </div>
-            <Globe className="w-12 h-12 opacity-20" />
-          </div>
+          <Globe className="w-12 h-12 opacity-20" />
         </div>
       </section>
     </div>

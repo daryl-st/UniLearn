@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Filter, UserPlus, Edit2, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/features/admin/StatCard';
-import { AIInsightCard } from '@/components/features/admin/AlInsightsCard';
 import { CreateUserForm } from '@/components/features/admin/CreateUserForm';
 import type { User } from '@/types/admin';
 import { UsersAPI, type SafeUserRow } from '@/api/users';
@@ -307,8 +306,6 @@ export const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      <AIInsightCard />
-
       {editingUser && (
         <div className="fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center">
           <div className="max-w-lg w-full rounded-3xl bg-surface p-6 border border-border shadow-xl">
@@ -341,6 +338,7 @@ export const UserManagement: React.FC = () => {
                   <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Email</span>
                   <input
                     type="email"
+                     placeholder="firstname.lastname@aau.edu.et"
                     value={editForm.email}
                     onChange={(event) => setEditForm((prev) => ({ ...prev, email: event.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-border bg-surface-low px-4 py-3 text-sm text-on-surface"

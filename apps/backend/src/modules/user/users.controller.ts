@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { UserService } from "./users.service.js";
 import { UserRepository } from "./user.repository.js";
+import { AAU_INSTRUCTOR_EMAIL_ERROR } from "../Auth/aauEmail.js";
 
 const userRepository = new UserRepository();
 const userService = new UserService(userRepository);
@@ -83,7 +84,7 @@ export class UserController {
             });
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Failed to create user";
-            const status = message === "Email already registered!" ? 409 : 500;
+            const status = message === "Email already registered!" ? 409 : (message === AAU_INSTRUCTOR_EMAIL_ERROR ? 400 : 500);
             return res.status(status).json({ error: message });
         }
     }
