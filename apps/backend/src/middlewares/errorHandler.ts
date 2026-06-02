@@ -28,6 +28,10 @@ function statusFromError(err: unknown, message: string): number {
         if (err.code === "P2002") {
             return 409;
         }
+        // Column/table missing — schema out of sync with prisma/schema.prisma
+        if (err.code === "P2021" || err.code === "P2022") {
+            return 503;
+        }
     }
 
     const mapped = AUTH_STATUS_MAP[message];
@@ -38,14 +42,25 @@ function statusFromError(err: unknown, message: string): number {
     return 500;
 }
 
+function prismaSchemaDriftMessage(err: Prisma.PrismaClientKnownRequestError): string {
+    return `Database schema is out of date (${err.code}). Run: cd apps/backend && pnpm exec prisma migrate deploy`;
+}
+
 export function errorHandler(
     err: unknown,
     _req: Request,
     res: Response,
     _next: NextFunction,
 ): void {
+    console.error("[errorHandler]", err);
+
     const message = messageFromError(err);
     let status = statusFromError(err, message);
+
+    if (err instanceof Prisma.PrismaClientKnownRequestError && (err.code === "P2021" || err.code === "P2022")) {
+        res.status(503).json({ message: prismaSchemaDriftMessage(err) });
+        return;
+    }
 
     if (status === 409 && message === "Email already registered!") {
         res.status(status).json({ message });
