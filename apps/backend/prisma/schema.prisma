@@ -18,6 +18,8 @@ model User {
   mustChangePassword Boolean            @default(false)
   isVerified         Boolean            @default(true)
   verificationToken  String?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
   instructorProfile  InstructorProfile?
   quizes             Quiz[]
   refreshTokens      RefreshToken[]

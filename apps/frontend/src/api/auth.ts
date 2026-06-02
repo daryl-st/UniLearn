@@ -124,6 +124,28 @@ export const authAPI = {
             throw new Error("Failed to change password");
         }
     },
+
+    forgotPassword: async (email: string): Promise<{ message: string }> => {
+        try {
+            return await api.post<{ message: string }>("auth/forgot-password", { email }, { skipAuthRefresh: true });
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw new Error(err.message || "Failed to send reset link");
+            }
+            throw new Error("Failed to send reset link");
+        }
+    },
+
+    resetPassword: async (token: string, password: string): Promise<{ message: string }> => {
+        try {
+            return await api.post<{ message: string }>("auth/reset-password", { token, password }, { skipAuthRefresh: true });
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw new Error(err.message || "Failed to reset password");
+            }
+            throw new Error("Failed to reset password");
+        }
+    },
 };
 
 const storedToken = typeof window !== "undefined" ? localStorage.getItem("auth-token") : null;

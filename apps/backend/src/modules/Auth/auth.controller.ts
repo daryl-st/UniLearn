@@ -129,4 +129,36 @@ export class AuthController {
             return res.status(500).json({ error: "Failed to change password" });
         }
     }
+
+    async forgotPassword(req: Request, res: Response) {
+        const { email } = req.body;
+        try {
+            const result = await authService.forgotPassword(email);
+            return res.status(200).json(result);
+        } catch (err) {
+            if (err instanceof EmailServiceNotConfiguredError) {
+                return res.status(503).json({ message: err.message });
+            }
+            if (err instanceof EmailServiceDeliveryError) {
+                return res.status(502).json({ message: err.message });
+            }
+            if (err instanceof Error && err.message === "User not found!") {
+                return res.status(404).json({ message: err.message });
+            }
+            throw err;
+        }
+    }
+
+    async resetPassword(req: Request, res: Response) {
+        const { token, password } = req.body;
+        try {
+            const result = await authService.resetPassword(token, password);
+            return res.status(200).json(result);
+        } catch (err) {
+            if (err instanceof Error && err.message === "Invalid or expired reset token!") {
+                return res.status(400).json({ message: err.message });
+            }
+            throw err;
+        }
+    }
 }

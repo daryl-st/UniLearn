@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { motion } from 'motion/react';
 import {
   LayoutDashboard,
   GraduationCap,
-  BookOpen,
   BarChart3,
   Bot,
   Settings,
@@ -52,7 +52,6 @@ export default function Sidebar() {
   const dashboardItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'courses', label: 'Courses', icon: GraduationCap, path: '/dashboard/courses' },
-    { id: 'learning', label: 'Learning', icon: BookOpen, path: '/dashboard/learning' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/dashboard/analytics' },
     { id: 'ai-tools', label: 'AI Tools', icon: Bot, path: '/dashboard/ai-tools' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' },

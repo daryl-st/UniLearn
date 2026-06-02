@@ -91,3 +91,32 @@ export async function sendVerificationEmail(to: string, verifyUrl: string): Prom
         text: `Welcome to UniLearn. Please verify your email by visiting the link below:\n\n${verifyUrl}`,
     });
 }
+
+export async function sendForgotPasswordEmail(to: string, resetUrl: string): Promise<void> {
+    const html = `
+        <div style="font-family: Arial, sans-serif; color: #111; max-width: 600px; margin: 0 auto; padding: 24px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h1 style="margin: 0; font-size: 28px; color: #0f172a;">UniLearn</h1>
+                <p style="margin: 8px 0 0; color: #475569;">Reset Your Password</p>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+                <h2 style="margin-top: 0; color: #0f172a; font-size: 20px;">Forgot Your Password?</h2>
+                <p style="color: #475569; line-height: 1.6;">You requested a password reset for your UniLearn account. Please click the button below to set a new password. This link is valid for 1 hour.</p>
+                <div style="text-align: center; margin: 24px 0;">
+                    <a href="${resetUrl}" style="display: inline-block; padding: 14px 24px; background: #2563eb; color: #ffffff; border-radius: 8px; text-decoration: none; font-weight: 600;">Reset Password</a>
+                </div>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">If the button above does not work, copy and paste the following link into your browser:</p>
+                <p style="word-break: break-all; color: #0f172a; font-size: 14px;">${resetUrl}</p>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">If you did not request a password reset, you can safely ignore this email.</p>
+            </div>
+        </div>
+    `;
+
+    await sendEmail({
+        to,
+        subject: "Reset Your UniLearn Password",
+        html,
+        text: `You requested a password reset for your UniLearn account. Please reset your password by visiting the link below:\n\n${resetUrl}`,
+    });
+}
+
