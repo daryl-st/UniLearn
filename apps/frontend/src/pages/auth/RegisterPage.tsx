@@ -192,7 +192,7 @@ export default function RegisterPage() {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors w-5 h-5" />
               <input 
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-card text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/70" 
-                placeholder="firstname.lastname-ug@aau.edu.et" 
+                placeholder="name@aau.edu.et" 
                 type="email" 
                 name='email'
                 value={formData.email}
