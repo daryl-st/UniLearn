@@ -84,3 +84,28 @@ To verify the system, open the browser and follow this sequence:
    * Enter a new secure password, confirm it, and submit.
    * The page will clear your session and redirect you back to `/login` after 3 seconds.
    * Log in with your email and new password successfully!
+
+---
+
+## 👥 Step 3: Admin & Instructor Course Assignment Walkthrough
+
+To verify administrative control and instructor material management, use the seeded demo accounts:
+
+### 1. Assigning an Instructor (Admin Workflow)
+1. Navigate to the login page and sign in using the pre-seeded **Admin** credentials:
+   * **Email**: `Admin@uni.test`
+   * **Password**: `12345678`
+2. Once on the **Admin Hub / Ops Console**, select the **User Management** tab on the sidebar to view all registered students and instructors.
+3. Select **Course Management** on the sidebar to view all created university courses.
+4. Select a course (e.g., *Programming Fundamentals*) and click **Assign Instructor**.
+5. Select **Dr. Jane Smith** or **Prof. Samuel Alemayehu** from the instructor dropdown menu and click **Assign**.
+6. Log out of the Admin console.
+
+### 2. Uploading Study Materials (Instructor Workflow)
+1. Sign in using the pre-seeded **Instructor** credentials:
+   * **Email**: `Ins@uni.test`
+   * **Password**: `12345678`
+2. On your **Instructor Console / teaching dashboard**, you will see your active course assignments (e.g., *Artificial Intelligence* or *Programming Fundamentals*).
+3. Select the course and click **Upload Resource**.
+4. Drag or select a lecture PDF, slides (`.pptx`), or worksheet (`.docx`, `pdf`), then click **Upload**.
+5. The system will ingest, chunk, and index the file. Once it shifts to a `READY` state, it is fully accessible to all enrolled student dashboards!
