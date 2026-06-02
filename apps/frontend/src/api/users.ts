@@ -5,6 +5,7 @@ export type SafeUserRow = {
     name: string;
     email: string;
     role: string;
+    isVerified?: boolean;
     mustChangePassword?: boolean;
     createdAt?: string;
     updatedAt?: string;
@@ -40,6 +41,29 @@ export const UsersAPI = {
         } catch (err) {
             if (err instanceof ApiError) throw err;
             throw new Error("Creating user failed!");
+        }
+    },
+
+    update: async (id: string, body: {
+        name: string;
+        email: string;
+        role: "ADMIN" | "INSTRUCTOR" | "STUDENT";
+    }) => {
+        try {
+            const response = await api.put<{ user: SafeUserRow }>(`users/${id}`, body);
+            return response.user;
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error("Updating user failed!");
+        }
+    },
+
+    remove: async (id: string) => {
+        try {
+            await api.delete<void>(`users/${id}`);
+        } catch (err) {
+            if (err instanceof ApiError) throw err;
+            throw new Error("Deleting user failed!");
         }
     },
 };

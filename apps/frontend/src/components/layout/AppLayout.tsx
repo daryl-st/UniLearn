@@ -106,7 +106,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div
             className={
               isLearning
-                ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+                ? 'flex h-0 min-h-0 flex-1 flex-col overflow-hidden'
                 : 'flex-1 overflow-y-auto custom-scrollbar px-4 py-6 md:px-8 md:py-8 lg:px-10'
             }
           >

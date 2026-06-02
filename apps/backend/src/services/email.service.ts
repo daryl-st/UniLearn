@@ -1,0 +1,122 @@
+import nodemailer, { type SendMailOptions } from "nodemailer";
+
+export class EmailServiceNotConfiguredError extends Error {
+    constructor() {
+        super("Email service is not configured. Set BREVO_EMAIL, BREVO_SMTP_KEY, and FROM_EMAIL.");
+        this.name = "EmailServiceNotConfiguredError";
+    }
+}
+
+export class EmailServiceDeliveryError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "EmailServiceDeliveryError";
+    }
+}
+
+interface EmailConfig {
+    brevoEmail: string;
+    brevoSmtpKey: string;
+    fromEmail: string;
+}
+
+function getEmailConfig(): EmailConfig {
+    const brevoEmail = process.env.BREVO_EMAIL?.trim() ?? "";
+    const brevoSmtpKey = process.env.BREVO_SMTP_KEY?.trim() ?? "";
+    const fromEmail = process.env.FROM_EMAIL?.trim() ?? "";
+
+    if (!brevoEmail || !brevoSmtpKey || !fromEmail) {
+        throw new EmailServiceNotConfiguredError();
+    }
+
+    return { brevoEmail, brevoSmtpKey, fromEmail };
+}
+
+function getTransporter() {
+    const { brevoEmail, brevoSmtpKey } = getEmailConfig();
+
+    return nodemailer.createTransport({
+        host: "smtp-relay.brevo.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: brevoEmail,
+            pass: brevoSmtpKey,
+        },
+    });
+}
+
+export async function sendEmail(options: SendMailOptions): Promise<void> {
+    const { fromEmail } = getEmailConfig();
+    const transporter = getTransporter();
+
+    try {
+        await transporter.sendMail({
+            ...options,
+            from: fromEmail,
+        });
+        console.info(`[EmailService] Sent email to ${options.to}`);
+    } catch (error) {
+        console.error("[EmailService] Failed to send email", error);
+        throw new EmailServiceDeliveryError(
+            error instanceof Error ? error.message : "Failed to send email via Brevo SMTP.",
+        );
+    }
+}
+
+export async function sendVerificationEmail(to: string, verifyUrl: string): Promise<void> {
+    const html = `
+        <div style="font-family: Arial, sans-serif; color: #111; max-width: 600px; margin: 0 auto; padding: 24px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h1 style="margin: 0; font-size: 28px; color: #0f172a;">UniLearn</h1>
+                <p style="margin: 8px 0 0; color: #475569;">Welcome to UniLearn</p>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+                <h2 style="margin-top: 0; color: #0f172a; font-size: 20px;">Verify Your UniLearn Account</h2>
+                <p style="color: #475569; line-height: 1.6;">Welcome to UniLearn. Please verify your email to activate your account.</p>
+                <div style="text-align: center; margin: 24px 0;">
+                    <a href="${verifyUrl}" style="display: inline-block; padding: 14px 24px; background: #2563eb; color: #ffffff; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify Your Email</a>
+                </div>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">If the button above does not work, copy and paste the following link into your browser:</p>
+                <p style="word-break: break-all; color: #0f172a; font-size: 14px;">${verifyUrl}</p>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">If you did not create this account, you can safely ignore this email.</p>
+            </div>
+        </div>
+    `;
+
+    await sendEmail({
+        to,
+        subject: "Verify Your UniLearn Account",
+        html,
+        text: `Welcome to UniLearn. Please verify your email by visiting the link below:\n\n${verifyUrl}`,
+    });
+}
+
+export async function sendForgotPasswordEmail(to: string, resetUrl: string): Promise<void> {
+    const html = `
+        <div style="font-family: Arial, sans-serif; color: #111; max-width: 600px; margin: 0 auto; padding: 24px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h1 style="margin: 0; font-size: 28px; color: #0f172a;">UniLearn</h1>
+                <p style="margin: 8px 0 0; color: #475569;">Reset Your Password</p>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+                <h2 style="margin-top: 0; color: #0f172a; font-size: 20px;">Forgot Your Password?</h2>
+                <p style="color: #475569; line-height: 1.6;">You requested a password reset for your UniLearn account. Please click the button below to set a new password. This link is valid for 1 hour.</p>
+                <div style="text-align: center; margin: 24px 0;">
+                    <a href="${resetUrl}" style="display: inline-block; padding: 14px 24px; background: #2563eb; color: #ffffff; border-radius: 8px; text-decoration: none; font-weight: 600;">Reset Password</a>
+                </div>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6;">If the button above does not work, copy and paste the following link into your browser:</p>
+                <p style="word-break: break-all; color: #0f172a; font-size: 14px;">${resetUrl}</p>
+                <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">If you did not request a password reset, you can safely ignore this email.</p>
+            </div>
+        </div>
+    `;
+
+    await sendEmail({
+        to,
+        subject: "Reset Your UniLearn Password",
+        html,
+        text: `You requested a password reset for your UniLearn account. Please reset your password by visiting the link below:\n\n${resetUrl}`,
+    });
+}
+

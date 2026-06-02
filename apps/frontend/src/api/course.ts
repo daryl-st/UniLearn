@@ -1,10 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { api, ApiError } from "./client";
-import type { Course, CreateCourseInput, Resource, UploadResourceResponse } from "@unilearn/shared-types";
+import type { Course, CreateCourseInput, Resource, UploadResourceResponse, UpdateCourseInput } from "@unilearn/shared-types";
 
-// Row from GET /course and GET /course/:id (includes display name when backend sends it).
-export type CourseWithInstructor = Course & { instructorName?: string };
+export type CourseWithInstructor = Course & {
+    instructorNames?: string[];
+};
 export type CourseCatalogRow = CourseWithInstructor;
+
+export function formatCourseInstructorLabel(
+    course: Pick<CourseWithInstructor, "instructorNames" | "instructorId">,
+    fallback = "Unassigned",
+): string {
+    const names = course.instructorNames?.filter(Boolean);
+    if (names?.length) return names.join(", ");
+    return course.instructorId ?? fallback;
+}
 
 export const CourseAPI = {
     getAllCourses: async () => {
@@ -87,6 +97,18 @@ export const CourseAPI = {
         }
     },
 
+    updateCourse: async (courseId: string, courseData: UpdateCourseInput) => {
+        try {
+            return await api.put<Course>(`course/${encodeURIComponent(courseId)}`, courseData);
+        } catch (err) {
+            if (err instanceof ApiError) {
+                if (err.status == 404) throw new Error("Not Found!");
+                throw err;
+            }
+            throw new Error("Updating course failed!");
+        }
+    },
+
     deleteCourse: async (courseId: string) => {
         try {
             return await api.delete<Course>(`course/${encodeURIComponent(courseId)}`);
@@ -96,6 +118,41 @@ export const CourseAPI = {
                 throw err;
             }
             throw new Error("Deleting course failed!");
+        }
+    },
+
+    assignInstructor: async (courseId: string, instructorId: string) => {
+        try {
+            return await api.post<{ ok: true }>(`course/${encodeURIComponent(courseId)}/instructors`, {
+                instructorId,
+            });
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw err;
+            }
+            throw new Error("Assigning instructor failed!");
+        }
+    },
+
+    unassignInstructor: async (courseId: string, instructorId: string) => {
+        try {
+            return await api.delete<{ ok: true }>(`course/${encodeURIComponent(courseId)}/instructors/${encodeURIComponent(instructorId)}`);
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw err;
+            }
+            throw new Error("Unassigning instructor failed!");
+        }
+    },
+
+    getCourseInstructors: async (courseId: string) => {
+        try {
+            return await api.get<{ instructors: Array<{ id: string; name: string }>; instructorNames?: string[] }>(`course/${encodeURIComponent(courseId)}/instructors`);
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw err;
+            }
+            throw new Error("Fetching course instructors failed!");
         }
     },
 

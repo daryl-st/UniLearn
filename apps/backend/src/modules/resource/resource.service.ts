@@ -1,6 +1,7 @@
-import type { FileType, IngestStatus } from "@unilearn/shared-types";
+import type { CourseStatus, FileType, IngestStatus } from "@unilearn/shared-types";
 import type { CourseRepository, ResourceRepository } from "./resource.repository.js";
 import { Course, Resource } from "./resource.entity.js";
+import prisma from "../../config/db.js";
 import type { UserRepository } from "../user/user.repository.js";
 import { proxyIngestResource, type IngestResponseBody } from "../ai/ai.service.js";
 import { cloudinaryService } from "./cloudinary.service.js";
@@ -16,8 +17,20 @@ type UploadResourceSuccess = {
     ingestStatus: IngestStatus;
 };
 type UploadResourceConflict = { ok: false; kind: "conflict"; message: string };
+type ReindexResourceSuccess = {
+    ok: true;
+    status: "READY" | "FAILED";
+    ingestStatus: IngestStatus;
+    chunkCount: number;
+};
+type ReindexResourceFailure = {
+    ok: false;
+    statusCode: number;
+    message: string;
+};
 
 export type UploadResourceResult = UploadResourceSuccess | UploadResourceConflict;
+export type ReindexResourceResult = ReindexResourceSuccess | ReindexResourceFailure;
 
 export class ResourceService {
     constructor(private resourceRepository: ResourceRepository) {}
@@ -36,8 +49,7 @@ export class ResourceService {
         cloudinaryPublicId?: string;
         needsConversion?: boolean;
     }): Promise<UploadResourceResult> {
-        // Viewable immediately for native PDFs; Office files stay PROCESSING until conversion webhook.
-        const initialStatus = data.needsConversion ? "PROCESSING" : "READY";
+        const initialStatus = "PROCESSING";
 
         const resource = await this.resourceRepository.create({
             title: data.title,
@@ -62,21 +74,84 @@ export class ResourceService {
     }
 
     async ingestResourceAsync(resourceId: string, pdfUrl: string): Promise<IngestStatus> {
+        await this.resourceRepository.updateStatus(resourceId, "PROCESSING");
         try {
             const ingest = await proxyIngestResource(resourceId, pdfUrl);
             if (!ingest.ok) {
-                // Keep READY so uploads remain viewable when AI indexing is unavailable.
-                await this.resourceRepository.updateStatus(resourceId, "READY");
+                await this.resourceRepository.updateStatus(resourceId, "FAILED");
                 return "failed";
             }
 
             const body = ingest.body as IngestResponseBody;
-            await this.resourceRepository.upsertChunks(resourceId, body.chunks ?? []);
+            const chunks = body.chunks ?? [];
+            if (chunks.length === 0) {
+                await this.resourceRepository.updateStatus(resourceId, "FAILED");
+                return "failed";
+            }
+            await this.resourceRepository.upsertChunks(resourceId, chunks);
             await this.resourceRepository.updateStatus(resourceId, "READY");
             return "ready";
         } catch {
-            await this.resourceRepository.updateStatus(resourceId, "READY");
+            await this.resourceRepository.updateStatus(resourceId, "FAILED");
             return "failed";
+        }
+    }
+
+    async reindexResource(data: { resourceId: string; fileUrl: string }): Promise<ReindexResourceResult> {
+        const resource = await this.resourceRepository.findOne({ id: data.resourceId });
+        if (!resource) {
+            return { ok: false, statusCode: 404, message: "Resource not found." };
+        }
+
+        const normalizedUrl = data.fileUrl.trim();
+        if (!normalizedUrl) {
+            return { ok: false, statusCode: 400, message: "fileUrl is required." };
+        }
+
+        await this.resourceRepository.updateStatus(resource.id, "PROCESSING");
+        try {
+            const ingest = await proxyIngestResource(resource.id, normalizedUrl);
+            if (!ingest.ok) {
+                await this.resourceRepository.updateStatus(resource.id, "FAILED");
+                const message =
+                    typeof ingest.body === "object" &&
+                    ingest.body !== null &&
+                    "detail" in ingest.body
+                        ? String((ingest.body as { detail: unknown }).detail)
+                        : "Failed to ingest resource.";
+                return {
+                    ok: false,
+                    statusCode: ingest.status,
+                    message,
+                };
+            }
+
+            const body = ingest.body as IngestResponseBody;
+            const chunks = body.chunks ?? [];
+            if (chunks.length === 0) {
+                await this.resourceRepository.updateStatus(resource.id, "FAILED");
+                return {
+                    ok: true,
+                    status: "FAILED",
+                    ingestStatus: "failed",
+                    chunkCount: 0,
+                };
+            }
+            await this.resourceRepository.upsertChunks(resource.id, chunks);
+            await this.resourceRepository.updateStatus(resource.id, "READY");
+            return {
+                ok: true,
+                status: "READY",
+                ingestStatus: "ready",
+                chunkCount: chunks.length,
+            };
+        } catch (error) {
+            await this.resourceRepository.updateStatus(resource.id, "FAILED");
+            return {
+                ok: false,
+                statusCode: 502,
+                message: error instanceof Error ? error.message : "Failed to ingest resource.",
+            };
         }
     }
 
@@ -96,7 +171,7 @@ export class ResourceService {
 
         const pdfUrl = cloudinaryService.buildPdfUrl(publicId);
         await this.resourceRepository.updateFileUrl(resource.id, pdfUrl);
-        await this.resourceRepository.updateStatus(resource.id, "READY");
+        await this.resourceRepository.updateStatus(resource.id, "PROCESSING");
         resource.fileUrl = pdfUrl;
         void this.ingestResourceAsync(resource.id, pdfUrl);
     }
@@ -123,48 +198,38 @@ export class CourseService {
         private userRepository: UserRepository,
     ) {}
 
-    async getCourses(instructorId?: string): Promise<
-        Array<{
-            id: string;
-            name: string;
-            code: string;
-            acadamicYear: number;
-            instructorId: string;
-            departmentId: string;
-            instructorName: string;
-        }>
-    > {
+    async getCourses(instructorId?: string) {
         const response = instructorId
             ? await this.courseRepository.findByInstructor(instructorId)
             : await this.courseRepository.findAll();
-        const instructorIds = response.map((course) => course.instructorId);
-
-        const instructorNames = await Promise.all(
-            instructorIds.map((id) => this.userRepository.getUserNameById(id)),
-        );
-        return response.map((course, i) => ({
+        return response.map((course) => ({
             id: course.id,
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
             departmentId: course.departmentId,
-            instructorName: instructorNames[i] ?? "",
+            description: course.description,
+            status: course.status,
+            instructorId: course.instructorId,
+            instructorNames: course.instructorNames,
         }));
     }
 
     async getCourseById(data: { id: string }) {
         const course = await this.courseRepository.findOne(data);
         if (!course) return null;
-        const instructorName = await this.userRepository.getUserNameById(course.instructorId);
+        const instructorNames = await this.courseRepository.findCourseInstructors(course.id);
         return {
             id: course.id,
             name: course.name,
             code: course.code,
             acadamicYear: course.acadamicYear,
-            instructorId: course.instructorId,
             departmentId: course.departmentId,
-            instructorName: instructorName ?? "",
+            description: course.description,
+            status: course.status,
+            instructorId: course.instructorId,
+            instructorNames: instructorNames.map((instructor) => instructor.name),
+            instructors: instructorNames,
         };
     }
 
@@ -173,13 +238,68 @@ export class CourseService {
         code: string;
         acadamicYear: number;
         instructorId: string;
-        departmentId: string;
+        departmentId?: string | undefined;
+        description?: string | undefined;
+        status?: CourseStatus | undefined;
     }): Promise<Course | string> {
         const existing = await this.courseRepository.findOneByCode(data.code);
         if (existing) {
             return "Course Already Exists!";
         }
-        return this.courseRepository.create(data);
+
+        const departmentId = data.departmentId ?? await this.getDefaultDepartmentId();
+        const course = await this.courseRepository.create({
+            name: data.name,
+            code: data.code,
+            acadamicYear: data.acadamicYear,
+            instructorId: data.instructorId,
+            departmentId,
+            description: data.description,
+            status: data.status,
+        });
+        await this.courseRepository.assignInstructor(course.id, data.instructorId);
+        return course;
+    }
+
+    async updateCourse(data: {
+        id: string;
+        name?: string | undefined;
+        code?: string | undefined;
+        acadamicYear?: number | undefined;
+        instructorId?: string | undefined;
+        departmentId?: string | undefined;
+        description?: string | undefined;
+        status?: CourseStatus | undefined;
+    }) {
+        const course = await this.courseRepository.findOne({ id: data.id });
+        if (!course) {
+            return "Course Not Found!";
+        }
+        const updated = await this.courseRepository.update(data);
+        if (data.instructorId) {
+            await this.courseRepository.assignInstructor(data.id, data.instructorId);
+        }
+        return updated;
+    }
+
+    async assignInstructor(courseId: string, instructorId: string) {
+        const course = await this.courseRepository.findOne({ id: courseId });
+        if (!course) return "Course Not Found!";
+
+        const user = await this.userRepository.findUserById(instructorId);
+        if (!user || user.role !== "INSTRUCTOR") {
+            return "Instructor not found or invalid role!";
+        }
+
+        await this.courseRepository.assignInstructor(courseId, instructorId);
+        return true;
+    }
+
+    async unassignInstructor(courseId: string, instructorId: string) {
+        const course = await this.courseRepository.findOne({ id: courseId });
+        if (!course) return "Course Not Found!";
+        await this.courseRepository.unassignInstructor(courseId, instructorId);
+        return true;
     }
 
     async deleteCourse(data: { id: string }): Promise<Course | string> {
@@ -194,6 +314,16 @@ export class CourseService {
             acadamicYear: deleted.acadamicYear,
             instructorId: deleted.instructorId,
             departmentId: deleted.departmentId,
+            description: deleted.description,
+            status: deleted.status,
         });
+    }
+
+    private async getDefaultDepartmentId(): Promise<string> {
+        const department = await prisma.department.findUnique({ where: { code: "CS101" } });
+        if (!department) {
+            throw new Error("Default department CS101 not found. Run seed first.");
+        }
+        return department.id;
     }
 }

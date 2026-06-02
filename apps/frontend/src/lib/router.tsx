@@ -4,11 +4,15 @@ import { useAuthStore } from "@/stores/authStore";
 import { postAuthRedirectPath } from "@/utils/auth";
 import { ROUTES } from "@/lib/route-paths";
 import { RoleGate } from "@/components/guards/RoleGate";
+import { PageLoadingSkeleton } from "@/components/ui/PageSkeleton";
 
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'));
 const ChangePasswordPage = lazy(() => import('@/pages/auth/ChangePasswordPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'));
 
 // shared page
 const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
@@ -25,6 +29,7 @@ const CoursesPage = lazy(() => import('@/pages/public/CoursePage'));
 const StudnetDashboardPage = lazy(() => import('@/pages/student/Dashboard'));
 const CourseDetail = lazy(() => import('@/pages/student/CourseDetail'));
 const LearningWorkspace = lazy(() => import('@/pages/student/LearningWorkspace'));
+const TakeQuizPage = lazy(() => import('@/pages/student/TakeQuizPage'));
 const CourseExplorer = lazy(() => import('@/pages/student/CourseExplorer'));
 const StudentAnalyticsPage = lazy(() => import('@/pages/student/Analytics'));
 const StudentAiToolsPage = lazy(() => import('@/pages/student/AiTools'));
@@ -35,7 +40,7 @@ function ChangePasswordRoute() {
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <PageLoadingSkeleton />;
   if (!user) return <Navigate to={ROUTES.LOGIN} replace />;
 
   return <ChangePasswordPage />;
@@ -85,7 +90,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <PageLoadingSkeleton />;
 
   if (user) return <Navigate to={postAuthRedirectPath(user)} replace />;
 
@@ -119,8 +124,20 @@ const publicRoutes: RouteEntry[] = [
     ),
   },
   {
+    path: '/verify-email',
+    element: <VerifyEmailPage />,
+  },
+  {
     path: ROUTES.CHANGE_PASSWORD,
     element: <ChangePasswordRoute />,
+  },
+  {
+    path: ROUTES.FORGOT_PASSWORD,
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: ROUTES.RESET_PASSWORD,
+    element: <ResetPasswordPage />,
   },
 ];
 
@@ -154,6 +171,14 @@ const protectedRoutes: RouteEntry[] = [
     element: (
       <RoleGate allowed={['STUDENT']}>
         <LearningWorkspace />
+      </RoleGate>
+    ),
+  },
+  {
+    path: '/dashboard/learning/:courseId/:resourceId/quiz/:quizId',
+    element: (
+      <RoleGate allowed={['STUDENT']}>
+        <TakeQuizPage />
       </RoleGate>
     ),
   },
@@ -284,7 +309,7 @@ const protectedRoutes: RouteEntry[] = [
 export function AppRouter() {
   // TODO: needs refactoring
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<PageLoadingSkeleton />}>
       <AppLayout>
         <Routes>
           {publicRoutes.map((route) => (

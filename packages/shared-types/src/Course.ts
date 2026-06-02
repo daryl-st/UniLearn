@@ -1,15 +1,18 @@
 export type FileType = "PDF" | "PPT" | "DOC"
 
 export type ResourceStatus = "QUEUED" | "PROCESSING" | "READY" | "FAILED"
+export type CourseStatus = "ACTIVE" | "DRAFT" | "ARCHIVED"
 
 // base course interface
 export interface Course {
     id: string;
     name: string;
     code: string;
-    instructorId: string;
+    instructorId?: string | undefined;
     acadamicYear: number;
     departmentId: string;
+    description?: string | undefined;
+    status?: CourseStatus | undefined;
     resources?: Resource[];
 };
 
@@ -19,15 +22,20 @@ export interface CreateCourseInput {
     code: string;
     instructorId: string;
     acadamicYear: number;
-    departmentId: string;
+    departmentId?: string | undefined;
+    description?: string | undefined;
+    status?: CourseStatus | undefined;
 }
 
 // API response for updating a course
 export interface UpdateCourseInput {
-    name?: string;
-    code?: string;
-    instructorId?: string;
-    acadamicYear?: number;
+    name?: string | undefined;
+    code?: string | undefined;
+    instructorId?: string | undefined;
+    acadamicYear?: number | undefined;
+    departmentId?: string | undefined;
+    description?: string | undefined;
+    status?: CourseStatus | undefined;
 };
 
 // base resource interface
@@ -39,7 +47,7 @@ export interface Resource {
     courseId: string;
     isDeleted: boolean;
     version: number;
-    instructorId: string;
+    instructorId?: string | null;
     status?: ResourceStatus;
 };
 

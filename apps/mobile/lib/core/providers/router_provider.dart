@@ -10,6 +10,7 @@ import 'package:mobile/features/auth/presentation/splash_screen.dart';
 import 'package:mobile/features/courses/presentation/course_detail_route_screen.dart';
 import 'package:mobile/features/courses/presentation/course_detail_screen.dart';
 import 'package:mobile/features/courses/presentation/courses_screen.dart';
+import 'package:mobile/features/ai/presentation/quiz_take_screen.dart';
 import 'package:mobile/features/courses/presentation/pdf_viewer_screen.dart';
 import 'package:mobile/features/home/presentation/home_screen.dart';
 import 'package:mobile/features/profile/presentation/profile_screen.dart';
@@ -73,6 +74,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           return PdfViewerScreen(material: material);
         },
       ),
+      GoRoute(
+        path: AppRoutes.quizTake,
+        builder: (context, state) {
+          final args = state.extra as QuizTakeArgs?;
+          return QuizTakeScreen(
+            args: args ?? const QuizTakeArgs(quizId: '', title: 'Quiz'),
+          );
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainShellScreen(navigationShell: navigationShell);
@@ -133,7 +143,8 @@ bool _requiresAuth(String location) {
       location.startsWith(AppRoutes.courses) ||
       location.startsWith(AppRoutes.stats) ||
       location.startsWith(AppRoutes.profile) ||
-      location.startsWith(AppRoutes.pdfViewer);
+      location.startsWith(AppRoutes.pdfViewer) ||
+      location.startsWith(AppRoutes.quizTake);
 }
 
 final class RouterRefreshNotifier extends ChangeNotifier {

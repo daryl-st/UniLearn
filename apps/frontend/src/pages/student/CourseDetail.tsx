@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Resource } from '@unilearn/shared-types';
-import { CourseAPI, type CourseWithInstructor } from '@/api/course';
+import { CourseAPI, formatCourseInstructorLabel, type CourseWithInstructor } from '@/api/course';
 import { courseThumbUrl } from '@/lib/coursePlaceholders';
 import { isPdfPreviewPending, shouldAttemptPdfPreview } from '@/lib/resourceStatus';
 import { ResourcePdfViewer } from '@/components/features/learning/ResourcePdfViewer';
@@ -58,8 +58,11 @@ export default function CourseDetail() {
     navigate('/dashboard/courses');
   };
 
-  const openInWorkspace = (resourceId: string) => {
-    if (courseId) navigate(`/dashboard/learning/${courseId}/${resourceId}`);
+  const openInWorkspace = (resourceId: string, panel?: 'chat' | 'summary' | 'quiz') => {
+    if (!courseId) return;
+    const suffix =
+      panel === 'summary' ? '?panel=summary' : panel === 'quiz' ? '?panel=quiz' : '';
+    navigate(`/dashboard/learning/${courseId}/${resourceId}${suffix}`);
   };
 
   const scrollToMaterials = () => {
@@ -68,7 +71,25 @@ export default function CourseDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-full bg-surface p-12 text-on-surface-variant font-mono text-sm">Loading course…</div>
+      <div className="min-h-screen bg-surface px-6 py-12">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <div className="h-10 w-2/5 rounded-full bg-surface-low animate-pulse" />
+          <div className="grid gap-8 lg:grid-cols-12">
+            <div className="lg:col-span-7 space-y-6">
+              <div className="h-96 rounded-[2rem] bg-surface-low animate-pulse" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="h-24 rounded-3xl bg-surface-low animate-pulse" />
+                <div className="h-24 rounded-3xl bg-surface-low animate-pulse" />
+              </div>
+            </div>
+            <div className="lg:col-span-5 space-y-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="h-14 rounded-3xl bg-surface-low animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -84,7 +105,7 @@ export default function CourseDetail() {
   }
 
   const thumb = courseThumbUrl(course.id);
-  const instructorLabel = course.instructorName?.trim() || course.instructorId;
+  const instructorLabel = formatCourseInstructorLabel(course, course.instructorId ?? 'Instructor');
 
   return (
     <div className="min-h-full bg-surface">
@@ -260,16 +281,26 @@ export default function CourseDetail() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  className="py-3 bg-surface-high text-on-surface-variant hover:text-white rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest opacity-50 cursor-not-allowed"
-                  disabled
+                  disabled={!activeResource}
+                  onClick={() => activeResource && openInWorkspace(activeResource.id, 'summary')}
+                  className={`py-3 rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest ${
+                    activeResource
+                      ? 'bg-surface-high text-on-surface-variant hover:text-white'
+                      : 'bg-surface-high text-on-surface-variant opacity-50 cursor-not-allowed'
+                  }`}
                 >
                   <Bookmark className="w-3.5 h-3.5" />
                   Summary
                 </button>
                 <button
                   type="button"
-                  className="py-3 bg-surface-high text-on-surface-variant hover:text-white rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest opacity-50 cursor-not-allowed"
-                  disabled
+                  disabled={!activeResource}
+                  onClick={() => activeResource && openInWorkspace(activeResource.id, 'quiz')}
+                  className={`py-3 rounded-sm border border-outline-variant/10 transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest ${
+                    activeResource
+                      ? 'bg-surface-high text-on-surface-variant hover:text-white'
+                      : 'bg-surface-high text-on-surface-variant opacity-50 cursor-not-allowed'
+                  }`}
                 >
                   <Share2 className="w-3.5 h-3.5" />
                   Quiz
@@ -297,9 +328,13 @@ export default function CourseDetail() {
                     <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
                     <span>Use the arrow on a resource to open the learning workspace with AI chat.</span>
                   </li>
-                  <li className="flex items-center gap-3 text-[13px] text-on-surface-variant opacity-60">
-                    <CheckCircle2 className="w-4 h-4 text-on-surface-variant shrink-0" />
-                    <span>AI summary and quiz generation are coming soon.</span>
+                  <li className="flex items-center gap-3 text-[13px] text-on-surface-variant">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span>Select a resource, then open Summary for AI revision notes (or use the learning workspace).</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-[13px] text-on-surface-variant">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span>Select a resource, then open Quiz to generate practice questions with instant feedback.</span>
                   </li>
                 </ul>
               </div>

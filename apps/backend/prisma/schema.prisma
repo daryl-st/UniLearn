@@ -16,11 +16,16 @@ model User {
   name               String
   password           String
   mustChangePassword Boolean            @default(false)
+  isVerified         Boolean            @default(true)
+  verificationToken  String?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
   instructorProfile  InstructorProfile?
   quizes             Quiz[]
   refreshTokens      RefreshToken[]
   resources          Resource[]
   studentProfile     StudentProfile?
+  courseInstructorAssignments CourseInstructor[]
 
   @@index([email])
 }
@@ -36,6 +41,7 @@ model StudentProfile {
   department   Department    @relation(fields: [departmentId], references: [id])
   student      User          @relation(fields: [id], references: [id], onDelete: Cascade)
   summaries    Summary[]
+  chatThreads  ChatThread[]
 }
 
 model InstructorProfile {
@@ -63,16 +69,32 @@ model Course {
   id           String             @id @default(uuid())
   name         String
   code         String             @unique
+  description  String?
   acadamicYear Int
+  status       CourseStatus       @default(ACTIVE)
   departmentId String
   instructorId String?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
   department   Department         @relation(fields: [departmentId], references: [id])
   instructor   InstructorProfile? @relation(fields: [instructorId], references: [id])
+  instructors  CourseInstructor[]
   progress     Progress[]
   resources    Resource[]
 
+  @@index([instructorId])
+}
+
+model CourseInstructor {
+  id           String    @id @default(uuid())
+  courseId     String
+  instructorId String
+  assignedAt   DateTime  @default(now())
+
+  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor   User      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, instructorId])
   @@index([instructorId])
 }
 
@@ -82,7 +104,7 @@ model Resource {
   type                FileType
   fileUrl             String             @unique
   courseId            String
-  instructorId        String
+  instructorId        String?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   instructorProfileId String?
@@ -92,10 +114,11 @@ model Resource {
   cloudinaryPublicId  String?            @unique
   quiz                Quiz[]
   course              Course             @relation(fields: [courseId], references: [id])
-  instructor          User               @relation(fields: [instructorId], references: [id])
+  instructor          User?              @relation(fields: [instructorId], references: [id], onDelete: SetNull)
   instructorProfile   InstructorProfile? @relation(fields: [instructorProfileId], references: [id])
   chunks              ResourceChunk[]
   summaries           Summary[]
+  chatThreads         ChatThread[]
 
   @@index([courseId])
   @@index([instructorId])
@@ -129,6 +152,33 @@ model Summary {
 
   @@index([resourceId])
   @@index([studnetId])
+}
+
+model ChatThread {
+  id         String        @id @default(uuid())
+  resourceId String
+  studnetId  String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  resource   Resource      @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  student    StudentProfile @relation(fields: [studnetId], references: [id])
+  messages   ChatMessage[]
+
+  @@unique([resourceId, studnetId])
+  @@index([resourceId])
+  @@index([studnetId])
+}
+
+model ChatMessage {
+  id        String          @id @default(uuid())
+  threadId  String
+  role      ChatMessageRole
+  content   String
+  citations Json?
+  createdAt DateTime        @default(now())
+  thread    ChatThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
 }
 
 model Quiz {
@@ -165,6 +215,7 @@ model Question {
 model QuizAttempt {
   id        String         @id @default(uuid())
   score     Int
+  results   Json?
   quizId    String
   studnetId String
   createdAt DateTime       @default(now())
@@ -221,9 +272,20 @@ enum Difficulty {
   HARD
 }
 
+enum CourseStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
 enum ResourceStatus {
   QUEUED
   PROCESSING
   READY
   FAILED
+}
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
 }

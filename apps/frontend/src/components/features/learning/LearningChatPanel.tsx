@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Send, Sparkles, User } from 'lucide-react';
+import { MarkdownContent } from '@/components/features/learning/MarkdownContent';
 
 export type ChatMessage = { role: 'ai' | 'user'; content: string };
 
@@ -34,7 +35,7 @@ export function LearningChatPanel({
   }, [messages, isTyping]);
 
   return (
-    <aside className="hidden lg:flex h-full min-h-0 w-[22rem] shrink-0 flex-col border-l border-outline-variant/10 bg-surface-low xl:w-[26rem]">
+    <aside className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-surface-low">
       <div className="shrink-0 border-b border-outline-variant/10 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-primary/80" />
@@ -61,13 +62,19 @@ export function LearningChatPanel({
               </div>
             )}
             <div
-              className={`max-w-[88%] text-[13px] leading-relaxed whitespace-pre-wrap px-4 py-3 ${
+              className={`max-w-[88%] px-4 py-3 ${
                 msg.role === 'ai'
                   ? 'rounded-2xl rounded-tl-md border border-outline-variant/10 bg-surface-high/80 text-on-surface'
                   : 'rounded-2xl rounded-tr-md border border-primary/25 bg-primary/15 text-on-surface'
               }`}
             >
-              {msg.content}
+              {msg.role === 'ai' ? (
+                <MarkdownContent>{msg.content}</MarkdownContent>
+              ) : (
+                <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-on-surface">
+                  {msg.content}
+                </p>
+              )}
             </div>
             {msg.role === 'user' && (
               <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-high">

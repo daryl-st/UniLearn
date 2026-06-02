@@ -1,10 +1,16 @@
 import { Surface } from "@/components/ui/Surface";
 import { Badge } from "@/components/ui/Badge";
 import { motion } from "motion/react";
-import type { CreateCourseInput } from "@unilearn/shared-types";
 import { courseThumbUrl, MVP_DEPARTMENT_LABEL } from "@/lib/coursePlaceholders";
 
-type CourseCardProps = CreateCourseInput & { id?: string; instructorName?: string };
+type CourseCardProps = {
+  id?: string;
+  name: string;
+  code: string;
+  acadamicYear?: number;
+  instructorId?: string;
+  instructorName?: string;
+};
 
 const fallbackImage =
   "https://media.istockphoto.com/id/2215967400/vector/smart-education-and-online-learning-with-digital-graduation-cap-vector-illustration.jpg?s=612x612&w=0&k=20&c=cdM8xg9s0cP_26UweU1HD0TrP5q9bL9xGKXxHtnJdbM=";
@@ -21,7 +27,7 @@ const fallbackImage =
 // export function CourseCard({ id, discipline, title, description, instructor, image }: CourseCardProps) {
 export function CourseCard({ id, name, code, acadamicYear, instructorId, instructorName }: CourseCardProps) {
   const cover = id ? courseThumbUrl(id) : fallbackImage;
-  const instructorLabel = instructorName || instructorId;
+  const instructorLabel = instructorName || instructorId || "Instructor";
   return (
     // let's wrap it with motion.div for hover effects
     <motion.div 
@@ -42,7 +48,7 @@ export function CourseCard({ id, name, code, acadamicYear, instructorId, instruc
       <div className="p-6 flex-1 flex flex-col justify-between">
         <div className="space-y-3 mb-6">
           <Badge variant="status" className="font-mono text-[10px] uppercase tracking-widest text-accent">
-            Year {acadamicYear} · {MVP_DEPARTMENT_LABEL}
+            Year {acadamicYear ?? 1} · {MVP_DEPARTMENT_LABEL}
           </Badge>
           <h3 className="font-display text-xl font-bold text-on-surface leading-snug group-hover:text-brand transition-colors">
             {name}

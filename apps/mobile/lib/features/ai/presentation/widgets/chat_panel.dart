@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/features/ai/presentation/widgets/markdown_body.dart';
 import 'package:mobile/features/ai/providers/resource_chat_provider.dart';
 import 'package:mobile/theme/app_radii.dart';
 import 'package:mobile/theme/app_spacing.dart';
@@ -106,15 +107,17 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
         ),
         Divider(height: 1, color: scheme.outlineVariant),
         Expanded(
-          child: ListView.separated(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(AppSpacing.stackGap),
-            itemCount: messages.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              return _ChatBubble(message: messages[index], scheme: scheme);
-            },
-          ),
+          child: chatState.isLoadingHistory
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.separated(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(AppSpacing.stackGap),
+                  itemCount: messages.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    return _ChatBubble(message: messages[index], scheme: scheme);
+                  },
+                ),
         ),
         Divider(height: 1, color: scheme.outlineVariant),
         Padding(
@@ -227,12 +230,14 @@ class _ChatBubble extends StatelessWidget {
                     : scheme.primary.withValues(alpha: 0.14),
               ),
             ),
-            child: Text(
-              message.text,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.25,
-              ),
-            ),
+            child: message.isBot
+                ? StudyMarkdownBody(data: message.text, shrinkWrap: true)
+                : Text(
+                    message.text,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      height: 1.25,
+                    ),
+                  ),
           ),
         ),
         if (!message.isBot) const SizedBox(width: 8),

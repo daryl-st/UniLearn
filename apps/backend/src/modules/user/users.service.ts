@@ -2,12 +2,51 @@ import type { Role } from "@unilearn/shared-types";
 import { UserRepository } from "./user.repository.js"
 import prisma from "../../config/db.js";
 import { User } from "./user.entity.js";
+import {
+    isAauInstructorEmail,
+    normalizeInstructorEmail,
+    AAU_INSTRUCTOR_EMAIL_ERROR,
+} from "../Auth/aauEmail.js";
 
 export class UserService {
     constructor(private userRepository: UserRepository) {}
 
     async getUsers() {
         return this.userRepository.findAll();
+    }
+
+    async updateUser(id: string, data: { name: string; email: string; role: Role }) {
+        const user = await this.userRepository.findUserById(id);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const normalizedEmail = data.email.trim().toLowerCase();
+        if (normalizedEmail !== user.email.toLowerCase()) {
+            const existing = await this.userRepository.findUserByEmail(normalizedEmail);
+            if (existing) {
+                throw new Error("Email already registered!");
+            }
+        }
+
+        return this.userRepository.update(id, {
+            name: data.name.trim(),
+            email: normalizedEmail,
+            role: data.role,
+        });
+    }
+
+    async deleteUser(id: string) {
+        const user = await this.userRepository.findUserById(id);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        if (user.role === "ADMIN") {
+            throw new Error("Cannot delete an admin user");
+        }
+
+        return this.userRepository.delete(id);
     }
 
     // This should be admin functionality, but for now let's keep it simple.
@@ -24,7 +63,15 @@ export class UserService {
         password: string;
         courseIds?: string[];
     }) {
-        const existing = await this.userRepository.findUserByEmail(data.email);
+        let normalizedEmail = data.email;
+        if (data.role === "INSTRUCTOR") {
+            normalizedEmail = normalizeInstructorEmail(data.email);
+            if (!isAauInstructorEmail(normalizedEmail)) {
+                throw new Error(AAU_INSTRUCTOR_EMAIL_ERROR);
+            }
+        }
+
+        const existing = await this.userRepository.findUserByEmail(normalizedEmail);
         if (existing) {
             throw new Error("Email already registered!");
         }
@@ -35,11 +82,13 @@ export class UserService {
         const user = await prisma.$transaction(async (tx) => {
             const createdUser = await tx.user.create({
                 data: {
-                    email: data.email,
+                    email: normalizedEmail,
                     name: data.name,
                     role: data.role,
                     password: hashedPassword,
                     mustChangePassword: true,
+                    isVerified: true,
+                    verificationToken: null,
                 },
             });
 
@@ -100,6 +149,9 @@ export class UserService {
             password: user.password,
             role: user.role,
             mustChangePassword: user.mustChangePassword,
+            isVerified: user.isVerified,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
         });
     }
 }
