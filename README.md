@@ -109,3 +109,8 @@ To verify administrative control and instructor material management, use the see
 3. Select the course and click **Upload Resource**.
 4. Drag or select a lecture PDF, slides (`.pptx`), or worksheet (`.docx`, `pdf`), then click **Upload**.
 5. The system will ingest, chunk, and index the file. Once it shifts to a `READY` state, it is fully accessible to all enrolled student dashboards!
+
+
+
+
+### notice - it doesn't include mobile app, the folder is aimed for mobile app course submission. 
