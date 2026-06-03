@@ -20,18 +20,6 @@ export const registerSchema = z.object({
 });
 export type RegisterBody = z.infer<typeof registerSchema>;
 
-export const verifyEmailQuerySchema = z.object({
-    token: z.string().min(1),
-});
-export type VerifyEmailQuery = z.infer<typeof verifyEmailQuerySchema>;
-
-export const resendVerificationSchema = z.object({
-    email: email.transform(normalizeStudentEmail).refine((v) => AAU_STUDENT_EMAIL_REGEX.test(v), {
-        message: AAU_STUDENT_EMAIL_ERROR,
-    }),
-});
-export type ResendVerificationBody = z.infer<typeof resendVerificationSchema>;
-
 export const loginSchema = z.object({
     email: z.email().max(255).transform((v) => v.trim()),
     password: z.string().min(1),
@@ -148,16 +136,3 @@ export const changePasswordSchema = z.object({
     password: z.string().min(8).max(128),
 });
 export type ChangePasswordBody = z.infer<typeof changePasswordSchema>
-
-export const forgotPasswordSchema = z.object({
-    email: email.transform(normalizeStudentEmail).refine((v) => AAU_STUDENT_EMAIL_REGEX.test(v), {
-        message: AAU_STUDENT_EMAIL_ERROR,
-    }),
-});
-export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
-
-export const resetPasswordSchema = z.object({
-    token: z.string().min(1),
-    password: password,
-});
-export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;

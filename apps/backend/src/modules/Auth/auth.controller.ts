@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { AuthService, EmailServiceNotConfiguredError, EmailServiceDeliveryError } from "./auth.service.js";
+import { AuthService } from "./auth.service.js";
 import { UserRepository } from "../user/user.repository.js";
-import type { LoginBody, RegisterBody, VerifyEmailQuery } from "../../schemas/index.js";
+import type { LoginBody, RegisterBody } from "../../schemas/index.js";
 import type { AuthRequest } from "../../middlewares/auth.js";
 import { REFRESH_TOKEN_COOKIE_NAME, refreshTokenCookieOptions } from "./auth.cookie.js";
 
@@ -11,31 +11,15 @@ const authService = new AuthService(userRepository);
 export class AuthController {
     async registerUser(req: Request, res: Response) {
         const userData = req.body as RegisterBody;
-        try {
-            const result = await authService.registerUser(userData);
-            return res.status(202).json(result);
-        } catch (err) {
-            if (err instanceof EmailServiceNotConfiguredError) {
-                return res.status(503).json({ message: err.message });
-            }
-            if (err instanceof EmailServiceDeliveryError) {
-                return res.status(502).json({ message: err.message });
-            }
-            throw err;
-        }
-    }
+        const result = await authService.registerUser(userData);
 
-    async verifyEmail(req: Request, res: Response) {
-        const { token } = (req as Request & { validatedQuery?: VerifyEmailQuery }).validatedQuery ?? {
-            token: String(req.query.token ?? ""),
-        };
+        res.cookie(REFRESH_TOKEN_COOKIE_NAME, result.refreshToken, refreshTokenCookieOptions());
 
-        try {
-            const result = await authService.verifyEmail(token);
-            return res.status(200).json(result);
-        } catch (err) {
-            throw err;
-        }
+        return res.status(201).json({
+            message: result.message,
+            user: result.user.toJson(),
+            accessToken: result.accessToken,
+        });
     }
 
     async loginUser(req: Request, res: Response) {
@@ -110,8 +94,6 @@ export class AuthController {
             const bcrypt = await import("bcrypt");
             const hashedPassword = await bcrypt.default.hash(password, 10);
 
-            // Import db config dynamically to avoid top level imports if preferred, or use prisma directly.
-            // Let's use the local db import. We can import it at the top or dynamically import it.
             const dbModule = await import("../../config/db.js");
             const db = dbModule.default;
 
@@ -124,57 +106,9 @@ export class AuthController {
             });
 
             return res.status(200).json({ message: "Password updated successfully" });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error changing password:", error);
             return res.status(500).json({ error: "Failed to change password" });
-        }
-    }
-
-    async resendVerification(req: Request, res: Response) {
-        const { email } = req.body as { email: string };
-        try {
-            const result = await authService.resendVerificationEmail(email);
-            return res.status(200).json(result);
-        } catch (err) {
-            if (err instanceof EmailServiceNotConfiguredError) {
-                return res.status(503).json({ message: err.message });
-            }
-            if (err instanceof EmailServiceDeliveryError) {
-                return res.status(502).json({ message: err.message });
-            }
-            throw err;
-        }
-    }
-
-    async forgotPassword(req: Request, res: Response) {
-        const { email } = req.body;
-        try {
-            const result = await authService.forgotPassword(email);
-            return res.status(200).json(result);
-        } catch (err) {
-            if (err instanceof EmailServiceNotConfiguredError) {
-                return res.status(503).json({ message: err.message });
-            }
-            if (err instanceof EmailServiceDeliveryError) {
-                return res.status(502).json({ message: err.message });
-            }
-            if (err instanceof Error && err.message === "User not found!") {
-                return res.status(404).json({ message: err.message });
-            }
-            throw err;
-        }
-    }
-
-    async resetPassword(req: Request, res: Response) {
-        const { token, password } = req.body;
-        try {
-            const result = await authService.resetPassword(token, password);
-            return res.status(200).json(result);
-        } catch (err) {
-            if (err instanceof Error && err.message === "Invalid or expired reset token!") {
-                return res.status(400).json({ message: err.message });
-            }
-            throw err;
         }
     }
 }

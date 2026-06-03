@@ -1,117 +1,90 @@
-# UniLearn: Setup & Quick-Start Guide
+# UniLearn
 
-A clean, practical step-by-step guide to get the UniLearn system fully running and tested.
+University learning platform with course resources, AI-assisted study (chat, summaries, quizzes), and role-based dashboards for students, instructors, and admins.
 
----
+## Prerequisites
 
-## 🛠️ Step 1: Installation & Setup
+- [Node.js](https://nodejs.org/) 20+
+- [pnpm](https://pnpm.io/) 10+
+- [Docker](https://www.docker.com/) (for PostgreSQL with pgvector)
 
-1. **Install Dependencies** (Run at the root directory):
+## Local development (pnpm)
+
+1. **Install dependencies** (repository root):
+
    ```bash
    pnpm install
    ```
 
-2. **Backend Configuration**:
-   Create a `.env` file in `apps/backend/` and populate it with your database and service details:
-   ```env
-   # Database connection
-   DATABASE_URL="postgresql://<db_username>:<db_password>@localhost:5432/<db_name>?schema=public"
+2. **Start the database**:
 
-   # Security keys (use any secure random strings)
-   ACCESS_TOKEN_SECRET="your_access_token_secret"
-   REFRESH_TOKEN_SECRET="your_refresh_token_secret"
-
-   # Allowed client domains (CORS). For email links, also set PUBLIC_APP_URL to your frontend URL in production.
-   CLIENT_ORIGIN="http://localhost:5173,http://localhost:5174"
-   # PUBLIC_APP_URL="https://your-production-frontend.example"
-
-   # AI Service (if applicable)
-   AI_SERVICE_URL="http://127.0.0.1:8000"
-   AI_INTERNAL_API_KEY="your_ai_api_key"
-
-   # Cloudinary Media credentials
-   CLOUDINARY_CLOUD_NAME="your_cloudinary_cloud_name"
-   CLOUDINARY_API_KEY="your_cloudinary_api_key"
-   CLOUDINARY_API_SECRET="your_cloudinary_api_secret"
-
-   # Brevo SMTP configuration (for verification & password recoveries)
-   BREVO_EMAIL="your_brevo_smtp_username"
-   BREVO_SMTP_KEY="your_brevo_smtp_password"
-   FROM_EMAIL="UniLearn <your_verified_sender_email>"
+   ```bash
+   docker compose up db -d
    ```
 
-3. **Frontend Configuration**:
-   Create a `.env` file in `apps/frontend/` and configure your API endpoint:
-   ```env
-   VITE_API_URL="http://localhost:3000/api/"
+3. **Configure environment** — copy examples and adjust secrets as needed:
+
+   ```bash
+   cp apps/backend/.env.example apps/backend/.env
+   cp apps/frontend/.env.example apps/frontend/.env
    ```
 
-4. **Initialize Database & Seed Data** (Run at the root directory):
+   Backend must use port **5433** when using Compose (`DATABASE_URL` in `.env.example`). Set `CLIENT_ORIGIN` to your Vite URL (default `http://localhost:5173`). Frontend needs `VITE_API_BASE_URL=http://localhost:4000`.
+
+4. **Initialize the database**:
+
    ```bash
    pnpm db:push
    pnpm db:generate
    pnpm db:seed
    ```
 
-5. **Start the Workspace**:
+5. **Run the app**:
+
    ```bash
    pnpm dev
    ```
-   * **Frontend App**: `http://localhost:5173`
-   * **Backend API**: `http://localhost:3000`
 
----
+   | Service   | URL                          |
+   |-----------|------------------------------|
+   | Web app   | http://localhost:5173        |
+   | API       | http://localhost:4000        |
+   | Postgres  | localhost:5433               |
 
-## 🚀 Step 2: Step-by-Step Functional Walkthrough
+   **Optional — AI features** (RAG, quizzes): run the Python service per [`apps/ai/README.md`](apps/ai/README.md) on port 8000 and set `AI_SERVICE_URL` / `AI_INTERNAL_API_KEY` in `apps/backend/.env`.
 
-To verify the system, open the browser and follow this sequence:
+   **Optional — file uploads**: configure Cloudinary in `apps/backend/.env` (see `.env.example`).
 
-1. **Create Student Account**:
-   * Navigate to `http://localhost:5173/register`.
-   * Register using a university email (must end with `@aau.edu.et`).
-2. **Verify Email**:
-   * Open the activation link sent to your email (or copy the local verification link printed in your backend terminal log).
-   * Your account is now verified!
-3. **Onboard Profile**:
-   * Log in at `http://localhost:5173/login`.
-   * Complete the first-time profile popup by entering a **Student ID** and selecting an **Academic Year**.
-4. **Study & Use AI Workspace**:
-   * Go to **Courses**, choose a course, and select any study document uploaded by instructors.
-   * Use **AI Chat** on the right side to ask questions about pages, click **Summary** to read a quick chapter breakdown, or take an **AI Quiz** to test your knowledge.
-5. **Recover Account (Forgot Password)**:
-   * Log out, go to `/login`, and click **Forgot password?**.
-   * Enter your university email.
-   * Open the link received in your inbox.
-   * Enter a new secure password, confirm it, and submit.
-   * The page will clear your session and redirect you back to `/login` after 3 seconds.
-   * Log in with your email and new password successfully!
+## Docker (full stack)
 
----
+Build and run API, web, database, and AI from the repo root. Provide a root `.env` with the same variables as `apps/backend/.env` (use `DATABASE_URL` pointing at the `db` service host when everything runs in Compose).
 
-## 👥 Step 3: Admin & Instructor Course Assignment Walkthrough
+```bash
+docker compose up --build
+```
 
-To verify administrative control and instructor material management, use the seeded demo accounts:
+| Service | URL                   |
+|---------|-----------------------|
+| Web     | http://localhost:3000 |
+| API     | http://localhost:4000 |
+| AI      | http://localhost:8000 |
 
-### 1. Assigning an Instructor (Admin Workflow)
-1. Navigate to the login page and sign in using the pre-seeded **Admin** credentials:
-   * **Email**: `Admin@uni.test`
-   * **Password**: `12345678`
-2. Once on the **Admin Hub / Ops Console**, select the **User Management** tab on the sidebar to view all registered students and instructors.
-3. Select **Course Management** on the sidebar to view all created university courses.
-4. Select a course (e.g., *Programming Fundamentals*) and click **Assign Instructor**.
-5. Select **Dr. Jane Smith** or **Prof. Samuel Alemayehu** from the instructor dropdown menu and click **Assign**.
-6. Log out of the Admin console.
+## Demo accounts (after seed)
 
-### 2. Uploading Study Materials (Instructor Workflow)
-1. Sign in using the pre-seeded **Instructor** credentials:
-   * **Email**: `Ins@uni.test`
-   * **Password**: `12345678`
-2. On your **Instructor Console / teaching dashboard**, you will see your active course assignments (e.g., *Artificial Intelligence* or *Programming Fundamentals*).
-3. Select the course and click **Upload Resource**.
-4. Drag or select a lecture PDF, slides (`.pptx`), or worksheet (`.docx`, `pdf`), then click **Upload**.
-5. The system will ingest, chunk, and index the file. Once it shifts to a `READY` state, it is fully accessible to all enrolled student dashboards!
+| Role       | Email              | Password   |
+|------------|--------------------|------------|
+| Admin      | `Admin@uni.test`   | `12345678` |
+| Instructor | `Ins@uni.test`     | `12345678` |
 
+Students register at `/register` with an `@aau.edu.et` email and are signed in immediately.
 
+## Scripts
 
+```bash
+pnpm build      # compile all workspace packages
+pnpm dev        # backend + frontend in watch mode
+pnpm db:push    # apply Prisma schema
+pnpm db:seed    # seed demo data
+```
 
-### notice - it doesn't include mobile app, the Mobile folder inside the apps folder is aimed for mobile app course submission. 
+The `apps/mobile` package is separate from this web stack.

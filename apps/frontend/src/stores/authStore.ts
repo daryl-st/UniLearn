@@ -46,7 +46,7 @@ interface AuthState {
     error: string | null;
 
     login: (email: string, password: string) => Promise<void>;
-    register: (userData: RegisterPayload) => Promise<{ verificationSent: boolean; message?: string; devVerificationUrl?: string }>;
+    register: (userData: RegisterPayload) => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     clearError: () => void;
@@ -78,21 +78,7 @@ export const useAuthStore = create<AuthState>() (
                 set({ isLoading: true, error: null });
                 try {
                     const response = await authAPI.register(userData);
-                    if ("accessToken" in response && response.accessToken) {
-                        set({ user: userFromAuthResponse(response.user), isLoading: false });
-                        return { verificationSent: false };
-                    }
-                    if ("message" in response) {
-                        set({ isLoading: false });
-                        const emailSent = response.emailSent === true;
-                        return {
-                            verificationSent: emailSent,
-                            message: response.message ?? "Verification email sent. Please check your inbox.",
-                            devVerificationUrl: response.devVerificationUrl,
-                        };
-                    }
-                    set({ isLoading: false });
-                    return { verificationSent: true, message: "Registration completed." };
+                    set({ user: userFromAuthResponse(response.user), isLoading: false });
                 } catch (err: unknown) {
                     set({
                         error: messageFromUnknown(err, 'Registration Failed!'),

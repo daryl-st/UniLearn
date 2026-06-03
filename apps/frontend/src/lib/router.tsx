@@ -9,10 +9,7 @@ import { PageLoadingSkeleton } from "@/components/ui/PageSkeleton";
 // Auth pages
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
-const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'));
 const ChangePasswordPage = lazy(() => import('@/pages/auth/ChangePasswordPage'));
-const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'));
 
 // shared page
 const AppLayout = lazy(() => import('@/components/layout/AppLayout'));
@@ -124,20 +121,8 @@ const publicRoutes: RouteEntry[] = [
     ),
   },
   {
-    path: '/verify-email',
-    element: <VerifyEmailPage />,
-  },
-  {
     path: ROUTES.CHANGE_PASSWORD,
     element: <ChangePasswordRoute />,
-  },
-  {
-    path: ROUTES.FORGOT_PASSWORD,
-    element: <ForgotPasswordPage />,
-  },
-  {
-    path: ROUTES.RESET_PASSWORD,
-    element: <ResetPasswordPage />,
   },
 ];
 

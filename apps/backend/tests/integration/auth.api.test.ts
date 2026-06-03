@@ -32,13 +32,7 @@ describe("auth api integration", () => {
         expect(res.status).toBe(401);
     });
 
-    it("returns 400 for invalid verification token", async () => {
-        const res = await api().get("/auth/verify-email").query({ token: "missing-token" });
-        expect(res.status).toBe(400);
-        expect(res.body.message).toBe("Invalid or expired verification link");
-    });
-
-    it("blocks login for unverified student", async () => {
+    it("allows student login even when isVerified is false in DB (legacy rows)", async () => {
         const dept = await seedDepartment();
         const student = await seedUser({
             email: "john.smith-ug@aau.edu.et",
@@ -54,8 +48,8 @@ describe("auth api integration", () => {
             password: "password123",
         });
 
-        expect(res.status).toBe(403);
-        expect(res.body.message).toBe("Please verify your email before logging in.");
+        expect(res.status).toBe(200);
+        expect(res.body.accessToken).toBeTypeOf("string");
     });
 
     it("allows verified student login and authenticated /auth/me", async () => {
@@ -85,98 +79,45 @@ describe("auth api integration", () => {
         expect(meRes.body.user.email).toBe("jane.doe-ug@aau.edu.et");
     });
 
-    it("returns 503 on register when Brevo is not configured", async () => {
-        const previous = {
-            BREVO_EMAIL: process.env.BREVO_EMAIL,
-            BREVO_SMTP_KEY: process.env.BREVO_SMTP_KEY,
-            FROM_EMAIL: process.env.FROM_EMAIL,
-        };
-        delete process.env.BREVO_EMAIL;
-        delete process.env.BREVO_SMTP_KEY;
-        delete process.env.FROM_EMAIL;
-
-        const dept = await seedDepartment();
-        const existing = await seedUser({
-            email: "existing.student-ug@aau.edu.et",
-            name: "Existing Student",
+    it("registers a new student and returns access token without email", async () => {
+        const res = await api().post("/auth/register").send({
+            email: "new.student-ug@aau.edu.et",
+            firstName: "New",
+            lastName: "Student",
+            password: "password123",
             role: "STUDENT",
-            isVerified: true,
-        });
-        await seedStudentProfile(existing.id, dept.id);
-
-        try {
-            const res = await api().post("/auth/register").send({
-                email: "new.student-ug@aau.edu.et",
-                firstName: "New",
-                lastName: "Student",
-                password: "password123",
-                role: "STUDENT",
-            });
-            expect(res.status).toBe(503);
-            expect(res.body.message).toContain("Email service is not configured");
-
-            const orphan = await prisma.user.findUnique({
-                where: { email: "new.student-ug@aau.edu.et" },
-            });
-            expect(orphan).toBeNull();
-        } finally {
-            if (previous.BREVO_EMAIL !== undefined) process.env.BREVO_EMAIL = previous.BREVO_EMAIL;
-            if (previous.BREVO_SMTP_KEY !== undefined) process.env.BREVO_SMTP_KEY = previous.BREVO_SMTP_KEY;
-            if (previous.FROM_EMAIL !== undefined) process.env.FROM_EMAIL = previous.FROM_EMAIL;
-        }
-    });
-
-    it("verifies email with a valid token and clears verification state", async () => {
-        const token = "valid-verification-token-abc123";
-        const { user } = await seedUnverifiedStudent({
-            email: "verify.me-ug@aau.edu.et",
-            verificationToken: token,
         });
 
-        const res = await api().get("/auth/verify-email").query({ token });
+        expect(res.status).toBe(201);
+        expect(res.body.accessToken).toBeTypeOf("string");
+        expect(res.body.user.email).toBe("new.student-ug@aau.edu.et");
 
-        expect(res.status).toBe(200);
-        expect(res.body.message).toBe("Email verified successfully. You can now sign in.");
-
-        const updated = await prisma.user.findUnique({ where: { id: user.id } });
-        expect(updated?.isVerified).toBe(true);
-        expect(updated?.verificationToken).toBeNull();
+        const created = await prisma.user.findUnique({
+            where: { email: "new.student-ug@aau.edu.et" },
+        });
+        expect(created?.isVerified).toBe(true);
     });
 
-    it("allows login after email verification", async () => {
-        const token = "verify-then-login-token";
+    it("re-registers an unverified legacy student and allows sign-in", async () => {
         await seedUnverifiedStudent({
-            email: "login.after.verify-ug@aau.edu.et",
-            verificationToken: token,
+            email: "legacy.unverified-ug@aau.edu.et",
+            verificationToken: "old-token",
         });
 
-        await api().get("/auth/verify-email").query({ token });
+        const registerRes = await api().post("/auth/register").send({
+            email: "legacy.unverified-ug@aau.edu.et",
+            firstName: "Legacy",
+            lastName: "Student",
+            password: "newpassword123",
+            role: "STUDENT",
+        });
+        expect(registerRes.status).toBe(201);
 
         const loginRes = await api().post("/auth/login").send({
-            email: "login.after.verify-ug@aau.edu.et",
-            password: "password123",
+            email: "legacy.unverified-ug@aau.edu.et",
+            password: "newpassword123",
         });
-
         expect(loginRes.status).toBe(200);
-        expect(loginRes.body.accessToken).toBeTypeOf("string");
-    });
-
-    it("returns already-verified message when token belongs to verified user", async () => {
-        const token = "stale-token-for-verified-user";
-        const dept = await seedDepartment();
-        const student = await seedUser({
-            email: "already.verified-ug@aau.edu.et",
-            name: "Already Verified",
-            role: "STUDENT",
-            isVerified: true,
-            verificationToken: token,
-        });
-        await seedStudentProfile(student.id, dept.id);
-
-        const res = await api().get("/auth/verify-email").query({ token });
-
-        expect(res.status).toBe(200);
-        expect(res.body.message).toBe("Your account is already verified. You can now sign in.");
     });
 
     it("rotates refresh token, revokes the prior session in DB, and allows refresh with the new cookie", async () => {

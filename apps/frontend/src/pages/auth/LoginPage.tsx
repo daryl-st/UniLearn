@@ -144,17 +144,9 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-foreground/90" htmlFor="password">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm font-medium text-blue-400 visited:text-blue-400 hover:text-blue-300 active:text-blue-200 decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 rounded-sm"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="block text-sm font-medium text-foreground/90 mb-2" htmlFor="password">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <input

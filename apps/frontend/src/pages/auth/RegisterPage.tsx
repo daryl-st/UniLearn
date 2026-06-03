@@ -3,7 +3,6 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-
 // import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authAPI } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
 import { asBackendRole, dashboardPathForBackendRole } from '@/utils/auth';
 
@@ -20,12 +19,6 @@ export default function RegisterPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
-  const [verificationSent, setVerificationSent] = useState(false);
-  const [verificationMessage, setVerificationMessage] = useState('');
-  const [devVerificationUrl, setDevVerificationUrl] = useState('');
-  const [registeredEmail, setRegisteredEmail] = useState('');
-  const [isResending, setIsResending] = useState(false);
-  const [resendMessage, setResendMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -53,47 +46,13 @@ export default function RegisterPage() {
         password: formData.password,
         email: formData.email,
       };
-      const result = await register(userData);
-      setRegisteredEmail(formData.email.trim().toLowerCase());
-      if (result.verificationSent) {
-        setVerificationSent(true);
-        setVerificationMessage(
-          result.message ?? 'Verification email sent. Please check your inbox.',
-        );
-        setDevVerificationUrl(result.devVerificationUrl ?? '');
-        return;
-      }
-      setValidationError(
-        result.message ?? 'Verification email could not be sent. Please try again.',
-      );
-      return;
+      await register(userData);
       const u = useAuthStore.getState().user;
       navigate(dashboardPathForBackendRole(asBackendRole(u?.role)), { replace: true });
-    } catch (err) {
-      // Error already in store, no need to handle here
-      console.log('Registration failed', err);
+    } catch {
+      // Error already in store
     }
   }
-
-  const handleResendVerification = async () => {
-    if (!registeredEmail) return;
-    setIsResending(true);
-    setResendMessage('');
-    setValidationError('');
-    try {
-      const response = await authAPI.resendVerification(registeredEmail);
-      setVerificationSent(true);
-      setVerificationMessage(
-        response.message ?? 'Verification email sent. Please check your inbox.',
-      );
-    } catch (err) {
-      setResendMessage(
-        err instanceof Error ? err.message : 'Failed to resend verification email.',
-      );
-    } finally {
-      setIsResending(false);
-    }
-  };
 
   const students = [
     "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=100&h=100&auto=format&fit=crop",
@@ -183,34 +142,6 @@ export default function RegisterPage() {
               {error || validationError}
             </p>
           ) : null}
-          {verificationSent ? (
-            <div className="rounded-xl border border-green-400/40 bg-green-500/10 px-3 py-2 text-sm text-green-300 space-y-2">
-              <p>{verificationMessage}</p>
-              {devVerificationUrl ? (
-                <p>
-                  Dev link:{' '}
-                  <a href={devVerificationUrl} className="underline break-all">
-                    {devVerificationUrl}
-                  </a>
-                </p>
-              ) : null}
-              <p className="text-xs text-green-200/80">
-                Didn&apos;t receive the email? Check spam or resend below.
-              </p>
-              <button
-                type="button"
-                onClick={handleResendVerification}
-                disabled={isResending || !registeredEmail}
-                className="text-sm font-semibold text-blue-300 hover:text-blue-200 disabled:opacity-50"
-              >
-                {isResending ? 'Resending...' : 'Resend verification email'}
-              </button>
-              {resendMessage ? (
-                <p className="text-xs text-red-300">{resendMessage}</p>
-              ) : null}
-            </div>
-          ) : null}
-
           {/* Full Name */}
           <div className="flex flex-col gap-1.5">
             <label className="text-foreground/90 text-sm font-semibold ml-1">Full Name</label>
