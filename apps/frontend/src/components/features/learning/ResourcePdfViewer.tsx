@@ -20,13 +20,17 @@ type ResourcePdfViewerProps = {
   initialPage?: number;
 };
 
-export function ResourcePdfViewer({
+export function ResourcePdfViewer(props: ResourcePdfViewerProps) {
+  const mountKey = `${props.resourceId}:${props.fileUrl}:${props.type}`;
+  return <ResourcePdfViewerInner key={mountKey} {...props} />;
+}
+
+function ResourcePdfViewerInner({
   resourceId,
   fileUrl,
   title,
   type,
   status,
-  initialPage: _initialPage = 1,
 }: ResourcePdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoomIndex, setZoomIndex] = useState(1);
@@ -35,18 +39,12 @@ export function ResourcePdfViewer({
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
 
   const zoom = ZOOM_LEVELS[zoomIndex] ?? 1;
-  const externalUrl = resolveCloudinaryViewerUrl(String(fileUrl), type);
+  const externalUrl = resolveCloudinaryViewerUrl(String(fileUrl));
   const previewPending = isPdfPreviewPending({ type, status });
   const canPreview = shouldAttemptPdfPreview({ type, status, fileUrl });
   const downloadOnly = isDownloadOnlyResource({ type, fileUrl });
   const unavailable = isUnavailableResource({ fileUrl });
   const officeFile = isOfficeFileType(type);
-
-  useEffect(() => {
-    setLoadError(null);
-    setIsDocumentLoading(true);
-    setIframeSrc(null);
-  }, [resourceId, fileUrl, type]);
 
   useEffect(() => {
     if (!canPreview || previewPending) return;
@@ -62,7 +60,7 @@ export function ResourcePdfViewer({
           objectUrl = URL.createObjectURL(new Blob([buffer], { type: 'application/pdf' }));
           setIframeSrc(objectUrl);
         } else {
-          const deliveryUrl = resolveCloudinaryViewerUrl(String(fileUrl), type);
+          const deliveryUrl = resolveCloudinaryViewerUrl(String(fileUrl));
           setIframeSrc(buildGoogleDocsViewerUrl(deliveryUrl));
         }
         if (!cancelled) {

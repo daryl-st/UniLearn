@@ -1,3 +1,4 @@
+import { getCourseThumbnailUrl } from "@unilearn/shared-types";
 import prisma from "../../config/db.js";
 import { UserRepository } from "../user/user.repository.js";
 import { CourseRepository, ResourceRepository } from "../resource/resource.repository.js";
@@ -141,7 +142,7 @@ export class DashboardService {
                     progress: Math.min(avgProgress, 100),
                     enrolled: String(enrolled),
                     tag: `YEAR ${course.acadamicYear}`,
-                    image: `https://picsum.photos/seed/${course.code}/800/400`
+                    image: getCourseThumbnailUrl({ code: course.code, name: course.name }),
                 };
             })
         );

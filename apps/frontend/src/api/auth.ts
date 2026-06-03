@@ -23,6 +23,7 @@ interface LoginAuthResponse {
 interface RegisterAuthResponse {
     message: string;
     email?: string;
+    emailSent?: boolean;
     devVerificationUrl?: string;
 }
 
@@ -122,6 +123,21 @@ export const authAPI = {
                 throw err;
             }
             throw new Error("Failed to change password");
+        }
+    },
+
+    resendVerification: async (email: string): Promise<{ message: string; emailSent?: boolean }> => {
+        try {
+            return await api.post<{ message: string; emailSent?: boolean }>(
+                "auth/resend-verification",
+                { email },
+                { skipAuthRefresh: true },
+            );
+        } catch (err) {
+            if (err instanceof ApiError) {
+                throw new Error(err.message || "Failed to resend verification email");
+            }
+            throw new Error("Failed to resend verification email");
         }
     },
 

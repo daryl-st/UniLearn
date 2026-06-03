@@ -104,7 +104,7 @@ export default function CourseDetail() {
     );
   }
 
-  const thumb = courseThumbUrl(course.id);
+  const thumb = courseThumbUrl({ code: course.code, name: course.name });
   const instructorLabel = formatCourseInstructorLabel(course, course.instructorId ?? 'Instructor');
 
   return (

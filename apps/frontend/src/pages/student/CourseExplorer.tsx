@@ -95,7 +95,7 @@ export default function Courses() {
           >
             <div className="relative h-100 w-full overflow-hidden rounded-sm">
               <img
-                src={courseThumbUrl(featured.id)}
+                src={courseThumbUrl({ code: featured.code, name: featured.name })}
                 alt=""
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"
@@ -213,7 +213,7 @@ export default function Courses() {
             >
               <div className="h-44 w-full overflow-hidden relative">
                 <img
-                  src={courseThumbUrl(course.id)}
+                  src={courseThumbUrl({ code: course.code, name: course.name })}
                   alt=""
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"

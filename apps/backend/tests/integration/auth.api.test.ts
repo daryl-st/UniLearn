@@ -114,6 +114,11 @@ describe("auth api integration", () => {
             });
             expect(res.status).toBe(503);
             expect(res.body.message).toContain("Email service is not configured");
+
+            const orphan = await prisma.user.findUnique({
+                where: { email: "new.student-ug@aau.edu.et" },
+            });
+            expect(orphan).toBeNull();
         } finally {
             if (previous.BREVO_EMAIL !== undefined) process.env.BREVO_EMAIL = previous.BREVO_EMAIL;
             if (previous.BREVO_SMTP_KEY !== undefined) process.env.BREVO_SMTP_KEY = previous.BREVO_SMTP_KEY;

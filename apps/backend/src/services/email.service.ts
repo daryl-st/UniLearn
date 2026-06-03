@@ -32,18 +32,34 @@ function getEmailConfig(): EmailConfig {
     return { brevoEmail, brevoSmtpKey, fromEmail };
 }
 
+const SMTP_CONNECTION_TIMEOUT_MS = 20_000;
+const SMTP_GREETING_TIMEOUT_MS = 20_000;
+const SMTP_SOCKET_TIMEOUT_MS = 30_000;
+
+let cachedTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+
 function getTransporter() {
+    if (cachedTransporter) {
+        return cachedTransporter;
+    }
+
     const { brevoEmail, brevoSmtpKey } = getEmailConfig();
 
-    return nodemailer.createTransport({
+    cachedTransporter = nodemailer.createTransport({
         host: "smtp-relay.brevo.com",
         port: 587,
         secure: false,
+        requireTLS: true,
+        connectionTimeout: SMTP_CONNECTION_TIMEOUT_MS,
+        greetingTimeout: SMTP_GREETING_TIMEOUT_MS,
+        socketTimeout: SMTP_SOCKET_TIMEOUT_MS,
         auth: {
             user: brevoEmail,
             pass: brevoSmtpKey,
         },
     });
+
+    return cachedTransporter;
 }
 
 export async function sendEmail(options: SendMailOptions): Promise<void> {

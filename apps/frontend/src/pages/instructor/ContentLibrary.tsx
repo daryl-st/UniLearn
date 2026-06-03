@@ -394,7 +394,10 @@ export const ContentLibrary: React.FC = () => {
                 <PlayCircle size={48} className="text-white" />
               </div>
               <img
-                src={courseThumbUrl(selectedCourse?.code ?? 'course')}
+                src={courseThumbUrl({
+                  code: selectedCourse?.code,
+                  name: selectedCourse?.name,
+                })}
                 alt=""
                 className="w-full h-full object-cover opacity-60"
                 referrerPolicy="no-referrer"

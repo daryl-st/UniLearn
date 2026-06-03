@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "./auth.controller.js";
 import { validateBody, validateQuery } from "../../middlewares/validate.js";
-import { loginSchema, registerSchema, changePasswordSchema, verifyEmailQuerySchema, forgotPasswordSchema, resetPasswordSchema } from "../../schemas/index.js";
+import { loginSchema, registerSchema, changePasswordSchema, verifyEmailQuerySchema, forgotPasswordSchema, resetPasswordSchema, resendVerificationSchema } from "../../schemas/index.js";
 import { requireAuth } from "../../middlewares/auth.js";
 import { asyncHandler } from "../../middlewares/asyncHandler.js";
 
@@ -22,6 +22,11 @@ router.get(
     "/verify-email",
     validateQuery(verifyEmailQuerySchema),
     asyncHandler((req, res) => controller.verifyEmail(req, res)),
+);
+router.post(
+    "/resend-verification",
+    validateBody(resendVerificationSchema),
+    asyncHandler((req, res) => controller.resendVerification(req, res)),
 );
 router.post(
     "/forgot-password",

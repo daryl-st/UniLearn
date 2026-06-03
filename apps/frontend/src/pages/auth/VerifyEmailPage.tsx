@@ -7,17 +7,18 @@ import { authAPI } from '@/api/auth';
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') ?? '';
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Verifying your email…');
+  const hasToken = token.length > 0;
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(() =>
+    hasToken ? 'loading' : 'error',
+  );
+  const [message, setMessage] = useState(() =>
+    hasToken ? 'Verifying your email…' : 'Invalid verification token',
+  );
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('Invalid verification token');
-      return;
-    }
+    if (!hasToken) return;
 
     let cancelled = false;
 
@@ -37,7 +38,7 @@ export default function VerifyEmailPage() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, hasToken]);
 
   useEffect(() => {
     if (status !== 'success') return;

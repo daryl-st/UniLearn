@@ -25,6 +25,13 @@ export const verifyEmailQuerySchema = z.object({
 });
 export type VerifyEmailQuery = z.infer<typeof verifyEmailQuerySchema>;
 
+export const resendVerificationSchema = z.object({
+    email: email.transform(normalizeStudentEmail).refine((v) => AAU_STUDENT_EMAIL_REGEX.test(v), {
+        message: AAU_STUDENT_EMAIL_ERROR,
+    }),
+});
+export type ResendVerificationBody = z.infer<typeof resendVerificationSchema>;
+
 export const loginSchema = z.object({
     email: z.email().max(255).transform((v) => v.trim()),
     password: z.string().min(1),

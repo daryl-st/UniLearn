@@ -27,13 +27,26 @@ function userFromAuthResponse(u: { id: string; email: string; name: string; role
     };
 }
 
+function messageFromUnknown(err: unknown, fallback: string): string {
+    if (err instanceof Error && err.message) return err.message;
+    return fallback;
+}
+
+export type RegisterPayload = {
+    email: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+    role: string;
+};
+
 interface AuthState {
     user: AuthStoreUser | null;
     isLoading: boolean;
     error: string | null;
 
     login: (email: string, password: string) => Promise<void>;
-    register: (userData: any) => Promise<{ verificationSent: boolean; message?: string; devVerificationUrl?: string }>;
+    register: (userData: RegisterPayload) => Promise<{ verificationSent: boolean; message?: string; devVerificationUrl?: string }>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     clearError: () => void;
@@ -47,23 +60,21 @@ export const useAuthStore = create<AuthState>() (
             isLoading: true,
             error: null,
 
-            // TODO: proper error handling -- partially done
             login: async (email: string, password: string) => {
                 set({ isLoading: true, error: null });
                 try {
                     const response = await authAPI.login({ email, password });
                     set({ user: userFromAuthResponse(response.user), isLoading: false });
-                } catch (err: any) {
+                } catch (err: unknown) {
                     set({
-                        error: err.message || 'Login Failed!',
+                        error: messageFromUnknown(err, 'Login Failed!'),
                         isLoading: false,
                     });
                     throw err;
                 }
             },
 
-            // TODO: proper error handling -- partially done
-            register: async (userData: any) => {
+            register: async (userData: RegisterPayload) => {
                 set({ isLoading: true, error: null });
                 try {
                     const response = await authAPI.register(userData);
@@ -73,17 +84,18 @@ export const useAuthStore = create<AuthState>() (
                     }
                     if ("message" in response) {
                         set({ isLoading: false });
+                        const emailSent = response.emailSent === true;
                         return {
-                            verificationSent: true,
+                            verificationSent: emailSent,
                             message: response.message ?? "Verification email sent. Please check your inbox.",
                             devVerificationUrl: response.devVerificationUrl,
                         };
                     }
                     set({ isLoading: false });
                     return { verificationSent: true, message: "Registration completed." };
-                } catch (err: any) {
+                } catch (err: unknown) {
                     set({
-                        error: err.message || 'Registration Failed!',
+                        error: messageFromUnknown(err, 'Registration Failed!'),
                         isLoading: false,
                     });
                     throw err;
@@ -106,7 +118,7 @@ export const useAuthStore = create<AuthState>() (
                     const response = await authAPI.getCurrentUser();
                     const u = response.user;
                     set({ user: userFromAuthResponse(u), isLoading: false });
-                } catch (err) {
+                } catch {
                     localStorage.removeItem('auth-token');
                     api.setAuthToken(null);
                     set({ user: null, isLoading: false });
@@ -122,9 +134,9 @@ export const useAuthStore = create<AuthState>() (
                         user: userFromAuthResponse(response.user),
                         isLoading: false,
                     });
-                } catch (err: any) {
+                } catch (err: unknown) {
                     set({
-                        error: err.message || 'Failed to change password!',
+                        error: messageFromUnknown(err, 'Failed to change password!'),
                         isLoading: false,
                     });
                     throw err;

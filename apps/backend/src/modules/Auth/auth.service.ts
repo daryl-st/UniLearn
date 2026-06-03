@@ -10,6 +10,7 @@ import {
     EmailServiceNotConfiguredError,
     EmailServiceDeliveryError,
 } from "../../services/email.service.js";
+import { buildAppLink } from "../../config/publicAppUrl.js";
 import {
     AAU_STUDENT_EMAIL_ERROR,
     isAauStudentEmail,
@@ -43,13 +44,18 @@ export class AuthService {
         }
 
         const existingUser = await this.userRepository.findUserByEmail(email);
-        if (existingUser) throw new Error("Email already registered!");
+        if (existingUser) {
+            if (existingUser.role === "STUDENT" && existingUser.isVerified === false) {
+                return this.completeUnverifiedRegistration(existingUser.id, email, data);
+            }
+            throw new Error("Email already registered!");
+        }
 
         const hashedPass = await bcrypt.hash(data.password, 10);
         const token = randomBytes(32).toString("hex");
         const name = `${data.firstName.trim()} ${data.lastName.trim()}`.trim();
 
-        await this.userRepository.create({
+        const createdUser = await this.userRepository.create({
             email,
             name,
             role: "STUDENT",
@@ -58,24 +64,87 @@ export class AuthService {
             verificationToken: token,
         });
 
-        const clientOrigin =
-            process.env.CLIENT_ORIGIN?.split(",")[0]?.trim() ?? "http://localhost:5173";
-        const verifyUrl = `${clientOrigin.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
-
-        const emailSent = await this.deliverVerificationEmail(email, verifyUrl);
+        try {
+            await this.deliverVerificationEmail(email, token);
+        } catch (err) {
+            await prisma.user.delete({ where: { id: createdUser.id } }).catch((deleteErr) => {
+                console.error("[AuthService] Failed to roll back user after email error", deleteErr);
+            });
+            throw err;
+        }
 
         return {
-            message: emailSent
-                ? "Verification email sent. Please check your inbox."
-                : "Verification email could not be delivered. Please try again later.",
+            message: "Verification email sent. Please check your inbox.",
             email,
+            emailSent: true,
         };
     }
 
-    private async deliverVerificationEmail(email: string, verifyUrl: string): Promise<boolean> {
+    async resendVerificationEmail(emailStr: string) {
+        const email = normalizeStudentEmail(emailStr);
+        if (!isAauStudentEmail(email)) {
+            throw new Error(AAU_STUDENT_EMAIL_ERROR);
+        }
+
+        const user = await this.userRepository.findUserByEmail(email);
+        if (!user || user.role !== "STUDENT") {
+            throw new Error("No pending verification found for this email.");
+        }
+        if (user.isVerified) {
+            throw new Error("This email is already verified. You can sign in.");
+        }
+
+        const token = randomBytes(32).toString("hex");
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { verificationToken: token },
+        });
+
+        await this.deliverVerificationEmail(email, token);
+
+        return {
+            message: "Verification email sent. Please check your inbox.",
+            email,
+            emailSent: true,
+        };
+    }
+
+    private async completeUnverifiedRegistration(
+        userId: string,
+        email: string,
+        data: { firstName: string; lastName: string; password: string },
+    ) {
+        const token = randomBytes(32).toString("hex");
+        const hashedPass = await bcrypt.hash(data.password, 10);
+        const name = `${data.firstName.trim()} ${data.lastName.trim()}`.trim();
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                name,
+                password: hashedPass,
+                verificationToken: token,
+                isVerified: false,
+            },
+        });
+
+        await this.deliverVerificationEmail(email, token);
+
+        return {
+            message: "Verification email sent. Please check your inbox.",
+            email,
+            emailSent: true,
+        };
+    }
+
+    private buildVerificationUrl(token: string): string {
+        return buildAppLink("/verify-email", { token });
+    }
+
+    private async deliverVerificationEmail(email: string, token: string): Promise<void> {
+        const verifyUrl = this.buildVerificationUrl(token);
         try {
             await sendVerificationEmail(email, verifyUrl);
-            return true;
         } catch (err) {
             if (err instanceof EmailServiceNotConfiguredError) {
                 throw err;
@@ -287,9 +356,7 @@ export class AuthService {
             },
         });
 
-        const clientOrigin =
-            process.env.CLIENT_ORIGIN?.split(",")[0]?.trim() ?? "http://localhost:5173";
-        const resetUrl = `${clientOrigin.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+        const resetUrl = buildAppLink("/reset-password", { token });
 
         try {
             await sendForgotPasswordEmail(email, resetUrl);

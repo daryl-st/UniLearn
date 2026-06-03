@@ -24,34 +24,31 @@ export const CourseManagement: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [sidebarResources, setSidebarResources] = useState<Resource[]>([]);
   const [totalMaterials, setTotalMaterials] = useState(0);
+  const activeCourseId = selectedId ?? courses[0]?.id ?? null;
 
   useEffect(() => {
     void fetchCourses();
   }, [fetchCourses]);
 
   useEffect(() => {
-    if (courses.length && !selectedId) setSelectedId(courses[0].id);
-  }, [courses, selectedId]);
-
-  useEffect(() => {
-    if (!selectedId) return;
+    if (!activeCourseId) return;
     let cancelled = false;
-    (async () => {
-      const r = await CourseAPI.getResourcesByCourseId(selectedId);
+    void (async () => {
+      const r = await CourseAPI.getResourcesByCourseId(activeCourseId);
       if (!cancelled) setSidebarResources(Array.isArray(r) ? r : []);
     })();
     return () => {
       cancelled = true;
     };
-  }, [selectedId]);
+  }, [activeCourseId]);
 
   useEffect(() => {
-    if (courses.length === 0) {
-      setTotalMaterials(0);
-      return;
-    }
     let cancelled = false;
-    (async () => {
+    void (async () => {
+      if (courses.length === 0) {
+        setTotalMaterials(0);
+        return;
+      }
       try {
         const counts = await Promise.all(
           courses.map((c) =>
@@ -79,12 +76,12 @@ export const CourseManagement: React.FC = () => {
         students: '—',
         growth: `Y${c.acadamicYear}`,
         status: 'Published' as const,
-        image: courseThumbUrl(c.id),
+        image: courseThumbUrl({ code: c.code, name: c.name }),
       })),
     [courses],
   );
 
-  const selected = courses.find((c) => c.id === selectedId);
+  const selected = courses.find((c) => c.id === activeCourseId);
 
   return (
     <motion.div 
@@ -184,7 +181,7 @@ export const CourseManagement: React.FC = () => {
                     onClick={() => setSelectedId(course.id)}
                     className={cn(
                       "group transition-all duration-200 cursor-pointer",
-                      course.id === selectedId ? "bg-primary/5" : "hover:bg-surface-high/55",
+                      course.id === activeCourseId ? "bg-primary/5" : "hover:bg-surface-high/55",
                     )}
                   >
                     <td className="px-6 py-4.5">
@@ -268,7 +265,7 @@ export const CourseManagement: React.FC = () => {
               <div className="w-16 h-16 rounded-sm bg-surface-high overflow-hidden">
                 {selected ? (
                   <img
-                    src={courseThumbUrl(selected.id)}
+                    src={courseThumbUrl({ code: selected.code, name: selected.name })}
                     alt=""
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"

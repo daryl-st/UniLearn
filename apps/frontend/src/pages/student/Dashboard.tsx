@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import type { LucideIcon } from 'lucide-react';
 import { Verified, Clock, Rocket, PlayCircle, Share2, ChevronLeft, ChevronRight, CheckCircle2, MessageSquare, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCourseStore } from '@/stores/courseStrore';
@@ -14,7 +15,7 @@ interface StatItem {
   status?: string;
   change?: string;
   trend?: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
 }
 
 export default function Dashboard() {
@@ -165,7 +166,7 @@ export default function Dashboard() {
           >
             <div className="w-full md:w-1/3 aspect-video rounded-sm overflow-hidden relative shadow-2xl group cursor-pointer">
               <img
-                src={courseThumbUrl(featured.id)}
+                src={courseThumbUrl({ code: featured.code, name: featured.name })}
                 alt=""
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 referrerPolicy="no-referrer"
@@ -264,7 +265,7 @@ export default function Dashboard() {
               >
                 <div className="aspect-video w-full rounded-sm mb-4 overflow-hidden relative">
                   <img
-                    src={courseThumbUrl(course.id)}
+                    src={courseThumbUrl({ code: course.code, name: course.name })}
                     alt=""
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                     referrerPolicy="no-referrer"

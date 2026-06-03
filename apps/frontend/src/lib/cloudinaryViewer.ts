@@ -1,10 +1,7 @@
 import type { FileType } from '@unilearn/shared-types';
 
 /** Return the stored Cloudinary URL unchanged — raw PDF delivery works when image PDF CDN is restricted. */
-export function resolveCloudinaryViewerUrl(
-  fileUrl: string,
-  _type?: string,
-): string {
+export function resolveCloudinaryViewerUrl(fileUrl: string): string {
   return fileUrl;
 }
 

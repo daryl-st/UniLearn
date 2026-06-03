@@ -130,6 +130,22 @@ export class AuthController {
         }
     }
 
+    async resendVerification(req: Request, res: Response) {
+        const { email } = req.body as { email: string };
+        try {
+            const result = await authService.resendVerificationEmail(email);
+            return res.status(200).json(result);
+        } catch (err) {
+            if (err instanceof EmailServiceNotConfiguredError) {
+                return res.status(503).json({ message: err.message });
+            }
+            if (err instanceof EmailServiceDeliveryError) {
+                return res.status(502).json({ message: err.message });
+            }
+            throw err;
+        }
+    }
+
     async forgotPassword(req: Request, res: Response) {
         const { email } = req.body;
         try {

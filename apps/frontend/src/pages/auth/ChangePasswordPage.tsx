@@ -51,7 +51,7 @@ export default function ChangePasswordPage() {
       setSuccess(true);
       const u = useAuthStore.getState().user;
       navigate(postAuthRedirectPath(u), { replace: true });
-    } catch (err) {
+    } catch {
       console.log('Password update failed');
     }
   };

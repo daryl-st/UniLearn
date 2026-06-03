@@ -38,7 +38,7 @@ export default function LoginPage() {
       await login(formData.email, formData.password);
       const u = useAuthStore.getState().user;
       navigate(postAuthRedirectPath(u), { replace: true });
-    } catch (err) {
+    } catch {
       // Error already in store, no need to handle here
       console.log('Login failed');
     }

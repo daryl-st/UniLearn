@@ -12,9 +12,6 @@ type CourseCardProps = {
   instructorName?: string;
 };
 
-const fallbackImage =
-  "https://media.istockphoto.com/id/2215967400/vector/smart-education-and-online-learning-with-digital-graduation-cap-vector-illustration.jpg?s=612x612&w=0&k=20&c=cdM8xg9s0cP_26UweU1HD0TrP5q9bL9xGKXxHtnJdbM=";
-
 // interface CourseCardProps {
 //   id: string;
 //   discipline: string;
@@ -25,8 +22,8 @@ const fallbackImage =
 // }
 
 // export function CourseCard({ id, discipline, title, description, instructor, image }: CourseCardProps) {
-export function CourseCard({ id, name, code, acadamicYear, instructorId, instructorName }: CourseCardProps) {
-  const cover = id ? courseThumbUrl(id) : fallbackImage;
+export function CourseCard({ name, code, acadamicYear, instructorId, instructorName }: CourseCardProps) {
+  const cover = courseThumbUrl({ code, name });
   const instructorLabel = instructorName || instructorId || "Instructor";
   return (
     // let's wrap it with motion.div for hover effects

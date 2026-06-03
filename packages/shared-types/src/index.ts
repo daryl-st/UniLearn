@@ -1,6 +1,7 @@
 export * from "./User";
 export * from "./Course";
 export * from "./AI";
+export * from "./courseThumbnails";
 
 // Only create shared types for:
 // - Things returned in API responses

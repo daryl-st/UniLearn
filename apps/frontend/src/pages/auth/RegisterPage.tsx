@@ -3,6 +3,7 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight, GraduationCap} from 'lucide-
 // import {SiGooglechrome, SiApple} from 'react-icons/si';
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
+import { authAPI } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
 import { asBackendRole, dashboardPathForBackendRole } from '@/utils/auth';
 
@@ -22,6 +23,9 @@ export default function RegisterPage() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
   const [devVerificationUrl, setDevVerificationUrl] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,6 +54,7 @@ export default function RegisterPage() {
         email: formData.email,
       };
       const result = await register(userData);
+      setRegisteredEmail(formData.email.trim().toLowerCase());
       if (result.verificationSent) {
         setVerificationSent(true);
         setVerificationMessage(
@@ -58,6 +63,10 @@ export default function RegisterPage() {
         setDevVerificationUrl(result.devVerificationUrl ?? '');
         return;
       }
+      setValidationError(
+        result.message ?? 'Verification email could not be sent. Please try again.',
+      );
+      return;
       const u = useAuthStore.getState().user;
       navigate(dashboardPathForBackendRole(asBackendRole(u?.role)), { replace: true });
     } catch (err) {
@@ -65,6 +74,26 @@ export default function RegisterPage() {
       console.log('Registration failed', err);
     }
   }
+
+  const handleResendVerification = async () => {
+    if (!registeredEmail) return;
+    setIsResending(true);
+    setResendMessage('');
+    setValidationError('');
+    try {
+      const response = await authAPI.resendVerification(registeredEmail);
+      setVerificationSent(true);
+      setVerificationMessage(
+        response.message ?? 'Verification email sent. Please check your inbox.',
+      );
+    } catch (err) {
+      setResendMessage(
+        err instanceof Error ? err.message : 'Failed to resend verification email.',
+      );
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const students = [
     "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=100&h=100&auto=format&fit=crop",
@@ -164,6 +193,20 @@ export default function RegisterPage() {
                     {devVerificationUrl}
                   </a>
                 </p>
+              ) : null}
+              <p className="text-xs text-green-200/80">
+                Didn&apos;t receive the email? Check spam or resend below.
+              </p>
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isResending || !registeredEmail}
+                className="text-sm font-semibold text-blue-300 hover:text-blue-200 disabled:opacity-50"
+              >
+                {isResending ? 'Resending...' : 'Resend verification email'}
+              </button>
+              {resendMessage ? (
+                <p className="text-xs text-red-300">{resendMessage}</p>
               ) : null}
             </div>
           ) : null}

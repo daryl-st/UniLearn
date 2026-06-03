@@ -21,8 +21,9 @@ A clean, practical step-by-step guide to get the UniLearn system fully running a
    ACCESS_TOKEN_SECRET="your_access_token_secret"
    REFRESH_TOKEN_SECRET="your_refresh_token_secret"
 
-   # Allowed client domains
+   # Allowed client domains (CORS). For email links, also set PUBLIC_APP_URL to your frontend URL in production.
    CLIENT_ORIGIN="http://localhost:5173,http://localhost:5174"
+   # PUBLIC_APP_URL="https://your-production-frontend.example"
 
    # AI Service (if applicable)
    AI_SERVICE_URL="http://127.0.0.1:8000"

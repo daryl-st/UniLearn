@@ -100,8 +100,6 @@ class APIClient {
         };
 
         // If body is FormData, do not send Content-Type header; the browser will set multipart boundary.
-        // restInit.body can be FormData when callers pass it through.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (restInit.body instanceof FormData) {
             delete headers['Content-Type'];
         }
@@ -171,8 +169,7 @@ class APIClient {
             if (!response.ok) {
                 let errorMessage = response.statusText;
                 if (data && typeof data === 'object' && data !== null) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const errorBody = data as any;
+                    const errorBody = data as { error?: string; message?: string };
                     if (typeof errorBody.error === 'string') {
                         errorMessage = errorBody.error;
                     } else if (typeof errorBody.message === 'string') {
@@ -203,8 +200,8 @@ class APIClient {
                 Authorization: `Bearer ${token}`,
             };
         } else {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { Authorization: _, ...rest } = this.defaultHeaders;
+            const rest = { ...this.defaultHeaders };
+            delete rest.Authorization;
             this.defaultHeaders = rest;
         }
     }
